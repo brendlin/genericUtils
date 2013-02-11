@@ -1,0 +1,29 @@
+package genericUtilities
+
+author Kurt Brendlinger <kurt.brendlinger@cern.ch>
+
+use AtlasPolicy         AtlasPolicy-*
+use AtlasPython         AtlasPython-*       External
+use AtlasROOT           AtlasROOT-*         External
+#use AtlasBoost          AtlasBoost-*       External
+
+#c# apply_pattern installed_library
+#c# library genericUtilities *.cxx *.C
+
+apply_pattern declare_python_modules files="*.py"
+
+private
+
+use AtlasReflex         AtlasReflex-*      External
+
+#c# apply_pattern lcgdict dict=genericUtilities \
+#c#              selectionfile=selection.xml \
+#c#              headerfiles="../genericUtilities/genericUtilitiesDict.h"
+
+#c# macro_append genericUtilities_cppflags " `xml2-config --cflags`"
+#c# macro_append genericUtilities_use_linkopts " -lxml2" slc4-gcc34 " /usr/lib/libxml2.so.2"
+#c# macro_append genericUtilities_use_linkopts " -lz -lpthread "
+
+end_private
+
+## c # is when you want to add some c++ to this shiz.
