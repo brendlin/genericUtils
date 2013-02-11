@@ -5,4 +5,6 @@ __all__ = ['LoadLibraries'
            ,'PyGenericUtilities'
            ,'PyHistogramUtilities'
            ,'PlotUtils'
+           ,'PyParallelize'
+           ,'ProcessManager'
            ]
