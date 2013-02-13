@@ -59,3 +59,16 @@ def getIntegralUnderflows(h) :
    ubin = 0
    #print 'Underflows:',h.Integral(ubin,ubin,-1,h.GetNbinsY()+1)
    return h.Integral(ubin,ubin)
+
+#----------------------------------------------------
+def setEffErrors(th,den) :
+    for i in range(th.GetNbinsX()) :
+        eff = th.GetBinContent(i+1)
+        if eff < 0: eff = 0
+        if eff > 1: eff = 1
+        n = den.GetBinContent(i+1)
+        if n != 0 and 0 <= eff and eff <= 1 :
+            err = math.sqrt(eff*(1-eff)/n)
+            th.SetBinError(i+1,err)
+
+    return

@@ -2,8 +2,8 @@ import os
 import sys
 import fnmatch
 from itertools import product
-from genericUtilities.PyGenericUtilities import getFile,getTree
-from egammaID.ProcessManager import GetInHMS,kBatchLocal,condorSubmit,BigHadd,AggregatePlots
+from genericUtils.PyGenericUtils import getFile,getTree
+from genericUtils.ProcessManager import GetInHMS,kBatchLocal,condorSubmit,BigHadd,AggregatePlots
 ###################
 # Class PyParallelize - intended for handling multiple jobs, splitting into subjobs.
 # - addMenu

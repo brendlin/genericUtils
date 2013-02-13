@@ -1,3 +1,4 @@
+from ROOT import TFile,TTree
 
 def MakeListMatrix(*lists) :
     lol = list(range(len(x)) for x in lists)
@@ -84,23 +85,23 @@ def MakeDirV2(file,dir) :
 
 #------------------------------------------------------------------
 def getFile(filename) :
-     if ('eosatlas' in filename) or ('castoratlas' in filename) :
-          tfile = TXNetFile(filename,'READ')
-     else :
-          print 'not an eos file'
-          tfile = TFile(filename,'READ')
-     return tfile
+    if ('eosatlas' in filename) or ('castoratlas' in filename) :
+        tfile = TXNetFile(filename,'READ')
+    else :
+        #print 'not an eos file'
+        tfile = TFile(filename,'READ')
+    return tfile
 
 def getTree(file,tree) :
-     nEvents = 0
-     for item in file.GetListOfKeys() :
-          itree = item.ReadObj()
-          if type(itree) == type(TTree()) :
-               ievents = int(itree.GetEntries())
-               if ievents > nEvents :
-                    nEvents = ievents
-                    returntree = itree
-     return returntree
+    nEvents = 0
+    for item in file.GetListOfKeys() :
+        itree = item.ReadObj()
+        if type(itree) == type(TTree()) :
+            ievents = int(itree.GetEntries())
+            if ievents > nEvents :
+                nEvents = ievents
+                returntree = itree
+    return returntree
 
 #--------------------------------------------------------------------------------
 def CopyV2(indir,outdir,keys=[]) :

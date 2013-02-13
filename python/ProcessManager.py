@@ -4,7 +4,7 @@ from sys import stdout
 import time   # time accounting
 import shlex, subprocess # subprocessing
 from ROOT import TFile,TObject
-from IsEMOptTools import MakeDirV2
+from genericUtils.PyGenericUtils import MakeDirV2
 
 #--------------------------------------------------------------------------------
 class kBatchLocal :

@@ -1,4 +1,7 @@
+from itertools import product
+from ROOT import TH1F
 
+from genericUtils.PyGenericUtils import MakeListMatrix
 
 #
 # Various binning schemes
