@@ -1,3 +1,5 @@
+import math
+
 #-- TH2F methods --------------------------------------------------
 def getIntegralAllFlows(h) :
     total = h.Integral(0,h.GetNbinsX()+1,0,h.GetNbinsY()+1)
