@@ -8,7 +8,7 @@ from genericUtils.PyGenericUtils import MakeDirV2
 
 #--------------------------------------------------------------------------------
 class kBatchLocal :
-    def __init__(self,maxnjobs=13) :
+    def __init__(self,maxnjobs=15) :
         self.outfiles = []
         self.errfiles = []
         self.subprocs = []
@@ -24,7 +24,7 @@ class kBatchLocal :
         self.poll()
         #print logname
         if doprint : print ' '.join(cmd)
-        time.sleep(5)
+        time.sleep(0.5)
         self.subprocs.append(subprocess.Popen(cmd,stdout=self.outfiles[-1],stderr=self.errfiles[-1]))
         return
 
@@ -299,3 +299,45 @@ def wait2(runMode,name,subprocs = 0,rmclass=False) :
     return
 
 #--------------------------------------------------------------------------------
+def jobFinishedSendEmail(script,config,dir,eventselection='',time=''
+                         ,sender='kBatch <kurb@at3i00.upenn.edu>',recipient='kurt.brendlinger@gmail.com') :
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
+    subject = 'at3i00 %s, config %s, dir %s, complete.'%(script,config,dir)
+    body    = 'script         : %sENTER'%script
+    body   += 'config         : %sENTER'%config
+    body   += 'dir            : %sENTER'%dir
+    if eventselection :
+        body   += 'eventselection : %sENTER'%eventselection
+    if time :
+        body   += 'elapsed time   : %sENTER'%time
+
+    html  = '<html><font face=\"Courier New, Courier, monospace\">'
+    html += body.replace('ENTER','<br>\n').replace(' ','&nbsp;')
+    html += '</font></html>'
+
+    body = body.replace('ENTER','\n')
+
+    print body
+    print html
+
+    #msg = MIMEText(body)
+    msg = MIMEMultipart('alternative')
+    part1 = MIMEText(body, 'plain')
+    part2 = MIMEText(html, 'html')
+
+    msg.attach(part1)
+    msg.attach(part2)
+
+    msg['Subject'] = subject
+    msg['From']    = sender
+    msg['To']      = recipient
+    
+    # Send the message via our own SMTP server, but don't include the
+    # envelope header.
+    s = smtplib.SMTP('localhost')
+    s.sendmail(sender, [recipient], msg.as_string())
+    s.quit()
+    return

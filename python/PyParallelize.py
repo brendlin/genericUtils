@@ -13,6 +13,8 @@ from genericUtils.ProcessManager import GetInHMS,kBatchLocal,condorSubmit,BigHad
 class PyParallelize :
     def __init__(self,script,p): # p = parser
 
+        self.p = p
+
         from ROOT import gROOT
         gROOT.SetBatch(True)
 
@@ -134,14 +136,20 @@ class PyParallelize :
             if self.submit : self.Batch.addJob(runcmd,outputlog)
         return
 
-    def submitJobs(self,filedict,nloop,runmode='',script='',extraopts=[]) :
+    def submitJobs(self,filestrlist,nloop,runmode='',script='',extraopts=[]) :
+        if True in list('*' in filestr for filestr in filestrlist) :
+            self.submitJobsWildcarFileList(filestrlist,nloop,runmode,script,extraopts)
+        else :
+            self.submitJobsRegular(filestrlist,nloop,runmode,script,extraopts)
+        return
+
+    def submitJobsRegular(self,filestrlist,nloop,runmode='',script='',extraopts=[]) :
 
         if not runmode : runmode = self.options.runmode
         if not script : script = self.script
 
-        for fk in filedict.keys() :
-            file = getFile(filedict[fk])
-            #print file.GetName()
+        for fk in range(len(filestrlist)) :
+            file = getFile(filestrlist[fk])
             tree = getTree(file,self.options.treename)
             if self.options.n <=0 : self.options.n = int(1e9)
             nevts = int(min(tree.GetEntries(),self.options.n))
@@ -151,8 +159,7 @@ class PyParallelize :
 
             for proc in range(nsubprocs) :
 
-                input_id  = filedict[fk].replace('.root','').split('/')[-1]
-                #subprocid = '_loop%02d_%s_%02d'%(nloop,input_id,proc)
+                input_id  = filestrlist[fk].replace('.root','').split('/')[-1]
                 outputlog = self.dirs['logdir']+self.getFileName(nloop,input_id,proc)
                 outfile   = self.dirs['outputdir']+self.getFileName(nloop,input_id,proc)+'.root'
                 #
@@ -160,30 +167,14 @@ class PyParallelize :
                 lastevt  = self.options.nevtsperproc*(proc+1)
                 runcmd = ['python',script]
                 runcmd += self.getBatchRunOpts()
-                #theoptions = vars(self.options)
-                #for k in theoptions.keys() :
-                #    if type(theoptions[k]) == type(False) :
-                #        if not theoptions[k] : continue # no false flags
-                #    if theoptions[k] == '' : continue
-                #    if k in ['nloop','first','last','rootfiles','out'] : continue
-                #    if k in ['firstloop','lastloop','nevtsperproc','runmode','nosubmit'] : continue
-                #    if type(theoptions[k]) == type(True) :
-                #        runcmd += ['--'+k.replace('_','-')]
-                #    else :
-                #        runcmd += ['--'+k.replace('_','-'),str(theoptions[k])]
-                #print 'the options from submitJobs:',runcmd
-                #print self.getBatchRunOpts([])
                 runcmd += ['--child']
                 runcmd += ['--nloop'    ,str(nloop)]
                 runcmd += ['--first'    ,str(firstevt)]
                 runcmd += ['--last'     ,str(lastevt)]
                 runcmd += ['--out'      ,outfile]
-                #if 'mc'   in fk : runcmd += ['--ismc'  ]
-                #if 'bkg'  in fk : runcmd += ['--isbkg' ]
-                #if 'data' in fk : runcmd += ['--isdata']
                 if extraopts : runcmd += extraopts
 
-                runcmd += [str(filedict[fk])]
+                runcmd += [str(filestrlist[fk])]
                 if self.debug or not self.submit : print ' '.join(runcmd)
                 if self.submit : self.Batch.addJob(runcmd,outputlog)
 
@@ -192,7 +183,7 @@ class PyParallelize :
     #
     # New Batch script
     #
-    def submitJobsNew(self,filestrlist,nloop,runmode='',script='',extraopts=[],grepfor=[]) :
+    def submitJobsWildcarFileList(self,filestrlist,nloop,runmode='',script='',extraopts=[]) :
 
         if not runmode : runmode = self.options.runmode
         if not script : script = self.script
@@ -203,9 +194,6 @@ class PyParallelize :
 
             c,eventcounter,subfiles = -1,0,[]
             for file,nevents in filetup :
-                if grepfor and grepfor[i] and not grepfor[i] in file :
-                    #print 'skipping %s (%s not in filename)'%(file,grepfor)
-                    continue
                 c += 1
                 eventcounter += nevents
                 subfiles.append(file)
@@ -215,12 +203,12 @@ class PyParallelize :
                     #
                     # submit
                     #
-                    input_id = ''
-                    if 'mc' in subfiles[0]       : input_id += 'mc'
-                    if 'samesign' in subfiles[0] : input_id += 'samesign'
-                    if 'EWR' in subfiles[0]      : input_id += 'EWR'
-                    if 'signal' in subfiles[0]   : input_id += 'signal'
-                    input_id += 'group%05d'%c
+                    input_id = 'File%02d'%i
+                    if 'mc' in subfiles[0]       : input_id = 'mc'
+                    if 'samesign' in subfiles[0] : input_id = 'samesign'
+                    if 'EWR' in subfiles[0]      : input_id = 'EWR'
+                    if 'signal' in subfiles[0]   : input_id = 'signal'
+                    input_id += 'Group%05d'%c
                     outputlog = self.dirs['logdir']+self.getFileName(nloop,input_id)
                     outfile   = self.getFileName(nloop,input_id)+'.root'
                     runcmd = ['python',script]
@@ -313,6 +301,7 @@ class PyParallelize :
             if k in ['nloop','first','last','rootfiles','out'] : continue
             if k in ['firstloop','lastloop','nevtsperproc','runmode','nosubmit'] : continue
             if k in notthese : continue
+            if theoptions[k] == self.p.defaults[k] : continue
             if self.debug : print 'Adding option',k
             if type(theoptions[k]) == type(True) :
                 optionlist += ['--'+k.replace('_','-')]

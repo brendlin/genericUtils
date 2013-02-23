@@ -84,6 +84,15 @@ def MakeDirV2(file,dir) :
     return file.GetDirectory(dir)
 
 #------------------------------------------------------------------
+def GetInHMS(seconds):
+    seconds = int(seconds)
+    hours = seconds / 3600
+    seconds -= 3600*hours
+    minutes = seconds / 60
+    seconds -= 60*minutes
+    return "%02d:%02d:%02d" % (hours, minutes, seconds)
+
+#------------------------------------------------------------------
 def getFile(filename) :
     if ('eosatlas' in filename) or ('castoratlas' in filename) :
         tfile = TXNetFile(filename,'READ')
