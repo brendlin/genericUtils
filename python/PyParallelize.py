@@ -42,7 +42,7 @@ class PyParallelize :
         p.add_option('--dir'           ,type='string',default='test'                ,dest='dir'           ,help='Output directory' )
 
         p.add_option('--config-default',type='string',default='default'             ,dest='config_default',help='default menu/alg configs')
-        p.add_option('--treename'      ,type='string',default='egamma'              ,dest='treename'      ,help='Tree name (e.g. egamma)')
+        p.add_option('--treename'      ,type='string',default='photon'              ,dest='treename'      ,help='Tree name (e.g. egamma)')
         p.add_option('--nevtsperproc'  ,type='int'   ,default=int(2e5)              ,dest='nevtsperproc'  ,help='Number of events per subprocess')
         #p.add_option('--filetype')
 
@@ -138,7 +138,7 @@ class PyParallelize :
 
     def submitJobs(self,filestrlist,nloop,runmode='',script='',extraopts=[]) :
         if True in list('*' in filestr for filestr in filestrlist) :
-            self.submitJobsWildcarFileList(filestrlist,nloop,runmode,script,extraopts)
+            self.submitJobsWildcardFileList(filestrlist,nloop,runmode,script,extraopts)
         else :
             self.submitJobsRegular(filestrlist,nloop,runmode,script,extraopts)
         return
@@ -183,7 +183,7 @@ class PyParallelize :
     #
     # New Batch script
     #
-    def submitJobsWildcarFileList(self,filestrlist,nloop,runmode='',script='',extraopts=[]) :
+    def submitJobsWildcardFileList(self,filestrlist,nloop,runmode='',script='',extraopts=[]) :
 
         if not runmode : runmode = self.options.runmode
         if not script : script = self.script

@@ -102,7 +102,8 @@ def getFile(filename) :
     return tfile
 
 def getTree(file,tree) :
-    nEvents = 0
+    nEvents = -1
+    returntree = 0
     for item in file.GetListOfKeys() :
         itree = item.ReadObj()
         if type(itree) == type(TTree()) :
@@ -110,6 +111,7 @@ def getTree(file,tree) :
             if ievents > nEvents :
                 nEvents = ievents
                 returntree = itree
+    if not returntree : print 'Error! Tree not found!',file
     return returntree
 
 #--------------------------------------------------------------------------------
