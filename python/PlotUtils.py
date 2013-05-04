@@ -36,6 +36,8 @@ color = [kBlack+0,kRed+1,kBlue+1,kGreen+1,kMagenta+1,kCyan+1,kOrange+1
          ,kGray,kRed-7,kBlue-7,kGreen-7,kMagenta-7,kCyan-7,kOrange-7
          ,kYellow+2,kRed-5,kBlue-5,kGreen-5,kMagenta-5,kCyan-5,kOrange-5
          ,21,22,23,24,25,26,27,28,29,30
+         ,21,22,23,24,25,26,27,28,29,30
+         ,21,22,23,24,25,26,27,28,29,30
          ]
 
 graphtypes = [type(TGraph()),type(TGraphErrors())]
@@ -89,7 +91,6 @@ def GetReasonableRanges(plots,ranges=0,log=False):
         if ranges[0] : maxx = ranges[0][1]
         if ranges[1] : newminy = ranges[1][0]
         if ranges[1] : newmaxy = ranges[1][1]
-
     if log and (newminy <= 0.) and (newmaxy >= 0.) :
         #print 'Trying to fix!'
         newminy = min(0.5,0.01*newmaxy)
@@ -185,7 +186,7 @@ class SmartPlot :
         for pl in range(len(self.plots)) : # Don't do 'for plot in plots!'
             if (not pl) :
                 same_str = ''
-                if (type(self.plots[0]) in graphtypes) : same_str = 'ap'
+                if (type(self.plots[0]) in graphtypes) : same_str = 'a'
                 if self.normalized :
                     self.normplots.append(self.plots[0].DrawNormalized(same_str+drawopt))
                     if not self.normplots[-1] : self.normplots[-1] = TH1F()
@@ -196,7 +197,7 @@ class SmartPlot :
 
             same_str = ''
             if (type(self.plots[pl]) in histtypes) : same_str = 'same'
-            if (type(self.plots[pl]) in graphtypes) : same_str = 'p'
+            if (type(self.plots[pl]) in graphtypes) : same_str = ''
             if self.normalized :
                 self.normplots.append(self.plots[pl].DrawNormalized(same_str+drawopt))
                 if not self.normplots[-1] : self.normplots[-1] = TH1F()
@@ -209,9 +210,11 @@ class SmartPlot :
         if ('colz' not in self.drawopt) and self.drawleg :
             self.leg.Draw()
         t=TLatex()
-        t.SetTextSize(0.038)
+        t.SetNDC()
+        t.SetTextSize(0.050)
         t.SetTextFont(42)
-        t.DrawTextNDC(0.1,0.93,self.name)
+        #t.DrawTextNDC(0.1,0.93,self.name)
+        t.DrawLatex(0.1,0.93,self.name)
         self.can.SetLogy(self.log)
         #print 'setting logy to',self.log
         if writecan : self.writeCan(file)
@@ -246,7 +249,7 @@ class SmartPlot :
                 self.plots[pl].SetFillStyle(these_styles)
         return
 
-    def SetMarkers(self,these_marker_sizes,these_styles) :
+    def SetMarkers(self,these_marker_sizes=0,these_styles=0) :
         if not these_marker_sizes : these_marker_sizes = self.markersize
         if not these_styles : these_styles = self.markerstyle
         if not these_marker_sizes and not these_styles : return
@@ -266,6 +269,7 @@ class SmartPlot :
 
     def SetLegend(self) :
         for pl in range(len(self.plots)) :
+            # print 'adding entry',self.plots[pl].GetName()
             self.leg.AddEntry(self.plots[pl],self.plots[pl].GetName(),'le')
         return
 
@@ -277,19 +281,22 @@ class SmartPlot :
         #print 'setting logy to',self.log
         self.can.Write(self.name)
 
-    def createLegend(self,x1,x2,y1,y2) :
+    def createLegend(self,x1,y1,x2,y2) :
+        #print x1,x2,y1,y2
         if self.can.GetPrimitive('mylegend') :
             self.can.GetPrimitive('mylegend').Delete()
-        self.leg = TLegend(x1,x2,y1,y2)
+        self.leg = TLegend(x1,y1,x2,y2)
         self.leg.SetName('mylegend')
         self.leg.SetTextFont(42)
         self.leg.SetBorderSize(0)
         self.leg.SetFillStyle(0)
         
-    def recreateLegend(self,x1,x2,y1,y2) :
-        self.createLegend(x1,x2,y1,y2)
+    def recreateLegend(self,x1,y1,x2,y2) :
+        self.can.cd()
+        self.createLegend(x1,y1,x2,y2)
         self.SetLegend()
         if ('colz' not in self.drawopt) and self.drawleg :
+            self.can.cd()
             self.leg.Draw()
         return
 
@@ -297,7 +304,7 @@ class SmartPlot :
         self.can.cd()
         a = TLine()
         a.SetLineColor(color)
-        a.DrawLine((self.xmax-self.xmin)*pct[0],yval,(self.xmax-self.xmin)*pct,yval)
+        a.DrawLine((self.xmax-self.xmin)*pct[0],yval,(self.xmax-self.xmin)*pct[1],yval)
 
     def DrawVertical(self,xval,color=1,pct=[0.,1.]) :
         self.can.cd()
