@@ -25,7 +25,12 @@ gStyle.SetHistLineWidth(2)
 gStyle.SetLineWidth(2)
 gStyle.SetFrameFillColor(0)
 gStyle.SetOptTitle(0)
+#
 gStyle.SetPadTopMargin(0.1)
+#gStyle.SetPadBottomMargin(0.1)
+gStyle.SetPadLeftMargin(0.15)
+#gStyle.SetPadRightMargin(0.1)
+#
 gStyle.SetTitleFontSize(0.4)
 gStyle.SetTitleYOffset(1.75)
 gStyle.SetPaintTextFormat('4.1f ')
@@ -39,6 +44,8 @@ color = [kBlack+0,kRed+1,kBlue+1,kGreen+1,kMagenta+1,kCyan+1,kOrange+1
          ,21,22,23,24,25,26,27,28,29,30
          ,21,22,23,24,25,26,27,28,29,30
          ]
+
+markerstyles = [20,21,22,23,24,25,26,27]
 
 graphtypes = [type(TGraph()),type(TGraphErrors())]
 histtypes = [type(TH1F()),type(TH1D()),type(TProfile()),type(TH2F())]
@@ -139,7 +146,19 @@ class SmartPlot :
             self.plotLegNames.append(self.plots[p].GetName())
             self.plotLegSizes.append(len(self.plots[p].GetName()))
             
-        self.plots[0].GetYaxis().SetTitleOffset(1.35)
+        self.plots[0].GetYaxis().SetTitleOffset(1.45)
+        self.plots[0].GetYaxis().SetTitleSize(0.05)
+        self.plots[0].GetYaxis().SetTitleFont(42)
+
+        self.plots[0].GetYaxis().SetLabelSize(0.04)
+        self.plots[0].GetYaxis().SetLabelFont(42)
+
+        self.plots[0].GetXaxis().SetTitleOffset(0.85)
+        self.plots[0].GetXaxis().SetTitleSize(0.05)
+        self.plots[0].GetXaxis().SetTitleFont(42)
+
+        self.plots[0].GetXaxis().SetLabelSize(0.04)
+        self.plots[0].GetXaxis().SetLabelFont(42)
 
         if 'colz' in drawopt :
             self.can.SetRightMargin(0.18)
@@ -267,8 +286,9 @@ class SmartPlot :
 
         return
 
-    def SetLegend(self) :
+    def SetLegend(self,skip=[]) :
         for pl in range(len(self.plots)) :
+            if pl in skip : continue
             # print 'adding entry',self.plots[pl].GetName()
             self.leg.AddEntry(self.plots[pl],self.plots[pl].GetName(),'le')
         return
@@ -300,16 +320,18 @@ class SmartPlot :
             self.leg.Draw()
         return
 
-    def DrawHorizontal(self,yval,color=1,pct=[0.,1.]) :
+    def DrawHorizontal(self,yval,color=1,pct=[0.,1.],style=1) :
         self.can.cd()
         a = TLine()
         a.SetLineColor(color)
+        a.SetLineStyle(style)
         a.DrawLine((self.xmax-self.xmin)*pct[0],yval,(self.xmax-self.xmin)*pct[1],yval)
 
     def DrawVertical(self,xval,color=1,pct=[0.,1.]) :
         self.can.cd()
         a = TLine()
         a.SetLineColor(color)
+        a.SetLineStyle(style)
         a.DrawLine(xval,(self.ymax-self.ymin)*pct[0],xval,(self.ymax-self.ymin)*pct[1])
 
     def AddPlots(self,plots,drawopt='') :
