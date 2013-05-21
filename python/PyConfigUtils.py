@@ -1,14 +1,21 @@
 
 #----------------------------------------------------
-def printConfigs(conf) :
+def printConfigs(conf,doPrint=True) :
+
+    thetext = ''
+
     if type(conf) != type([]) :
         configs = [conf]
     else : configs = conf
 
     for config in configs :
-        print 'Configuration:'
+        thetext += 'Configuration:\n'
         for k in config.keys() :
-            print '    key:',str(k).ljust(15),'value:',str(config[k]).ljust(20)
+            thetext += '    key: %s value: %s \n'%(str(k).ljust(15),str(config[k]).ljust(20))
+        thetext += '\n'
+    if doPrint : print thetext
+    return thetext
+            
 
 def hasAndIsTrue(config,thing) :
     return thing in config.keys() and config[thing]

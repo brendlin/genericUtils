@@ -74,3 +74,17 @@ def setEffErrors(th,den) :
             th.SetBinError(i+1,err)
 
     return
+
+#----------------------------------------------------
+def MakeEffPlotsFromNumDen(thnum,thden) :
+    for i in range(thnum.GetNbinsX()) :
+        bin = i+1
+        num = thnum.GetBinContent(bin)
+        den = float(thden.GetBinContent(bin))
+        if den <=0. : den = 1.
+        eff = num/den
+        thnum.SetBinContent(bin,eff)
+        if 0 <= eff and eff <= 1 :
+            efferr = math.sqrt(eff*(1-eff)/den)
+            thnum.SetBinError(bin,efferr)
+    return

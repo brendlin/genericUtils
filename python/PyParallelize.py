@@ -1,6 +1,9 @@
 import os
 import sys
 import fnmatch
+import time
+import datetime
+import socket
 from itertools import product
 from genericUtils.PyGenericUtils import getFile,getTree
 from genericUtils.ProcessManager import GetInHMS,kBatchLocal,condorSubmit,BigHadd,AggregatePlots
@@ -20,6 +23,10 @@ class PyParallelize :
 
         self.script = script
         self.debug = False
+
+        self.copyWaitDir = '/disk/userdata00/atlas_data2/%s/veto'%os.getenv('USER')
+        if not os.path.isdir(self.copyWaitDir) :
+            os.mkdir(self.copyWaitDir)
 
         # for child processes
         p.add_option('--child' ,action='store_true',default=False     ,dest='child' ,help='Child process?')
@@ -43,7 +50,7 @@ class PyParallelize :
 
         p.add_option('--config-default',type='string',default='default'             ,dest='config_default',help='default menu/alg configs')
         p.add_option('--treename'      ,type='string',default='photon'              ,dest='treename'      ,help='Tree name (e.g. egamma)')
-        p.add_option('--nevtsperproc'  ,type='int'   ,default=int(2e5)              ,dest='nevtsperproc'  ,help='Number of events per subprocess')
+        p.add_option('--nevtsperproc'  ,type='int'   ,default=int(4e5)              ,dest='nevtsperproc'  ,help='Number of events per subprocess')
         #p.add_option('--filetype')
 
         (self.options,self.args) = p.parse_args()
@@ -56,6 +63,79 @@ class PyParallelize :
         self.makeOutputDirectories()
 
         return
+
+    def deleteFilesFromLocal(self,args) :
+        if not self.options.child :
+            return
+        if not (self.options.runmode == 'condor') :
+            return
+
+        #
+        # Please! Do not delete the original file!
+        #
+        for arg in args :
+            if '/' in arg : continue
+            os.system('rm %s'%arg)
+
+        return
+
+    def copyFilesToLocal(self,args) :
+        if not self.options.child :
+            return args
+        if not (self.options.runmode == 'condor') :
+            return args
+        if (socket.gethostname() == 'at3i00.hep.upenn.edu') :
+            return args
+
+        while len(os.listdir(self.copyWaitDir)) > 19 :
+            print 'Waiting to copy files.'
+            time.sleep(15)
+
+        ctime = datetime.datetime.now()
+        thetime = ctime.strftime('%Y-%m-%d_%H-%M-%S.%f')
+        id = self.options.out.split('/')[-1].replace('.root','')
+        self.copyWaitName = '%s/%s%s.log'%(self.copyWaitDir,thetime,id)
+        file = open(self.copyWaitName,'w')
+        file.write(self.copyWaitName+'\n')
+        file.close()
+
+        new_args = []
+        for arg in args :
+
+#             special_str = ''
+#             for s in ['ttbar','ztt','wminenu','wplusenu','mc12','data12'] :
+#                 if s in arg :
+#                     special_str = s
+#                     break
+
+#             if special_str : special_str += '_'
+#             new_arg = special_str + arg.split('/')[-1]
+            new_arg = arg.replace('/','_')
+
+            print 'cp %s %s'%(arg,new_arg)
+            os.system('cp %s %s'%(arg,new_arg))
+            print 'os.getcwd()',os.getcwd()
+            print 'os.listdir(.)'
+            print os.listdir('.')
+            new_args.append(new_arg)
+
+        print '########################################################'
+        print '########################################################'
+        print '########################################################'
+        print '########################################################'
+        print 'OLD ARGS:'
+        print args
+        print 'NEW ARGS:'
+        print new_args
+        print '########################################################'
+        print '########################################################'
+        print '########################################################'
+        print '########################################################'
+        
+        if os.path.isfile(self.copyWaitName) :
+            os.remove(self.copyWaitName)
+
+        return new_args
 
     def Reset(self,options,args) :
         self.options = options
@@ -188,8 +268,8 @@ class PyParallelize :
         if not runmode : runmode = self.options.runmode
         if not script : script = self.script
 
-        for filestr in filestrlist :
-            i = filestrlist.index(filestr)
+        for i,filestr in enumerate(filestrlist) :
+            print 'filestr:',filestr
             filetup = self.getFiles(filestr)
 
             c,eventcounter,subfiles = -1,0,[]
@@ -204,10 +284,15 @@ class PyParallelize :
                     # submit
                     #
                     input_id = 'File%02d'%i
-                    if 'mc' in subfiles[0]       : input_id = 'mc'
-                    if 'samesign' in subfiles[0] : input_id = 'samesign'
-                    if 'EWR' in subfiles[0]      : input_id = 'EWR'
-                    if 'signal' in subfiles[0]   : input_id = 'signal'
+                    if 'ttbar' in subfiles[0]      : input_id = 'ttbar'
+                    elif 'ztt' in subfiles[0]      : input_id = 'ztt'
+                    elif 'zee' in subfiles[0]      : input_id = 'zee'
+                    elif 'wminenu' in subfiles[0]  : input_id = 'wminenu'
+                    elif 'wplusenu' in subfiles[0] : input_id = 'wplusenu'
+                    elif 'mc12' in subfiles[0]     : input_id = 'mc12'
+                    elif 'samesign' in subfiles[0] : input_id = 'samesign'
+                    elif 'EWR' in subfiles[0]      : input_id = 'EWR'
+                    elif 'signal' in subfiles[0]   : input_id = 'signal'
                     input_id += 'Group%05d'%c
                     outputlog = self.dirs['logdir']+self.getFileName(nloop,input_id)
                     outfile   = self.getFileName(nloop,input_id)+'.root'
@@ -238,6 +323,7 @@ class PyParallelize :
         #
         # check for a summary list 
         #
+        #self.debug = True
         basedir = filestring.replace('.root','').replace('*','')
         if self.debug : print basedir
         if 'filesummary.txt' in os.listdir(basedir) :
@@ -299,7 +385,7 @@ class PyParallelize :
                 if not theoptions[k] : continue # no false flags
             if theoptions[k] == '' : continue
             if k in ['nloop','first','last','rootfiles','out'] : continue
-            if k in ['firstloop','lastloop','nevtsperproc','runmode','nosubmit'] : continue
+            if k in ['firstloop','lastloop','nevtsperproc','nosubmit'] : continue
             if k in notthese : continue
             if theoptions[k] == self.p.defaults[k] : continue
             if self.debug : print 'Adding option',k

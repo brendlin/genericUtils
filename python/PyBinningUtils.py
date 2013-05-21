@@ -1,5 +1,5 @@
 from itertools import product
-from ROOT import TH1F
+from ROOT import TH1F,TH2F
 
 from genericUtils.PyGenericUtils import MakeListMatrix
 
@@ -17,6 +17,10 @@ def binStrToList(the_string) :
 
 def getBinName(et,eta,ip=0,iptype='',key='',underscore=True
                ,et_bins=LikelihoodEtBins,eta_bins=LikelihoodEtaBins):
+
+#     print 'et',et,'eta',eta
+#     print et_bins
+#     print eta_bins
     filestr =  ('_' if underscore else '')+(key+'_' if key else '')
     if not iptype :
         filestr += 'et%deta%2.2f' % (int(et_bins[et]), eta_bins[eta])

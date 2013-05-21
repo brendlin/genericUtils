@@ -67,11 +67,13 @@ def GetListOfKeyNames(file,dir='') :
         return list(i.GetName() for i in file.GetListOfKeys()) 
 
 def MakeDir(file,dir,superdir='') :
-    if dir not in GetListOfKeyNames(file,superdir) :
-        if superdir :
-            file.GetDirectory(superdir).mkdir(dir)
-        else :
-            file.mkdir(dir)
+    if superdir : dir = '/'.join(superdir,dir)
+    MakeDirV2(file,dir)
+#     if dir not in GetListOfKeyNames(file,superdir) :
+#         if superdir :
+#             file.GetDirectory(superdir).mkdir(dir)
+#         else :
+#             file.mkdir(dir)
     return
 
 def MakeDirV2(file,dir) :
@@ -106,6 +108,8 @@ def getTree(file,tree) :
     returntree = 0
     for item in file.GetListOfKeys() :
         itree = item.ReadObj()
+        #if itree.GetName() != tree : continue
+        if itree.GetName() not in ['photon','egamma','physics'] : continue
         if type(itree) == type(TTree()) :
             ievents = int(itree.GetEntries())
             if ievents > nEvents :

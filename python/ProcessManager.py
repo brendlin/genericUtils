@@ -5,6 +5,7 @@ import time   # time accounting
 import shlex, subprocess # subprocessing
 from ROOT import TFile,TObject
 from genericUtils.PyGenericUtils import MakeDirV2
+from genericUtils.PyConfigUtils import printConfigs
 
 #--------------------------------------------------------------------------------
 class kBatchLocal :
@@ -126,6 +127,12 @@ class condorSubmit :
 
 #--------------------------------------------------------------------------------
 def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='/tmp/kurb/tmphadd/') :
+    if not os.path.isdir(tmpdir) :
+        os.mkdir(tmpdir)
+    from time import strftime,localtime
+    tmpdir = tmpdir+strftime("%d_%m_%Y_%H_%M_%S", localtime())+'/'
+    if not os.path.isdir(tmpdir) :
+        os.mkdir(tmpdir)    
     filelist = []
     filelist2 = []
     for i in os.listdir(dir) :
@@ -133,11 +140,9 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='/tmp/kurb/tmphadd/') :
             if i == outname : continue
             if 'Iter' in i : continue
             filelist.append(dir+'/'+i)
-    if not os.path.isdir(tmpdir) :
-        os.mkdir(tmpdir)
 
     filelist.sort()
-    Batch = kBatchLocal(13)
+    Batch = kBatchLocal(15)
 
     # each iter
     for k in range(100) :
@@ -171,6 +176,7 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='/tmp/kurb/tmphadd/') :
         
     os.system('mv '+tmpdir+'/'+outname+' '+dir)
     print 'Hadd succeeded.'
+    os.system('rm '+tmpdir+'/*')
     return
 
 #--------------------------------------------------------------------------------
@@ -257,50 +263,52 @@ def GetInHMS(seconds):
 
 #--------------------------------------------------------------------------------
 # Define waiting function
-def wait(runMode,name,subprocs = 0) :
-    if runMode == 'batch' :
-        print 'Batch progress bar < =',
-        while os.popen('bjobs -w').read().find(name) != -1 :
-            print '=',
-            time.sleep(15)
-    elif runMode == 'local' :
-        print 'waiting for local jobs to finish...'
-        for subproc in subprocs :
-            subproc.wait()
-    print '>'
-    return
+# def wait(runMode,name,subprocs = 0) :
+#     if runMode == 'batch' :
+#         print 'Batch progress bar < =',
+#         while os.popen('bjobs -w').read().find(name) != -1 :
+#             print '=',
+#             time.sleep(15)
+#     elif runMode == 'local' :
+#         print 'waiting for local jobs to finish...'
+#         for subproc in subprocs :
+#             subproc.wait()
+#     print '>'
+#     return
 
 #--------------------------------------------------------------------------------
-def wait2(runMode,name,subprocs = 0,rmclass=False) :
-    if runMode == 'batch' :
-        print 'Batch progress bar < =',
-        while os.popen('bjobs -w').read().find(name) != -1 :
-            print '=',
-            time.sleep(15)
-    elif runMode == 'local' :
-        jobsFinished = False
-        #print 'waiting for local jobs to finish...'
-        #while not jobsFinished :
-        for i in range(1000000) :
-            nleft = 0
-            for subproc in subprocs :
-                tmp = subproc.poll()
-                nleft += 1 if (tmp == None) else 0
-            if nleft == 0 :
-                #jobsFinished = True
-                break
-            else :
-                stdout.write("\rJobs left: %d (%s)" % (nleft,GetInHMS(i*15)))
-                stdout.flush()
-                if rmclass :
-                    os.system('rm weights/*.class.C')
-                time.sleep(15)
-    print '>'
-    return
+# def wait2(runMode,name,subprocs = 0,rmclass=False) :
+#     if runMode == 'batch' :
+#         print 'Batch progress bar < =',
+#         while os.popen('bjobs -w').read().find(name) != -1 :
+#             print '=',
+#             time.sleep(15)
+#     elif runMode == 'local' :
+#         jobsFinished = False
+#         #print 'waiting for local jobs to finish...'
+#         #while not jobsFinished :
+#         for i in range(1000000) :
+#             nleft = 0
+#             for subproc in subprocs :
+#                 tmp = subproc.poll()
+#                 nleft += 1 if (tmp == None) else 0
+#             if nleft == 0 :
+#                 #jobsFinished = True
+#                 break
+#             else :
+#                 stdout.write("\rJobs left: %d (%s)" % (nleft,GetInHMS(i*15)))
+#                 stdout.flush()
+#                 if rmclass :
+#                     os.system('rm weights/*.class.C')
+#                 time.sleep(15)
+#     print '>'
+#     return
 
 #--------------------------------------------------------------------------------
 def jobFinishedSendEmail(script,config,dir,eventselection='',time=''
-                         ,sender='kBatch <kurb@at3i00.upenn.edu>',recipient='kurt.brendlinger@gmail.com') :
+                         ,configdicts=[]
+                         ,sender='kBatch <kurb@at3i00.upenn.edu>'
+                         ,recipient='kurt.brendlinger@gmail.com') :
     import smtplib
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
@@ -313,6 +321,8 @@ def jobFinishedSendEmail(script,config,dir,eventselection='',time=''
         body   += 'eventselection : %sENTER'%eventselection
     if time :
         body   += 'elapsed time   : %sENTER'%time
+    if configdicts :
+        body   += printConfigs(configdicts,doPrint=False).replace('\n','ENTER')
 
     html  = '<html><font face=\"Courier New, Courier, monospace\">'
     html += body.replace('ENTER','<br>\n').replace(' ','&nbsp;')
@@ -320,8 +330,8 @@ def jobFinishedSendEmail(script,config,dir,eventselection='',time=''
 
     body = body.replace('ENTER','\n')
 
-    print body
-    print html
+    #print body
+    #print html
 
     #msg = MIMEText(body)
     msg = MIMEMultipart('alternative')
