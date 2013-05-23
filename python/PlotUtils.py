@@ -1,10 +1,11 @@
-from ROOT import TCanvas,TLegend,TGraph,TGraphErrors,TH1F,gROOT
+from ROOT import TCanvas,TLegend,TGraph,TGraphErrors,TH1F,gROOT,TF1
 from ROOT import TLine,TMath,TPad,gStyle,TROOT,TText,TProfile,TH2F,TH1D
 from ROOT import kRed,kMagenta,kBlue,kCyan,kGreen,kGray,kBlack,kOrange,kYellow
 from ROOT import TLatex,TAxis
 #import AtlasStyle
 from array import array
 gROOT.SetBatch(True)
+
 gStyle.SetStatColor(0)
 gStyle.SetTitleColor(0)
 gStyle.SetCanvasColor(0)
@@ -12,7 +13,6 @@ gStyle.SetPadColor(0)
 gStyle.SetPadBorderMode(0)
 gStyle.SetCanvasBorderMode(0)
 gStyle.SetFrameBorderMode(0)
-#gStyle.SetOptStat(1110)
 gStyle.SetOptStat(0)
 gStyle.SetStatH(0.3)
 gStyle.SetStatW(0.3)
@@ -22,18 +22,16 @@ gStyle.SetTitleY(1.)
 gStyle.SetTitleX(.1)
 gStyle.SetTitleBorderSize(0)
 gStyle.SetHistLineWidth(2)
-gStyle.SetLineWidth(2)
+gStyle.SetLineWidth(1)
 gStyle.SetFrameFillColor(0)
 gStyle.SetOptTitle(0)
-#
-gStyle.SetPadTopMargin(0.1)
-#gStyle.SetPadBottomMargin(0.1)
-gStyle.SetPadLeftMargin(0.15)
-#gStyle.SetPadRightMargin(0.1)
 #
 gStyle.SetTitleFontSize(0.4)
 gStyle.SetTitleYOffset(1.75)
 gStyle.SetPaintTextFormat('4.1f ')
+gStyle.SetEndErrorSize(3)
+
+#gStyle.SetOptStat(1110)
 
 #color = [1,3,2,4,6,9,11,46,49,12,13,14,15,16,5,7,8,10,17,18,19,20,21,22,23,24,25,26]
 color = [kBlack+0,kRed+1,kBlue+1,kGreen+1,kMagenta+1,kCyan+1,kOrange+1
@@ -49,6 +47,7 @@ markerstyles = [20,21,22,23,24,25,26,27]
 
 graphtypes = [type(TGraph()),type(TGraphErrors())]
 histtypes = [type(TH1F()),type(TH1D()),type(TProfile()),type(TH2F())]
+formulatypes = [type(TF1())]
 h1types = [type(TH1F()),type(TH1D()),type(TProfile())]
 #listtypes = [type(TList),type(THashList())]
 
@@ -78,11 +77,17 @@ def GetReasonableRanges(plots,ranges=0,log=False):
             localmaxx = TMath.MaxElement(plots[pl].GetN(),plots[pl].GetX())
             localminy = TMath.MinElement(plots[pl].GetN(),plots[pl].GetY())
             localmaxy = TMath.MaxElement(plots[pl].GetN(),plots[pl].GetY())
+        if type(plots[pl]) in formulatypes :
+            pass
+            localminx = plots[pl].GetXmin()
+            localmaxx = plots[pl].GetXmax()
+            localminy = plots[pl].GetMinimum()
+            localmaxy = plots[pl].GetMaximum()
         elif type(plots[pl]) in h1types :
             localminx = plots[pl].GetBinLowEdge(1)
             localmaxx = plots[pl].GetBinLowEdge(plots[pl].GetNbinsX()+1)
             localminy = plots[pl].GetMinimum()
-            localmaxy = plots[pl].GetMaximum()
+            localmaxy = plots[pl].GetMaximum()        
         if not pl :
             minx,maxx,miny,maxy = localminx,localmaxx,localminy,localmaxy
         minx = localminx if (localminx < minx) else minx
@@ -116,8 +121,8 @@ def writeCan(file,dir,can,name) :
     can.Write(name)
 
 class SmartPlot :
-    def __init__(self,file,dir,name,plots,drawopt='',ranges=0,legendpos='topright',markersize=1
-                 ,markerstyle=20
+    def __init__(self,file,dir,name,plots,drawopt='E1',ranges=0,legendpos='topright',markersize=1.0
+                 ,markerstyle=20,drawtitle=True
                  ,normalized=False,writecan=False,log=False,drawleg=True) :
 
         # ranges : [[xmin,xmax],[ymin,ymax]]
@@ -130,6 +135,7 @@ class SmartPlot :
         self.normalized = normalized
         self.markersize = markersize
         self.markerstyle = markerstyle
+        self.drawtitle = drawtitle
         self.nplots = 0
         self.legendpos = legendpos
         self.normplots = []
@@ -160,8 +166,6 @@ class SmartPlot :
         self.plots[0].GetXaxis().SetLabelSize(0.04)
         self.plots[0].GetXaxis().SetLabelFont(42)
 
-        if 'colz' in drawopt :
-            self.can.SetRightMargin(0.18)
         self.can.cd()
 
         legHeight = 0.06*len(self.plots)
@@ -195,9 +199,6 @@ class SmartPlot :
         if type(self.plots[0]) == type(TH2F()) :
             self.can.SetLogz(self.log)
 
-        # Set up plots
-        self.SetColors()
-        self.SetStyles()
         self.createLegend(x1,y1,x2,y2)
         self.SetLegend()
 
@@ -217,25 +218,43 @@ class SmartPlot :
             same_str = ''
             if (type(self.plots[pl]) in histtypes) : same_str = 'same'
             if (type(self.plots[pl]) in graphtypes) : same_str = ''
+            if (type(self.plots[pl]) in formulatypes) : 
+                same_str = 'same'
             if self.normalized :
                 self.normplots.append(self.plots[pl].DrawNormalized(same_str+drawopt))
                 if not self.normplots[-1] : self.normplots[-1] = TH1F()
             else :
                 self.plots[pl].Draw(same_str+drawopt)
-                
+        
         if self.normalized :
             GetReasonableRanges(self.normplots,self.ranges,log=self.log)
 
+        # Set up plots
+        self.SetColors()
+        self.SetStyles()
+        self.SetMarkers(these_marker_sizes=0,these_styles=0)
+
         if ('colz' not in self.drawopt) and self.drawleg :
             self.leg.Draw()
+
+        self.can.SetBottomMargin(0.10) # equivalent to Style.SetPadBottomMargin(0.10)
+        self.can.SetLeftMargin  (0.16) # equivalent to Style.SetPadLeftMargin  (0.16)
+        self.can.SetTopMargin   (0.05) # equivalent to Style.SetPadTopMargin   (0.05)
+        self.can.SetRightMargin (0.05) # equivalent to Style.SetPadRightMargin (0.05)
+
+        if 'colz' in drawopt :
+            self.can.SetRightMargin(0.18)
+
         t=TLatex()
-        t.SetNDC()
-        t.SetTextSize(0.050)
-        t.SetTextFont(42)
-        #t.DrawTextNDC(0.1,0.93,self.name)
-        t.DrawLatex(0.1,0.93,self.name)
+        if self.drawtitle :
+            t.SetNDC()
+            t.SetTextSize(0.050)
+            t.SetTextFont(42)
+            #t.DrawTextNDC(0.1,0.93,self.name)
+            t.DrawLatex(0.1,0.93,self.name)
+            self.can.SetTopMargin(0.1)
+
         self.can.SetLogy(self.log)
-        #print 'setting logy to',self.log
         if writecan : self.writeCan(file)
         return
 
@@ -246,15 +265,17 @@ class SmartPlot :
             self.plots[pl].SetMarkerColor(these_colors[pl])
             self.plots[pl].SetLineColor(these_colors[pl])
             self.plots[pl].SetMarkerSize(self.markersize)
+            # self.plots[pl].SetFillColor(these_colors[pl])
             if (self.plots[pl].GetFillStyle() != 1001) :
                 self.plots[pl].SetFillColor(these_colors[pl])
 
         for pl in range(len(self.normplots)) :
             if not self.normplots[pl] : continue
-            print 'Setting norms!'
             self.normplots[pl].SetMarkerColor(these_colors[pl])
             self.normplots[pl].SetLineColor(these_colors[pl])
             self.normplots[pl].SetMarkerSize(self.markersize)
+            #self.normplots[pl].SetFillColor(these_colors[pl])
+            #self.normplots[pl].SetFillColor(these_colors[pl])
             if (self.normplots[pl].GetFillStyle() != 1001) :
                 self.normplots[pl].SetFillColor(these_colors[pl])
         return
@@ -290,7 +311,7 @@ class SmartPlot :
         for pl in range(len(self.plots)) :
             if pl in skip : continue
             # print 'adding entry',self.plots[pl].GetName()
-            self.leg.AddEntry(self.plots[pl],self.plots[pl].GetName(),'le')
+            self.leg.AddEntry(self.plots[pl],self.plots[pl].GetName(),'ple')
         return
 
     def writeCan(self,file) :
@@ -302,7 +323,7 @@ class SmartPlot :
         self.can.Write(self.name)
 
     def createLegend(self,x1,y1,x2,y2) :
-        #print x1,x2,y1,y2
+        #print x1,y1,x2,y2
         if self.can.GetPrimitive('mylegend') :
             self.can.GetPrimitive('mylegend').Delete()
         self.leg = TLegend(x1,y1,x2,y2)
@@ -340,7 +361,7 @@ class SmartPlot :
         self.can.cd()
         for pl in range(len(plots)) : # Don't do 'for plot in plots!'
             self.leg.AddEntry(plots[pl],plots[pl].GetName(),'le')
-            plots[pl].SetMarkerSize(self.markersize)
+            # plots[pl].SetMarkerSize(self.markersize)
             plots[pl].SetLineWidth(2)
             plots[pl].SetLineColor(color[self.nplots])
             plots[pl].SetMarkerColor(color[self.nplots])
@@ -366,5 +387,31 @@ class SmartPlot :
         if angle : t.SetTextAngle(angle)
         t.DrawText(x,y,text)
 
+    def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035) :
+        self.can.cd()
+        t = TLatex()
+        t.SetTextSize(0.04)
+        t.SetTextFont(42)
+        if align == 'R': t.SetTextAlign(31)
+        if angle : t.SetTextAngle(angle)
+        t.DrawTextNDC(x,y,text)
 
+    def CleanNameForMacro(self,nm) :
+        return ''.join(ch for ch in nm if ch.isalnum())
 
+    def SaveMacro(self,name= '') :
+        for p in range(len(self.plots)) :
+            key = self.CleanNameForMacro(self.plots[p].GetName())
+            self.plots[p].SetName(key)
+            key = self.CleanNameForMacro(self.plots[p].GetTitle())
+            self.plots[p].SetTitle(key)
+        self.can.SetName(self.CleanNameForMacro(self.can.GetName()))
+        self.can.SetTitle(self.CleanNameForMacro(self.can.GetTitle()))
+        if not name : name = self.can.GetName()
+        self.can.SaveAs(name+'.C')
+        return
+
+    def SavePDF(self,name='') :
+        if not name : name = self.CleanNameForMacro(self.can.GetName())
+        self.can.SaveAs(name+'.pdf')
+        return
