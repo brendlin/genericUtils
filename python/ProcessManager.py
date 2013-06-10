@@ -23,7 +23,6 @@ class kBatchLocal :
         self.errfiles[-1].write('\n\n'+' '.join(cmd)+'\n\n')
         self.outfiles[-1].write('\n\n'+' '.join(cmd)+'\n\n')
         self.poll()
-        #print logname
         if doprint : print ' '.join(cmd)
         time.sleep(0.5)
         self.subprocs.append(subprocess.Popen(cmd,stdout=self.outfiles[-1],stderr=self.errfiles[-1]))
@@ -60,8 +59,6 @@ class kBatchLocal :
 #--------------------------------------------------------------------------------
 class condorSubmit :
     def __init__(self,maxnjobs=15) :
-        #self.outfiles = []
-        #self.errfiles = []
         self.subprocs = []
         self.jobfiles = []
         self.maxnjobs = maxnjobs
@@ -87,7 +84,6 @@ class condorSubmit :
         self.jobfiles[-1].close()
 
         print 'condor_submit '+logname+'.job'
-        #os.system('condor_submit '+logname+'.job')
         jobs = subprocess.Popen('condor_submit '+logname+'.job',shell=True,stdout=subprocess.PIPE)
         self.jobids.append(jobs.communicate()[0].split(' ')[-1].replace('.','').replace('\n',''))
         time.sleep(0.5)
@@ -97,11 +93,8 @@ class condorSubmit :
     def wait(self) :
         for i in range(1000000) :
             jobs = subprocess.Popen('condor_q -submitter '+os.getenv('USER'),shell=True,stdout=subprocess.PIPE)
-            # output = jobs.communicate()[0][35:]
             output = jobs.communicate()[0]
-            #print output
-            condor_error_msgs = ['contact the condor_collector','Failed to end classad message']
-            if True in list(a in output for a in condor_error_msgs) :
+            if not output.replace(' ','') :
                 display = 'Condor Problem! Waiting...'
                 stdout.write("\r%s: (%s) (%d jobs left in process)" % (display,GetInHMS(time.time() - self.start_time),len(self.jobids)))
                 stdout.flush()
@@ -114,8 +107,6 @@ class condorSubmit :
                 if job not in output :
                     self.jobids.remove(job)
                     c -= 1
-            #if os.getenv('USER') not in output :
-            #    break
             if not self.jobids : break
             else :
                 display = output[35:].split('\n\n')[-1].rstrip('\n')
@@ -158,7 +149,6 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='/tmp/kurb/tmphadd/') :
                 if len(filelist) <= nfilesperjob :
                     tmpoutname = [tmpdir+'/'+outname]
                 else :
-                    #tmpoutname = [tmpdir+'/Iter%02d'+str(k)+'_'+str(nsubs)+'_'+outname % (k,nsubs)]
                     tmpoutname = [tmpdir+'/Iter%02d_%02d_%s' % (k,nsubs,outname)]
                     nsubs += 1
 
@@ -262,49 +252,6 @@ def GetInHMS(seconds):
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 #--------------------------------------------------------------------------------
-# Define waiting function
-# def wait(runMode,name,subprocs = 0) :
-#     if runMode == 'batch' :
-#         print 'Batch progress bar < =',
-#         while os.popen('bjobs -w').read().find(name) != -1 :
-#             print '=',
-#             time.sleep(15)
-#     elif runMode == 'local' :
-#         print 'waiting for local jobs to finish...'
-#         for subproc in subprocs :
-#             subproc.wait()
-#     print '>'
-#     return
-
-#--------------------------------------------------------------------------------
-# def wait2(runMode,name,subprocs = 0,rmclass=False) :
-#     if runMode == 'batch' :
-#         print 'Batch progress bar < =',
-#         while os.popen('bjobs -w').read().find(name) != -1 :
-#             print '=',
-#             time.sleep(15)
-#     elif runMode == 'local' :
-#         jobsFinished = False
-#         #print 'waiting for local jobs to finish...'
-#         #while not jobsFinished :
-#         for i in range(1000000) :
-#             nleft = 0
-#             for subproc in subprocs :
-#                 tmp = subproc.poll()
-#                 nleft += 1 if (tmp == None) else 0
-#             if nleft == 0 :
-#                 #jobsFinished = True
-#                 break
-#             else :
-#                 stdout.write("\rJobs left: %d (%s)" % (nleft,GetInHMS(i*15)))
-#                 stdout.flush()
-#                 if rmclass :
-#                     os.system('rm weights/*.class.C')
-#                 time.sleep(15)
-#     print '>'
-#     return
-
-#--------------------------------------------------------------------------------
 def jobFinishedSendEmail(script,config,dir,eventselection='',time=''
                          ,configdicts=[]
                          ,sender='kBatch <kurb@at3i00.upenn.edu>'
@@ -330,10 +277,6 @@ def jobFinishedSendEmail(script,config,dir,eventselection='',time=''
 
     body = body.replace('ENTER','\n')
 
-    #print body
-    #print html
-
-    #msg = MIMEText(body)
     msg = MIMEMultipart('alternative')
     part1 = MIMEText(body, 'plain')
     part2 = MIMEText(html, 'html')
