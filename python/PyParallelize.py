@@ -277,7 +277,7 @@ class PyParallelize :
                 c += 1
                 eventcounter += nevents
                 subfiles.append(file)
-                if eventcounter < self.options.nevtsperproc :
+                if eventcounter < self.options.nevtsperproc and (file != filetup[-1][0]) :
                     continue
                 else :
                     #
@@ -340,7 +340,7 @@ class PyParallelize :
             filesummary = open(os.path.join(basedir,'filesummary.txt'),'w')
             for tup in os.walk(basedir) :
                 if self.debug : print tup
-                for file in tup[2] :
+                for file in sorted(tup[2]) :
                     if self.debug : print file
                     if fnmatch.fnmatch(file, '*.root*'):
                         fileFullPath = os.path.join(tup[0],file)
