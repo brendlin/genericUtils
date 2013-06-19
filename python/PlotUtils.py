@@ -121,7 +121,8 @@ def writeCan(file,dir,can,name) :
     can.Write(name)
 
 class SmartPlot :
-    def __init__(self,file,dir,name,plots,drawopt='E1',ranges=0,legendpos='topright',markersize=1.0
+    def __init__(self,name,plots,file=0,dir=''
+                 ,drawopt='E1',ranges=0,legendpos='topright',markersize=1.0
                  ,markerstyle=20,drawtitle=True
                  ,normalized=False,writecan=False,log=False,drawleg=True) :
 
@@ -385,16 +386,22 @@ class SmartPlot :
         t.SetTextSize(0.035)
         if align == 'R': t.SetTextAlign(31)
         if angle : t.SetTextAngle(angle)
-        t.DrawText(x,y,text)
+        t.DrawLatex(x,y,text)
 
     def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035) :
         self.can.cd()
         t = TLatex()
+        t.SetNDC()
         t.SetTextSize(0.04)
         t.SetTextFont(42)
         if align == 'R': t.SetTextAlign(31)
         if angle : t.SetTextAngle(angle)
-        t.DrawTextNDC(x,y,text)
+        t.DrawLatex(x,y,text)
+
+    def SetAxisLabels(self,xlabel,ylabel) :
+        if len(self.plots) :
+            self.plots[0].GetXaxis().SetTitle(xlabel)
+            self.plots[0].GetYaxis().SetTitle(ylabel)
 
     def CleanNameForMacro(self,nm) :
         return ''.join(ch for ch in nm if ch.isalnum())
@@ -412,6 +419,19 @@ class SmartPlot :
         return
 
     def SavePDF(self,name='') :
+        print name
         if not name : name = self.CleanNameForMacro(self.can.GetName())
+        print 'saving as',name+'.pdf'
         self.can.SaveAs(name+'.pdf')
         return
+
+def SmartPlotify(can,name='') :
+    plots = []
+    for i in list(a.GetName() for a in can.GetListOfPrimitives()) :
+        if type(can.GetPrimitive(i)) in histtypes :
+            plots.append(can.GetPrimitive(i).Clone())
+        if type(can.GetPrimitive(i)) == type(TLatex()) :
+            name1 = can.GetPrimitive(i).GetTitle()+'_new'
+
+    return SmartPlot(0,'',name if name else name1,plots,drawopt='')
+
