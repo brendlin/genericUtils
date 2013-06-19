@@ -120,7 +120,16 @@ def writeCan(file,dir,can,name) :
     file.cd(dir)
     can.Write(name)
 
-class SmartPlot :
+def SmartPlot(file,dir,name,plots
+              ,drawopt='E1',ranges=0,legendpos='topright',markersize=1.0
+              ,markerstyle=20,drawtitle=True
+              ,normalized=False,writecan=False,log=False,drawleg=True) :
+    return PlotObject(name,plots,file=file,dir=dir
+                      ,drawopt=drawopt,ranges=ranges,legendpos=legendpos,markersize=markersize
+                      ,markerstyle=markerstyle,drawtitle=drawtitle
+                      ,normalized=normalized,writecan=writecan,log=log,drawleg=drawleg)
+
+class PlotObject :
     def __init__(self,name,plots,file=0,dir=''
                  ,drawopt='E1',ranges=0,legendpos='topright',markersize=1.0
                  ,markerstyle=20,drawtitle=True
@@ -426,6 +435,9 @@ class SmartPlot :
         return
 
 def SmartPlotify(can,name='') :
+    return PlotObjectify(can,name=name)
+
+def PlotObjectify(can,name='') :
     plots = []
     for i in list(a.GetName() for a in can.GetListOfPrimitives()) :
         if type(can.GetPrimitive(i)) in histtypes :
@@ -433,5 +445,5 @@ def SmartPlotify(can,name='') :
         if type(can.GetPrimitive(i)) == type(TLatex()) :
             name1 = can.GetPrimitive(i).GetTitle()+'_new'
 
-    return SmartPlot(0,'',name if name else name1,plots,drawopt='')
+    return PlotObject(name if name else name1,plots,drawopt='')
 
