@@ -51,6 +51,21 @@ formulatypes = [type(TF1())]
 h1types = [type(TH1F()),type(TH1D()),type(TProfile())]
 #listtypes = [type(TList),type(THashList())]
 
+def AddWatermark(can,x0=0.,y0=0.,x1=.1,y1=.1) :
+    from ROOT import TASImage
+    #a = TASImage('shield.color.png')
+    a = TASImage('penn_fulllogo_black.pdf')
+    p = TPad('watermark','watermark',x0,y0,x1,y1)
+    p.SetFillColor(42)
+    p.SetFillColor(0)
+    #p.SetFillStyle(4050)
+    p.SetFillStyle(0)
+    p.cd()
+    a.Draw()
+    can.cd()
+    p.Draw("sames")
+    return a,p
+
 def GetZaxisReasonableRanges(hist,forcelow=None,forcehigh=None) :
     if type(hist) is not type(TH2F()) :
         print 'Error in Z axis.'
@@ -133,14 +148,15 @@ class PlotObject :
     def __init__(self,name,plots,file=0,dir=''
                  ,drawopt='E1',ranges=0,legendpos='topright',markersize=1.0
                  ,markerstyle=20,drawtitle=True
-                 ,normalized=False,writecan=False,log=False,drawleg=True) :
+                 ,normalized=False,writecan=False,log=False,drawleg=True
+                 ,canw=500,canh=500) :
 
         # ranges : [[xmin,xmax],[ymin,ymax]]
         # i.e. [None,[.84,1.02]]
         
         self.dir = dir
         self.name = name
-        self.can = TCanvas(name,name,500,500)
+        self.can = TCanvas(name,name,canw,canh)
         self.log = log
         self.normalized = normalized
         self.markersize = markersize
@@ -255,18 +271,26 @@ class PlotObject :
         if 'colz' in drawopt :
             self.can.SetRightMargin(0.18)
 
-        t=TLatex()
-        if self.drawtitle :
-            t.SetNDC()
-            t.SetTextSize(0.050)
-            t.SetTextFont(42)
-            #t.DrawTextNDC(0.1,0.93,self.name)
-            t.DrawLatex(0.1,0.93,self.name)
-            self.can.SetTopMargin(0.1)
+        self.DrawTitle()
 
         self.can.SetLogy(self.log)
         if writecan : self.writeCan(file)
         return
+
+    def DrawTitle(self,title='',textsize=0.050,x=0.1,y=0.93) :
+        if self.can.GetPrimitive('title') :
+            self.can.GetPrimitive('title').Delete()
+        if not title :
+            title = self.name
+        self.title=TLatex(x,y,title)
+        self.title.SetName('title')
+        if self.drawtitle :
+            self.title.SetNDC()
+            self.title.SetTextSize(textsize)
+            self.title.SetTextFont(42)
+            self.can.cd()
+            self.title.Draw()
+            self.can.SetTopMargin(0.1)
 
     def SetColors(self,these_colors=color) :
 
@@ -356,13 +380,15 @@ class PlotObject :
         a = TLine()
         a.SetLineColor(color)
         a.SetLineStyle(style)
+        a.SetLineWidth(2)
         a.DrawLine((self.xmax-self.xmin)*pct[0],yval,(self.xmax-self.xmin)*pct[1],yval)
 
-    def DrawVertical(self,xval,color=1,pct=[0.,1.]) :
+    def DrawVertical(self,xval,color=1,pct=[0.,1.],style=1) :
         self.can.cd()
         a = TLine()
         a.SetLineColor(color)
         a.SetLineStyle(style)
+        a.SetLineWidth(2)
         a.DrawLine(xval,(self.ymax-self.ymin)*pct[0],xval,(self.ymax-self.ymin)*pct[1])
 
     def AddPlots(self,plots,drawopt='') :
