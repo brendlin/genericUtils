@@ -100,18 +100,21 @@ def getFile(filename) :
         tfile = TFile(filename,'READ')
     return tfile
 
-def getTree(file,tree) :
+def getTree(file,tree='') :
     nEvents = -1
     returntree = 0
     for item in file.GetListOfKeys() :
         itree = item.ReadObj()
-        #if itree.GetName() != tree : continue
+        if tree and itree.GetName() != tree : continue
         if itree.GetName() not in ['photon','egamma','physics'] : continue
         if type(itree) == type(TTree()) :
             ievents = int(itree.GetEntries())
             if ievents > nEvents :
                 nEvents = ievents
                 returntree = itree
+    if tree and (not returntree) :
+        print 'Error! Tree %s not found! Trying to find any tree.'%tree
+        return getTree(file)
     if not returntree : print 'Error! Tree not found!',file
     return returntree
 

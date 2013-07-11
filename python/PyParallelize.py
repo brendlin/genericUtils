@@ -32,12 +32,15 @@ class PyParallelize :
         p.add_option('--child' ,action='store_true',default=False     ,dest='child' ,help='Child process?')
         p.add_option('--nloop' ,type  ='int'       ,default=    0     ,dest='nloop' ,help='Loop number (from 0)')
         p.add_option('--out'   ,type  ='string'    ,default='out.root',dest='out'   ,help='Output file' )
+        p.add_option('--first' ,type  ='int'       ,default=    0     ,dest='first' ,help='First Event')
+        p.add_option('--last'  ,type  ='int'       ,default=   -1     ,dest='last'  ,help='Last Event')
 
         # for use in parent processes
         p.add_option('--n'        ,type='int'         ,default=-1             ,dest='n'       ,help='N events')
         p.add_option('--runmode'  ,type='string'      ,default='condor'       ,dest='runmode' ,help='Run mode (kbatch,condor)')
         p.add_option('--nosubmit' ,action='store_true',default=False          ,dest='nosubmit',help='Is a bkg file?')
         p.add_option('--steps'    ,type='string'      ,default='0,1,2,3,4,5,6',dest='steps'   ,help='Parent job steps')
+        p.add_option('--hadd'     ,action='store_true',default=False          ,dest='hadd'    ,help='Force hadd 0')
         p.add_option('--hadd0'    ,action='store_true',default=False          ,dest='hadd0'   ,help='Force hadd 0')
         p.add_option('--hadd1'    ,action='store_true',default=False          ,dest='hadd1'   ,help='Force hadd 1')
         p.add_option('--hadd2'    ,action='store_true',default=False          ,dest='hadd2'   ,help='Force hadd 2')
@@ -49,6 +52,7 @@ class PyParallelize :
         p.add_option('--dir'           ,type='string',default='test'   ,dest='dir'           ,help='Output directory' )
         p.add_option('--config-default',type='string',default='default',dest='config_default',help='default menu/alg configs')
         p.add_option('--nevtsperproc'  ,type='int'   ,default=int(4e5) ,dest='nevtsperproc'  ,help='Number of events per subprocess')
+        p.add_option('--treename'      ,type='string',default='photon'              ,dest='treename'      ,help='Tree name (e.g. egamma)')
         
         (self.options,self.args) = p.parse_args()
 
@@ -57,9 +61,9 @@ class PyParallelize :
         
         return
 
-    def parse_args(self) :
+    def parse_args(self,p) :
 
-        (self.options,self.args) = p.parse_args()
+        (options,args) = p.parse_args()
 
         #
         # do some additional parsing
@@ -410,6 +414,7 @@ class PyParallelize :
             if k in ['firstloop','lastloop','nevtsperproc','nosubmit'] : continue
             if k in ['steps'] : continue
             if k in notthese : continue
+            if k not in self.p.defaults.keys() : continue
             if theoptions[k] == self.p.defaults[k] : continue
             if self.debug : print 'Adding option',k
             if type(theoptions[k]) == type(True) :
