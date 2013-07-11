@@ -31,37 +31,73 @@ class PyParallelize :
         # for child processes
         p.add_option('--child' ,action='store_true',default=False     ,dest='child' ,help='Child process?')
         p.add_option('--nloop' ,type  ='int'       ,default=    0     ,dest='nloop' ,help='Loop number (from 0)')
-        p.add_option('--first' ,type  ='int'       ,default=    0     ,dest='first' ,help='First Event')
-        p.add_option('--last'  ,type  ='int'       ,default=   -1     ,dest='last'  ,help='Last Event')
-        p.add_option('--ismc'  ,action='store_true',default=False     ,dest='ismc'  ,help='Is an mc file?')
-        p.add_option('--isdata',action='store_true',default=False     ,dest='isdata',help='Is a data file?')
-        p.add_option('--isbkg' ,action='store_true',default=False     ,dest='isbkg' ,help='Is a bkg file?')
         p.add_option('--out'   ,type  ='string'    ,default='out.root',dest='out'   ,help='Output file' )
 
         # for use in parent processes
-        p.add_option('--n'        ,type='int'   ,default=-1      ,dest='n'        ,help='N events')
-        p.add_option('--runmode'  ,type='string',default='condor',dest='runmode'  ,help='Run mode ((kbatch,condor,)')
+        p.add_option('--n'        ,type='int'         ,default=-1             ,dest='n'       ,help='N events')
+        p.add_option('--runmode'  ,type='string'      ,default='condor'       ,dest='runmode' ,help='Run mode (kbatch,condor)')
+        p.add_option('--nosubmit' ,action='store_true',default=False          ,dest='nosubmit',help='Is a bkg file?')
+        p.add_option('--steps'    ,type='string'      ,default='0,1,2,3,4,5,6',dest='steps'   ,help='Parent job steps')
+        p.add_option('--hadd0'    ,action='store_true',default=False          ,dest='hadd0'   ,help='Force hadd 0')
+        p.add_option('--hadd1'    ,action='store_true',default=False          ,dest='hadd1'   ,help='Force hadd 1')
+        p.add_option('--hadd2'    ,action='store_true',default=False          ,dest='hadd2'   ,help='Force hadd 2')
+        # to be deprecated
         p.add_option('--firstloop',type='int'   ,default=0       ,dest='firstloop',help='First loop to execute')
         p.add_option('--lastloop' ,type='int'   ,default=99      ,dest='lastloop' ,help='Last loop to execute')
-        p.add_option('--nosubmit' ,action='store_true',default=False     ,dest='nosubmit' ,help='Is a bkg file?')
 
         # general purpose
-        p.add_option('--dir'           ,type='string',default='test'                ,dest='dir'           ,help='Output directory' )
+        p.add_option('--dir'           ,type='string',default='test'   ,dest='dir'           ,help='Output directory' )
+        p.add_option('--config-default',type='string',default='default',dest='config_default',help='default menu/alg configs')
+        p.add_option('--nevtsperproc'  ,type='int'   ,default=int(4e5) ,dest='nevtsperproc'  ,help='Number of events per subprocess')
+        
+        (self.options,self.args) = p.parse_args()
 
-        p.add_option('--config-default',type='string',default='default'             ,dest='config_default',help='default menu/alg configs')
-        p.add_option('--treename'      ,type='string',default='photon'              ,dest='treename'      ,help='Tree name (e.g. egamma)')
-        p.add_option('--nevtsperproc'  ,type='int'   ,default=int(4e5)              ,dest='nevtsperproc'  ,help='Number of events per subprocess')
-        #p.add_option('--filetype')
+        self.makeOutputDirectories(self.options)
+        self.SetupBatch(self.options)
+        
+        return
+
+    def parse_args(self) :
 
         (self.options,self.args) = p.parse_args()
-        self.submit = not self.options.nosubmit
-        if self.options.dir[0] != '/' : self.options.dir = os.getcwd()+'/'+self.options.dir
-        if self.options.runmode == 'kbatch' :
-            self.Batch = kBatchLocal()
-        elif self.options.runmode == 'condor' :
-            self.Batch = condorSubmit()
-        self.makeOutputDirectories()
 
+        #
+        # do some additional parsing
+        #
+        self.submit = not self.options.nosubmit
+        options.parent = not options.child
+
+        #
+        # The standard nomenclature for job steering
+        #
+        options.submit_loop_0  = (options.parent and '0' in options.steps)
+        options.run_loop_0     = (options.child and options.nloop == 0)
+        options.run_hadd_0     = options.hadd0 or (options.parent and '0' in options.steps) or options.hadd
+        options.run_analyze_0  = (options.parent and '1' in options.steps)
+        options.submit_loop_1  = (options.parent and '2' in options.steps)
+        options.run_loop_1     = (options.child and options.nloop == 1)
+        options.run_hadd_1     = options.hadd1 or (options.parent and '2' in options.steps)
+        options.run_analyze_1  = (options.parent and '3' in options.steps)
+        options.submit_loop_2  = (options.parent and '4' in options.steps)
+        options.run_loop_2     = (options.child and options.nloop == 2)
+        options.run_hadd_2     = options.hadd2 or (options.parent and '4' in options.steps)
+        options.run_analyze_2  = (options.parent and '5' in options.steps)
+
+        self.makeOutputDirectories(options)
+
+        self.options = options
+        self.args = args
+        return (self.options,self.args)
+
+    def SetupBatch(self,options) :
+        #
+        # Set up batch system
+        #
+        if options.runmode == 'kbatch' :
+            self.Batch = kBatchLocal()
+        elif options.runmode == 'condor' :
+            self.Batch = condorSubmit()
+        
         return
 
     def deleteFilesFromLocal(self,args) :
@@ -101,17 +137,7 @@ class PyParallelize :
 
         new_args = []
         for arg in args :
-
-#             special_str = ''
-#             for s in ['ttbar','ztt','wminenu','wplusenu','mc12','data12'] :
-#                 if s in arg :
-#                     special_str = s
-#                     break
-
-#             if special_str : special_str += '_'
-#             new_arg = special_str + arg.split('/')[-1]
             new_arg = arg.replace('/','_')
-
             print 'cp %s %s'%(arg,new_arg)
             os.system('cp %s %s'%(arg,new_arg))
             print 'os.getcwd()',os.getcwd()
@@ -120,18 +146,12 @@ class PyParallelize :
             new_args.append(new_arg)
 
         print '########################################################'
-        print '########################################################'
-        print '########################################################'
-        print '########################################################'
         print 'OLD ARGS:'
         print args
         print 'NEW ARGS:'
         print new_args
         print '########################################################'
-        print '########################################################'
-        print '########################################################'
-        print '########################################################'
-        
+
         if os.path.isfile(self.copyWaitName) :
             os.remove(self.copyWaitName)
 
@@ -149,15 +169,17 @@ class PyParallelize :
         self.makeOutputDirectories()
         return
 
-    def makeOutputDirectories(self) :
+    def makeOutputDirectories(self,options) :
+
+        if options.dir[0] != '/' : options.dir = os.getcwd()+'/'+options.dir
         self.dirs = dict()
-        self.dirs['outdir']     = self.options.dir
-        self.dirs['tmvadir']    = self.options.dir+'/TMVA/'
-        self.dirs['logdir']     = self.options.dir+'/logs/'
-        self.dirs['scriptsdir'] = self.options.dir+'/scripts/'
-        self.dirs['outputdir']  = self.options.dir+'/output/'
-        self.dirs['plotdir']    = self.options.dir+'/plots/'
-        self.dirs['inputdir']   = self.options.dir+'/input/'
+        self.dirs['outdir']     = options.dir
+        self.dirs['tmvadir']    = options.dir+'/TMVA/'
+        self.dirs['logdir']     = options.dir+'/logs/'
+        self.dirs['scriptsdir'] = options.dir+'/scripts/'
+        self.dirs['outputdir']  = options.dir+'/output/'
+        self.dirs['plotdir']    = options.dir+'/plots/'
+        self.dirs['inputdir']   = options.dir+'/input/'
         if not os.path.isdir(self.dirs['outdir']) :  os.mkdir(self.dirs['outdir'])
         for d in self.dirs : 
             if not os.path.isdir(self.dirs[d]) :
@@ -386,6 +408,7 @@ class PyParallelize :
             if theoptions[k] == '' : continue
             if k in ['nloop','first','last','rootfiles','out'] : continue
             if k in ['firstloop','lastloop','nevtsperproc','nosubmit'] : continue
+            if k in ['steps'] : continue
             if k in notthese : continue
             if theoptions[k] == self.p.defaults[k] : continue
             if self.debug : print 'Adding option',k
@@ -400,37 +423,7 @@ class PyParallelize :
         self.Batch.wait()
 
     def checkCondor(self,runmode) :
-        if (runmode == 'condor') and (not os.getcwd() in os.getenv('PYTHONPATH')) :
-            pass
-            #print 'Error! Jobs will fail.'
-            #print 'Execute the following command in the dir egammaFrame/python:'
-            #print 'actually I am not sure if this is necessary any more...'
-            #print 'export PYTHONPATH=$PYTHONPATH:`pwd`'
-            #sys.exit()
+        pass
 
         return
     
-class PyLoopObject(object) :
-    def __init__(self,tree) :
-        self.debug = False
-        if self.debug : print 'PyLoopObject:: init'
-        self.index = -1
-        self.localvar = dict()
-        self.localliteral = dict()
-        self.vr = dict()
-        self.tree = tree
-        self.init(tree)
-        if self.debug : print 'PyLoopObject:: init end'
-        return
-
-    def reset(self) :
-        #import sys
-        #sys.exit()
-        self.index = -1
-        self.localvar = dict()
-        self.localliteral = dict()
-        for i in xrange(self.var('el_n')) :
-            self.localvar[i] = dict()
-            self.localliteral[i] = dict()
-        #self.localliteral = dict()
-        return
