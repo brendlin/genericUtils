@@ -117,7 +117,10 @@ class condorSubmit :
         return
 
 #--------------------------------------------------------------------------------
-def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='/tmp/kurb/tmphadd/') :
+def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='') :
+    import os
+    USER = os.getenv('USER')
+    if not tmpdir : tmpdir = '/tmp/%s/tmphadd/'%USER
     if not os.path.isdir(tmpdir) :
         os.mkdir(tmpdir)
     from time import strftime,localtime
@@ -254,8 +257,12 @@ def GetInHMS(seconds):
 #--------------------------------------------------------------------------------
 def jobFinishedSendEmail(script,config,dir,eventselection='',time=''
                          ,configdicts=[]
-                         ,sender='kBatch <kurb@at3i00.upenn.edu>'
+                         ,sender=''
                          ,recipient='kurt.brendlinger@gmail.com') :
+    
+    import os
+    if not sender : sender = 'kBatch <%s@at3i00.upenn.edu>'%(os.getenv('USER'))
+
     import smtplib
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
