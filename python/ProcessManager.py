@@ -92,6 +92,7 @@ class condorSubmit :
 
     def wait(self) :
         for i in range(1000000) :
+            if not self.jobids : break
             jobs = subprocess.Popen('condor_q -submitter '+os.getenv('USER'),shell=True,stdout=subprocess.PIPE)
             output = jobs.communicate()[0]
             if not output.replace(' ','') :

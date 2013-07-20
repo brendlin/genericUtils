@@ -55,6 +55,7 @@ class PyParallelize :
         p.add_option('--treename'      ,type='string',default='photon'              ,dest='treename'      ,help='Tree name (e.g. egamma)')
         
         (self.options,self.args) = p.parse_args()
+        self.submit = not self.options.nosubmit
 
         self.makeOutputDirectories(self.options)
         self.SetupBatch(self.options)
