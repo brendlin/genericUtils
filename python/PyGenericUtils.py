@@ -1,4 +1,5 @@
-from ROOT import TFile,TTree
+from ROOT import TFile,TTree,TGraph
+from array import array
 
 def MakeListMatrix(*lists) :
     lol = list(range(len(x)) for x in lists)
@@ -160,4 +161,9 @@ def printArray(lists,brackets='{}',nsf=5,duplicatefirst=False) :
         text += '\n'
     print text
     return text
+
+def TGraphFromLists(x,y) :
+    xx = array('d',x)
+    yy = array('d',y)
+    return TGraph(len(xx),xx,yy)
 
