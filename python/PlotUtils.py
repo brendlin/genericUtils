@@ -1,10 +1,17 @@
-from ROOT import TCanvas,TLegend,TGraph,TGraphErrors,TH1F,gROOT,TF1
+from ROOT import TCanvas,TLegend,TGraph,TGraphErrors,TH1F,gROOT,TF1,TH1
 from ROOT import TLine,TMath,TPad,gStyle,TROOT,TText,TProfile,TH2F,TH1D
-from ROOT import kRed,kMagenta,kBlue,kCyan,kGreen,kGray,kBlack,kOrange,kYellow
-from ROOT import TLatex,TAxis
+from ROOT import kRed,kMagenta,kBlue,kCyan,kGreen,kGray,kBlack,kOrange,kYellow,kAzure
+from ROOT import TLatex,TAxis,TASImage,kTRUE
 #import AtlasStyle
 from array import array
 gROOT.SetBatch(True)
+
+#
+# TH1.SetDefaultSumw2(kTRUE) - very important for correctly plotting
+# and calculating errors. For instance "Scale" will mess up your
+# errors if this is not set to True.
+#
+TH1.SetDefaultSumw2(kTRUE)
 
 gStyle.SetStatColor(0)
 gStyle.SetTitleColor(0)
@@ -34,7 +41,7 @@ gStyle.SetEndErrorSize(3)
 #gStyle.SetOptStat(1110)
 
 #color = [1,3,2,4,6,9,11,46,49,12,13,14,15,16,5,7,8,10,17,18,19,20,21,22,23,24,25,26]
-color = [kBlack+0,kRed+1,kBlue+1,kGreen+1,kMagenta+1,kCyan+1,kOrange+1
+color = [kBlack+0,kRed+1,kAzure-2,kGreen+1,kMagenta+1,kCyan+1,kOrange+1
          ,kBlack+2,kRed+3,kBlue+3,kGreen+3,kMagenta+3,kCyan+3,kOrange+3
          ,kGray,kRed-7,kBlue-7,kGreen-7,kMagenta-7,kCyan-7,kOrange-7
          ,kYellow+2,kRed-5,kBlue-5,kGreen-5,kMagenta-5,kCyan-5,kOrange-5
@@ -51,20 +58,22 @@ formulatypes = [type(TF1())]
 h1types = [type(TH1F()),type(TH1D()),type(TProfile())]
 #listtypes = [type(TList),type(THashList())]
 
-def AddWatermark(can,x0=0.,y0=0.,x1=.1,y1=.1) :
-    from ROOT import TASImage
-    #a = TASImage('shield.color.png')
-    a = TASImage('penn_fulllogo_black.pdf')
-    p = TPad('watermark','watermark',x0,y0,x1,y1)
-    p.SetFillColor(42)
-    p.SetFillColor(0)
-    #p.SetFillStyle(4050)
-    p.SetFillStyle(0)
-    p.cd()
-    a.Draw()
-    can.cd()
-    p.Draw("sames")
-    return a,p
+# def AddWatermark(can,x0=0.,y0=0.,x1=.1,y1=.1) :
+#     from ROOT import TASImage
+#     #a = TASImage('shield.color.png')
+#     #a = TASImage('penn_fulllogo_black.pdf')
+#     a = TASImage('penn_notitle_20.png')
+#     #p = TPad('watermark','watermark',x0,y0,x1,y1)
+#     #p.SetFillColor(42)
+#     #p.SetFillColor(0)
+#     #p.SetFillStyle(4050)
+#     #p.SetFillStyle(0)
+#     #p.cd()
+#     can.cd()
+#     a.Draw()
+#     can.cd()
+#     p.Draw("sames")
+#     return a,p
 
 def GetZaxisReasonableRanges(hist,forcelow=None,forcehigh=None) :
     if type(hist) is not type(TH2F()) :
@@ -149,7 +158,8 @@ class PlotObject :
                  ,drawopt='E1',ranges=0,legendpos='topright',markersize=1.0
                  ,markerstyle=20,drawtitle=True
                  ,normalized=False,writecan=False,log=False,drawleg=True
-                 ,canw=500,canh=500) :
+                 ,canw=500,canh=500
+                 ,watermark=False) :
 
         # ranges : [[xmin,xmax],[ymin,ymax]]
         # i.e. [None,[.84,1.02]]
@@ -157,6 +167,8 @@ class PlotObject :
         self.dir = dir
         self.name = name
         self.can = TCanvas(name,name,canw,canh)
+        self.canw = canw
+        self.canh = canh
         self.log = log
         self.normalized = normalized
         self.markersize = markersize
@@ -171,7 +183,16 @@ class PlotObject :
         self.plotLegNames = []
         self.plotLegSizes = []
         self.drawleg = drawleg
+        self.watermark = watermark
+        self.drawopts = []
 
+        if self.watermark :
+            #self.wmimage = TASImage('penn_notitle_10.pdf')
+            #self.wmimage = TASImage('penn_notitle_20.pdf')
+            #self.wmimage = TASImage('penn_notitle_20_topleft.pdf')
+            #self.wmimage = TASImage('penn_notitle_20_botleft.pdf')
+            #self.wmimage = TASImage('penn_notitle_20_topright.pdf')
+            self.wmimage = TASImage('penn_notitle_20_botright.pdf')
         for p in range(len(plots)) :
             self.plots.append(0)
             self.plots[p] = plots[p]
@@ -237,7 +258,14 @@ class PlotObject :
                     self.normplots.append(self.plots[0].DrawNormalized(same_str+drawopt))
                     if not self.normplots[-1] : self.normplots[-1] = TH1F()
                 else :
+                    self.drawopts.append(same_str+drawopt)
                     self.plots[0].Draw(same_str+drawopt)
+                    if self.watermark :
+                        self.wmimage.Draw('sames')
+                        self.plots[0].Draw('sames'+drawopt)
+                        self.can.SetTickx(1)
+                        self.can.SetTicky(1)
+                        self.can.RedrawAxis()
                 if 'colz' in self.drawopt : self.plots[0].SetMarkerSize(1.4)
                 continue
 
@@ -356,22 +384,28 @@ class PlotObject :
         #print 'setting logy to',self.log
         self.can.Write(self.name)
 
-    def createLegend(self,x1,y1,x2,y2) :
+    def createLegend(self,x1,y1,x2,y2,can='') :
         #print x1,y1,x2,y2
-        if self.can.GetPrimitive('mylegend') :
-            self.can.GetPrimitive('mylegend').Delete()
+        if can == 'ratio' :
+            if self.ratiopad1.GetPrimitive('mylegend') :
+                self.ratiopad1.GetPrimitive('mylegend').Delete()
+        else :
+            if self.can.GetPrimitive('mylegend') :
+                self.can.GetPrimitive('mylegend').Delete()
         self.leg = TLegend(x1,y1,x2,y2)
         self.leg.SetName('mylegend')
         self.leg.SetTextFont(42)
         self.leg.SetBorderSize(0)
         self.leg.SetFillStyle(0)
         
-    def recreateLegend(self,x1,y1,x2,y2) :
-        self.can.cd()
-        self.createLegend(x1,y1,x2,y2)
+    def recreateLegend(self,x1,y1,x2,y2,can='') :
+
+        self.createLegend(x1,y1,x2,y2,can=can)
         self.SetLegend()
         if ('colz' not in self.drawopt) and self.drawleg :
             self.can.cd()
+            if can == 'ratio' :
+                self.ratiopad1.cd()
             self.leg.Draw()
         return
 
@@ -381,7 +415,7 @@ class PlotObject :
         a.SetLineColor(color)
         a.SetLineStyle(style)
         a.SetLineWidth(2)
-        a.DrawLine((self.xmax-self.xmin)*pct[0],yval,(self.xmax-self.xmin)*pct[1],yval)
+        a.DrawLine((self.xmax-self.xmin)*pct[0]+self.xmin,yval,(self.xmax-self.xmin)*pct[1]+self.xmin,yval)
 
     def DrawVertical(self,xval,color=1,pct=[0.,1.],style=1) :
         self.can.cd()
@@ -389,7 +423,7 @@ class PlotObject :
         a.SetLineColor(color)
         a.SetLineStyle(style)
         a.SetLineWidth(2)
-        a.DrawLine(xval,(self.ymax-self.ymin)*pct[0],xval,(self.ymax-self.ymin)*pct[1])
+        a.DrawLine(xval,(self.ymax-self.ymin)*pct[0]+self.ymin,xval,(self.ymax-self.ymin)*pct[1]+self.ymin)
 
     def AddPlots(self,plots,drawopt='') :
         for pl in range(len(plots)) :
@@ -441,7 +475,71 @@ class PlotObject :
     def CleanNameForMacro(self,nm) :
         return ''.join(ch for ch in nm if ch.isalnum())
 
-    def SaveMacro(self,name= '') :
+    def MakeRatioPlot(self,den,nums) :
+        #
+        # You can use self.ratioplots[0].GetYaxis().SetNdivisions(5,5,0)
+        # to change the ticks.
+        #
+
+        self.ratiocan = TCanvas(self.name+'_r',self.name+'_r',self.canw,self.canh+100)
+        self.ratiopad1 = TPad("pad1", "The pad 80% of the height",0.0,0.3,1.0,1.0,21)
+        self.ratiopad1.SetBottomMargin(.020)
+        self.ratiopad1.SetFillColor(0)
+        self.ratiopad2 = TPad("pad2", "The pad 20% of the height",0.0,0.0,1.0,0.3,22)
+        self.ratiopad2.SetBottomMargin(0.30)
+        self.ratiopad2.SetFillColor(0)
+        self.ratiopad1.Draw()
+        self.ratiopad2.Draw()
+        self.ratioplots = []
+        self.ratiopad1.cd()
+        self.ratioplot0 = self.plots[0].Clone()
+        self.ratioplot0.Draw(self.drawopt)
+        #
+        #
+        #
+        self.ratioplot0.GetXaxis().SetLabelOffset(1.5)
+
+        self.ratioplot0.GetYaxis().SetTitleOffset(1.27)
+        self.ratioplot0.GetYaxis().SetTitleSize(0.06)
+        self.ratioplot0.GetYaxis().SetTitleFont(42)
+        self.ratioplot0.GetYaxis().SetLabelSize(0.05)
+        self.ratioplot0.GetYaxis().SetLabelFont(42)
+
+        self.ratioplot0.GetXaxis().SetTitleOffset(0.85)
+        self.ratioplot0.GetXaxis().SetTitleSize(0.06)
+        self.ratioplot0.GetXaxis().SetTitleFont(42)
+        self.ratioplot0.GetXaxis().SetLabelSize(0.05)
+        self.ratioplot0.GetXaxis().SetLabelFont(42)
+
+
+        sames = 'sames'
+        for p in range(1,len(self.plots)) :
+            self.plots[p].Draw(sames+self.drawopt)
+            sames = 'sames'
+        sames = ''
+        for p in nums :
+            self.ratioplots.append(self.plots[p].Clone())
+            key = self.ratioplots[-1].GetName()
+            self.ratioplots[-1].SetNameTitle(key,key)
+            self.ratioplots[-1].Divide(self.plots[den])
+            self.ratiopad2.cd()
+            self.ratioplots[-1].Draw(sames+self.drawopt)
+            self.ratioplots[-1].GetYaxis().SetTitle('Ratio')
+            self.ratioplots[-1].GetYaxis().SetLabelSize(0.12)
+            self.ratioplots[-1].GetYaxis().SetTitleSize(0.14)
+            self.ratioplots[-1].GetYaxis().SetTitleOffset(.55)
+            self.ratioplots[-1].GetXaxis().SetTitle(self.ratioplot0.GetXaxis().GetTitle())
+            self.ratioplots[-1].GetXaxis().SetLabelSize(0.12)
+            self.ratioplots[-1].GetXaxis().SetLabelOffset(0.02)
+            self.ratioplots[-1].GetXaxis().SetTitleSize(0.14)
+            self.ratioplots[-1].GetXaxis().SetTitleOffset(1.0)
+            sames = 'sames'
+
+        self.ratiopad1.cd()
+        self.leg.Draw()
+        return
+
+    def SaveMacro(self,name= '',dir='',can='') :
         for p in range(len(self.plots)) :
             key = self.CleanNameForMacro(self.plots[p].GetName())
             self.plots[p].SetName(key)
@@ -450,14 +548,30 @@ class PlotObject :
         self.can.SetName(self.CleanNameForMacro(self.can.GetName()))
         self.can.SetTitle(self.CleanNameForMacro(self.can.GetTitle()))
         if not name : name = self.can.GetName()
-        self.can.SaveAs(name+'.C')
+        if dir : dir = dir+'/'
+        if can == 'ratio' :
+            self.ratiocan.SaveAs(dir+name+'.C')
+            return        
+        self.can.SaveAs(dir+name+'.C')
         return
 
-    def SavePDF(self,name='') :
+    def SavePDF(self,name='',extension='pdf',dir='',can='') :
+        do_epstopdf = (extension == 'pdf' and self.watermark)
         print name
         if not name : name = self.CleanNameForMacro(self.can.GetName())
-        print 'saving as',name+'.pdf'
-        self.can.SaveAs(name+'.pdf')
+        if do_epstopdf :
+            extension = 'eps'
+            print 'saving as %s.%s'%(name,extension)
+            self.can.SaveAs('%s.%s'%(name,extension))
+            import os
+            os.system('epstopdf %s.%s'%(name,extension))
+            return
+        if dir : dir = dir+'/'
+        print 'saving as %s%s.%s'%(dir,name,extension)
+        if can == 'ratio' :
+            self.ratiocan.SaveAs('%s%s.%s'%(dir,name,extension))
+            return
+        self.can.SaveAs('%s%s.%s'%(dir,name,extension))
         return
 
 def SmartPlotify(can,name='') :
