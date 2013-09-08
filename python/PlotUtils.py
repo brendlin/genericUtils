@@ -11,7 +11,10 @@ gROOT.SetBatch(True)
 # and calculating errors. For instance "Scale" will mess up your
 # errors if this is not set to True.
 #
-TH1.SetDefaultSumw2(kTRUE)
+# Comment out for now since it is incompatible with some
+# jobs (too much memory)
+#
+#TH1.SetDefaultSumw2(kTRUE)
 
 gStyle.SetStatColor(0)
 gStyle.SetTitleColor(0)
