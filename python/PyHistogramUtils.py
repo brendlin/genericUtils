@@ -75,6 +75,24 @@ def setEffErrors(th,den) :
 
     return
 
+def setEffContentErrorsWeights(th,num,fail) :
+    for i in range(th.GetNbinsX()) :
+        nm = num.GetBinContent(i+1)
+        if nm < 0 : nm = 0
+        fl = fail.GetBinContent(i+1)
+        if fl <= 0 : fl = 1
+        eff = nm/float(nm+fl)
+        if eff < 0: eff = 0
+        if eff > 1: eff = 1
+        nm_sumw2 = num.GetSumw2()[i+1]
+        fl_sumw2 = fail.GetSumw2()[i+1]
+        err = math.sqrt(math.pow(fl,2)*nm_sumw2+math.pow(nm,2)*fl_sumw2)/float(math.pow(nm+fl,2))
+        th.SetBinContent(i+1,eff)
+        th.SetBinError(i+1,err)
+
+    return
+
+
 #----------------------------------------------------
 def MakeEffPlotsFromNumDen(thnum,thden) :
     for i in range(thnum.GetNbinsX()) :

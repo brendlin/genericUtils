@@ -53,10 +53,14 @@ class PyParallelize :
         p.add_option('--config-default',type='string',default='default',dest='config_default',help='default menu/alg configs')
         p.add_option('--nevtsperproc'  ,type='int'   ,default=int(4e5) ,dest='nevtsperproc'  ,help='Number of events per subprocess')
         p.add_option('--treename'      ,type='string',default='photon'              ,dest='treename'      ,help='Tree name (e.g. egamma)')
-        
+
+        # message handler
+        p.add_option('--verbose', '-v', action='count',  default=0, help='verbosity')
+
         (self.options,self.args) = p.parse_args()
         self.submit = not self.options.nosubmit
 
+        
         self.makeOutputDirectories(self.options)
         self.SetupBatch(self.options)
         
@@ -313,10 +317,10 @@ class PyParallelize :
                     input_id = 'File%02d'%i
                     if 'ttbar' in subfiles[0]      : input_id = 'ttbar'
                     elif 'ztt' in subfiles[0]      : input_id = 'ztt'
-                    elif 'zee' in subfiles[0]      : input_id = 'zee'
-                    elif 'wminenu' in subfiles[0]  : input_id = 'wminenu'
-                    elif 'wplusenu' in subfiles[0] : input_id = 'wplusenu'
-                    elif 'mc12' in subfiles[0]     : input_id = 'mc12'
+                    #elif 'zee' in subfiles[0]      : input_id = 'zee'
+                    #elif 'wminenu' in subfiles[0]  : input_id = 'wminenu'
+                    #elif 'wplusenu' in subfiles[0] : input_id = 'wplusenu'
+                    #elif 'mc12' in subfiles[0]     : input_id = 'mc12'
                     elif 'samesign' in subfiles[0] : input_id = 'samesign'
                     elif 'EWR' in subfiles[0]      : input_id = 'EWR'
                     elif 'signal' in subfiles[0]   : input_id = 'signal'

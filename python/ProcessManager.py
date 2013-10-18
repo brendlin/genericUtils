@@ -173,8 +173,34 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='') :
     os.system('rm '+tmpdir+'/*')
     return
 
+
 #--------------------------------------------------------------------------------
-def AggregatePlots(dir,keyword,outname) : # outname does not include dir.
+def CopyDirectoryContents(indir,outdir,keyword_plot='') :
+    #print 'indir:',indir.GetName()
+    #print 'outdir:',outdir.GetName()
+    for i in indir.GetListOfKeys() :
+        n = i.GetName()
+        if not n : continue
+        if i.GetClassName() == 'TDirectoryFile' :
+            #print 'making dir',n
+            MakeDirV2(outdir,n)
+            CopyDirectoryContents(indir.GetDirectory(n),outdir.GetDirectory(n))
+        else :
+            if keyword_plot and keyword_plot not in n : continue
+            if n in list(a.GetName() for a in outdir.GetListOfKeys()) :
+                print 'Error! Hist already exists! Hadding it:',n
+                tmp = outdir.Get(n).Clone()
+                tmp.Add(i.ReadObj())
+                tmp.Write(tmp.GetName(),TObject.kOverwrite)
+                continue
+            outdir.cd()
+            i.ReadObj().Write()
+    #print 'copy finsihed'
+    return
+
+
+#--------------------------------------------------------------------------------
+def AggregatePlots(dir,keyword,outname,keyword_plot='') : # outname does not include dir.
     filelist = []
     for i in os.listdir(dir) :
         if (keyword in i) and ('.root' in i) :
@@ -183,32 +209,10 @@ def AggregatePlots(dir,keyword,outname) : # outname does not include dir.
 
     filelist.sort()
     
-    def Copy(indir,outdir) :
-        #print 'indir:',indir.GetName()
-        #print 'outdir:',outdir.GetName()
-        for i in indir.GetListOfKeys() :
-            n = i.GetName()
-            if not n : continue
-            if i.GetClassName() == 'TDirectoryFile' :
-                #print 'making dir',n
-                MakeDirV2(outdir,n)
-                Copy(indir.GetDirectory(n),outdir.GetDirectory(n))
-            else :
-                if n in list(a.GetName() for a in outdir.GetListOfKeys()) :
-                    print 'Error! Hist already exists! Hadding it:',n
-                    tmp = outdir.Get(n).Clone()
-                    tmp.Add(i.ReadObj())
-                    tmp.Write(tmp.GetName(),TObject.kOverwrite)
-                    continue
-                outdir.cd()
-                i.ReadObj().Write()
-        #print 'copy finsihed'
-        return
-
     outfile = TFile(dir+'/'+outname,'recreate')
     for file in filelist :
         f = TFile(file,'read')
-        Copy(f,outfile)
+        CopyDirectoryContents(f,outfile,keyword_plot=keyword_plot)
 
     outfile.Close()
     return

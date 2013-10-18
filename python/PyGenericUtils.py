@@ -51,12 +51,15 @@ def listKeys(dir,subdir='') :
     for i in dir.GetListOfKeys() : print i.GetName()
 
 #----------------------------------------------------
-def GetRootObj(file,name):
+def GetRootObj(file,name,printWarning=True):
     obj = file.Get(name)
     if not obj :
-        print 'Warning in',file.GetName(),':',name,'does not exist.'
+        if printWarning : print 'Warning in',file.GetName(),':',name,'does not exist.'
         return 0
     else : return obj
+
+def CheckRootObj(file,name) :
+    return GetRootObj(file,name,printWarning=False)
 
 def GetListOfKeyNames(file,dir='') :
     if dir :

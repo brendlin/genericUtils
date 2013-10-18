@@ -1,5 +1,5 @@
 from ROOT import TCanvas,TLegend,TGraph,TGraphErrors,TH1F,gROOT,TF1,TH1
-from ROOT import TLine,TMath,TPad,gStyle,TROOT,TText,TProfile,TH2F,TH1D
+from ROOT import TLine,TMath,TPad,gStyle,TROOT,TText,TProfile,TH2F,TH1D,TH3F
 from ROOT import kRed,kMagenta,kBlue,kCyan,kGreen,kGray,kBlack,kOrange,kYellow,kAzure
 from ROOT import TLatex,TAxis,TASImage,kTRUE
 #import AtlasStyle
@@ -56,9 +56,9 @@ color = [kBlack+0,kRed+1,kAzure-2,kGreen+1,kMagenta+1,kCyan+1,kOrange+1
 markerstyles = [20,21,22,23,24,25,26,27]
 
 graphtypes = [type(TGraph()),type(TGraphErrors())]
-histtypes = [type(TH1F()),type(TH1D()),type(TProfile()),type(TH2F())]
+histtypes = [type(TH1F()),type(TH2F()),type(TProfile()),type(TH2F()),type(TH1D()),type(TH3F())]
 formulatypes = [type(TF1())]
-h1types = [type(TH1F()),type(TH1D()),type(TProfile())]
+h1types = [type(TH1F()),type(TH1D()),type(TProfile()),type(TH1D())]
 #listtypes = [type(TList),type(THashList())]
 
 # def AddWatermark(can,x0=0.,y0=0.,x1=.1,y1=.1) :
