@@ -1,6 +1,7 @@
 
 from sys import stdout, stderr
 import smtplib
+import inspect
 
 class PyMessageHandler():
     """Class to handle messages.
@@ -52,6 +53,14 @@ class PyMessageHandler():
         out_str = None
         # More here later
 
+    def getClassAndLineno(self,stackitem) :
+        #
+        # If your class is to be identified, it needs a __name__ assigned to it.
+        #
+        myclass = stackitem.f_locals.get('self',None)
+        if myclass :
+            return '[%s][line%d]'%(getattr(myclass,'__name__','NoName'),stackitem.f_lineno)
+        return ''
 
 
     def message(self, msg, mlevel):
@@ -65,7 +74,10 @@ class PyMessageHandler():
         """
         out_str = None
         if self.verbose >= mlevel: 
-            out_str = "[Info]:....."
+            myclass = inspect.stack()[1][0].f_locals.get('self',None)
+            out_str = ''
+            out_str += self.getClassAndLineno(inspect.stack()[1][0])
+            out_str += "[Info]:....."
             out_str += msg
             out_str += '\n'
         if out_str is not None:
@@ -83,7 +95,9 @@ class PyMessageHandler():
         """
         out_str = None
         if self.verbose >= mlevel: 
-            out_str = "!!![WARNING]:....."
+            out_str = ''
+            out_str += self.getClassAndLineno(inspect.stack()[1][0])
+            out_str += "!!![WARNING]:....."
             out_str += msg
             out_str += '\n'
         if out_str is not None:
@@ -102,7 +116,9 @@ class PyMessageHandler():
         if self.do_debug:
             out_str = None
             if self.verbose >= mlevel: 
-                out_str = "***[DEBUG]:....."
+                out_str = ''
+                out_str += self.getClassAndLineno(inspect.stack()[1][0])
+                out_str += "***[DEBUG]:....."
                 out_str += msg
                 out_str += '\n'
             if out_str is not None:
