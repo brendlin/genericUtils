@@ -63,6 +63,21 @@ def getIntegralUnderflows(h) :
    return h.Integral(ubin,ubin)
 
 #----------------------------------------------------
+def set1dErrors(th,errs) :
+    for i in range(th.GetNbinsX()) :
+        th.SetBinError(i+1,errs.GetBinContent(i+1))
+    return
+
+def setErrorsFractional(th,hx1,hx2) :
+    for i in range(th.GetNbinsX()) :
+        f = th.GetBinContent(i+1)
+        x1 = float(hx1.GetBinContent(i+1))
+        dx1 = hx1.GetBinError(i+1)
+        x2 = float(hx2.GetBinContent(i+1))
+        dx2 = hx2.GetBinError(i+1)
+        if (x1 == 0) or (x2 == 0) : continue
+        th.SetBinError(f*math.sqrt(math.pow(dx1/x1,2)+mth.pow(dx2/x2,2)))
+        
 def setEffErrors(th,den) :
     for i in range(th.GetNbinsX()) :
         eff = th.GetBinContent(i+1)
@@ -72,7 +87,7 @@ def setEffErrors(th,den) :
         if n != 0 and 0 <= eff and eff <= 1 :
             err = math.sqrt(eff*(1-eff)/n)
             th.SetBinError(i+1,err)
-
+            
     return
 
 def setEffContentErrorsWeights(th,num,fail) :
