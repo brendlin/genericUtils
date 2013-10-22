@@ -216,6 +216,13 @@ class PlotObject :
         self.plots[0].GetXaxis().SetLabelSize(0.04)
         self.plots[0].GetXaxis().SetLabelFont(42)
 
+        self.plots[0].GetZaxis().SetTitleOffset(0.85)
+        self.plots[0].GetZaxis().SetTitleSize(0.05)
+        self.plots[0].GetZaxis().SetTitleFont(42)        
+
+        self.plots[0].GetZaxis().SetLabelSize(0.04)
+        self.plots[0].GetZaxis().SetLabelFont(42)
+
         self.can.cd()
 
         legHeight = 0.06*len(self.plots)
@@ -460,11 +467,12 @@ class PlotObject :
         if angle : t.SetTextAngle(angle)
         t.DrawLatex(x,y,text)
 
-    def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035) :
+    def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035,can='') :
         self.can.cd()
+        if can == 'ratio' : self.ratiopad1.cd()
         t = TLatex()
         t.SetNDC()
-        t.SetTextSize(0.04)
+        t.SetTextSize(size)
         t.SetTextFont(42)
         if align == 'R': t.SetTextAlign(31)
         if angle : t.SetTextAngle(angle)
@@ -560,7 +568,6 @@ class PlotObject :
 
     def SavePDF(self,name='',extension='pdf',dir='',can='') :
         do_epstopdf = (extension == 'pdf' and self.watermark)
-        print name
         if not name : name = self.CleanNameForMacro(self.can.GetName())
         if do_epstopdf :
             extension = 'eps'
@@ -580,7 +587,7 @@ class PlotObject :
 def SmartPlotify(can,name='') :
     return PlotObjectify(can,name=name)
 
-def PlotObjectify(can,name='') :
+def PlotObjectify(can,name='',drawtitle=True) :
     plots = []
     for i in list(a.GetName() for a in can.GetListOfPrimitives()) :
         if type(can.GetPrimitive(i)) in histtypes :
@@ -588,5 +595,5 @@ def PlotObjectify(can,name='') :
         if type(can.GetPrimitive(i)) == type(TLatex()) :
             name1 = can.GetPrimitive(i).GetTitle()+'_new'
 
-    return PlotObject(name if name else name1,plots,drawopt='')
+    return PlotObject(name if name else name1,plots,drawopt='',drawtitle=drawtitle)
 
