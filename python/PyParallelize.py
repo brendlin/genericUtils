@@ -419,6 +419,12 @@ class PyParallelize :
             if k in ['nloop','first','last','rootfiles','out'] : continue
             if k in ['firstloop','lastloop','nevtsperproc','nosubmit'] : continue
             if k in ['steps'] : continue
+            if k in ['verbose'] :
+                verb = '-'
+                for i in range(theoptions[k]) :
+                    verb += 'v'
+                optionlist += [verb]
+                continue
             if k in notthese : continue
             if k not in self.p.defaults.keys() : continue
             if theoptions[k] == self.p.defaults[k] : continue
