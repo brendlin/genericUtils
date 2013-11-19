@@ -216,12 +216,13 @@ class PlotObject :
         self.plots[0].GetXaxis().SetLabelSize(0.04)
         self.plots[0].GetXaxis().SetLabelFont(42)
 
-        self.plots[0].GetZaxis().SetTitleOffset(0.85)
-        self.plots[0].GetZaxis().SetTitleSize(0.05)
-        self.plots[0].GetZaxis().SetTitleFont(42)        
+        if type(self.plots[0]) in histtypes :
+            self.plots[0].GetZaxis().SetTitleOffset(0.85)
+            self.plots[0].GetZaxis().SetTitleSize(0.05)
+            self.plots[0].GetZaxis().SetTitleFont(42)        
 
-        self.plots[0].GetZaxis().SetLabelSize(0.04)
-        self.plots[0].GetZaxis().SetLabelFont(42)
+            self.plots[0].GetZaxis().SetLabelSize(0.04)
+            self.plots[0].GetZaxis().SetLabelFont(42)
 
         self.can.cd()
 

@@ -148,11 +148,11 @@ class PyParallelize :
         new_args = []
         for arg in args :
             new_arg = arg.replace('/','_')
-            print 'cp %s %s'%(arg,new_arg)
+            #print 'cp %s %s'%(arg,new_arg)
             os.system('cp %s %s'%(arg,new_arg))
-            print 'os.getcwd()',os.getcwd()
-            print 'os.listdir(.)'
-            print os.listdir('.')
+            #print 'os.getcwd()',os.getcwd()
+            #print 'os.listdir(.)'
+            #print os.listdir('.')
             new_args.append(new_arg)
 
         print '########################################################'
