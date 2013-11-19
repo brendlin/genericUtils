@@ -51,10 +51,13 @@ def listKeys(dir,subdir='') :
     for i in dir.GetListOfKeys() : print i.GetName()
 
 #----------------------------------------------------
-def GetRootObj(file,name,printWarning=True):
+def GetRootObj(file,name,printWarning=True,fatal=False):
     obj = file.Get(name)
     if not obj :
-        if printWarning : print 'Warning in',file.GetName(),':',name,'does not exist.'
+        if printWarning : print 'Warning in %s: %s does not exist. %s'%(file.GetName(),name,'Fatal; exiting.' if fatal else '')
+        if fatal :
+            import sys
+            sys.exit()
         return 0
     else : return obj
 
