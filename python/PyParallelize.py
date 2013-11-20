@@ -318,15 +318,15 @@ class PyParallelize :
                     # submit
                     #
                     input_id = 'File%02d'%i
-                    if 'ttbar' in subfiles[0]      : input_id = 'ttbar'
-                    elif 'ztt' in subfiles[0]      : input_id = 'ztt'
-                    #elif 'zee' in subfiles[0]      : input_id = 'zee'
-                    #elif 'wminenu' in subfiles[0]  : input_id = 'wminenu'
-                    #elif 'wplusenu' in subfiles[0] : input_id = 'wplusenu'
-                    #elif 'mc12' in subfiles[0]     : input_id = 'mc12'
-                    elif 'samesign' in subfiles[0] : input_id = 'samesign'
-                    elif 'EWR' in subfiles[0]      : input_id = 'EWR'
-                    elif 'signal' in subfiles[0]   : input_id = 'signal'
+                    #if 'ttbar' in subfiles[0]      : input_id = 'ttbar'
+                    #elif 'ztt' in subfiles[0]      : input_id = 'ztt'
+                    ##elif 'zee' in subfiles[0]      : input_id = 'zee'
+                    ##elif 'wminenu' in subfiles[0]  : input_id = 'wminenu'
+                    ##elif 'wplusenu' in subfiles[0] : input_id = 'wplusenu'
+                    ##elif 'mc12' in subfiles[0]     : input_id = 'mc12'
+                    #elif 'samesign' in subfiles[0] : input_id = 'samesign'
+                    #elif 'EWR' in subfiles[0]      : input_id = 'EWR'
+                    #elif 'signal' in subfiles[0]   : input_id = 'signal'
                     input_id += 'Group%05d'%c
                     outputlog = self.dirs['logdir']+self.getFileName(nloop,input_id)
                     outfile   = self.getFileName(nloop,input_id)+'.root'
