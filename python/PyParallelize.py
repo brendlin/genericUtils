@@ -18,6 +18,8 @@ class PyParallelize :
 
         self.p = p
 
+        # test
+
         from ROOT import gROOT
         gROOT.SetBatch(True)
 
