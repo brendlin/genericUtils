@@ -58,7 +58,7 @@ class PyParallelize :
 
         # message handler
         p.add_option('--verbose','-v',action='count'     ,default=0                  ,help='verbosity')
-        p.add_option('--debug'       ,action='store_true',default=False,dest='DEBUG' ,help='Turn on debug')
+        p.add_option('--DEBUG'       ,action='store_true',default=False,dest='DEBUG' ,help='Turn on debug')
 
         (self.options,self.args) = p.parse_args()
         self.submit = not self.options.nosubmit
