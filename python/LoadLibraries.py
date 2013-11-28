@@ -18,9 +18,8 @@ def loadLibrary(lib) :
         if os.getenv('ROOTCOREDIR') :
             from ROOT import gROOT
             if lib in ROOT.gSystem.GetLibraries() :
-                print 'skipping loading!'
+                #print 'skipping loading!'
                 return
-            print 'libs:',ROOT.gSystem.GetLibraries()
             gROOT.ProcessLine (".x $ROOTCOREDIR/scripts/load_packages.C");
             print 'Loaded ALL libraries (during attempt %s)'%lib
             return
