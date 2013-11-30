@@ -263,10 +263,16 @@ def GetInHMS(seconds):
 def jobFinishedSendEmail(script,config,dir,eventselection='',time=''
                          ,configdicts=[]
                          ,sender=''
-                         ,recipient='kurt.brendlinger@gmail.com') :
+                         ,recipient='') :
     
     import os
     if not sender : sender = 'kBatch <%s@at3i00.upenn.edu>'%(os.getenv('USER'))
+    
+    if not recipient :
+        recipient = os.getenv('EMAIL_RECIPIENT')
+    if not recipient :
+        print 'Job Notification Email Not Sent! To do so, set EMAIL_RECIPIENT environment variable.'
+        return
 
     import smtplib
     from email.mime.text import MIMEText
