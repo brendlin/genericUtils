@@ -1,4 +1,4 @@
-from ROOT import TFile,TTree,TGraph
+from ROOT import TFile,TTree,TGraph,TH1F,TLine
 from array import array
 
 def MakeListMatrix(*lists) :
@@ -99,12 +99,16 @@ def GetInHMS(seconds):
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 #------------------------------------------------------------------
-def getFile(filename) :
+def GetFile(filename,fatal=True) :
     if ('eosatlas' in filename) or ('castoratlas' in filename) :
         tfile = TXNetFile(filename,'READ')
     else :
         #print 'not an eos file'
         tfile = TFile(filename,'READ')
+    if tfile.IsZombie() and fatal :
+        print 'Fatal. Exiting.'
+        import sys
+        sys.exit()
     return tfile
 
 def getTree(file,tree='') :
@@ -173,3 +177,25 @@ def TGraphFromLists(x,y) :
     yy = array('d',y)
     return TGraph(len(xx),xx,yy)
 
+def HistThief(name,can,xbounds,doErrors=True) :
+    values = dict()
+    errors = dict()
+    for y in can.GetListOfPrimitives() :
+        if type(y) == type(TLine()) :
+            values[y.GetX1()] = y.GetY1()
+            errors[y.GetX1()] = abs(y.GetY1()-y.GetY2())
+    x = array('d',xbounds)
+    tmp = TH1F(name,name,len(x)-1,x)
+    for i in range(tmp.GetNbinsX()) :
+        tmp.SetBinContent(i+1,values[sorted(values.keys())[i]])
+        if doErrors : 
+            tmp.SetBinError(i+1,errors[sorted(values.keys())[i]])
+        print '%04.4f pm %04.4f'%(tmp.GetBinContent(i+1),tmp.GetBinError(i+1))
+    return tmp
+
+def CleanNameForMacro(nm) :
+    nm = nm.replace(' ','_')
+    nm = nm.replace('_','PUPPIES')
+    nm = ''.join(ch for ch in nm if ch.isalnum())
+    nm = nm.replace('PUPPIES','_')
+    return nm
