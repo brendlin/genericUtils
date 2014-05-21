@@ -262,7 +262,7 @@ class PlotObject :
         if type(self.plots[0]) == type(TH2F()) :
             self.can.SetLogz(self.log)
 
-        self.createLegend(x1,y1,x2,y2)
+        self.CreateLegend(x1,y1,x2,y2)
         self.SetLegend()
 
         # print plots
@@ -422,35 +422,37 @@ class PlotObject :
         #print 'setting logy to',self.log
         self.can.Write(self.name)
 
-    def createLegend(self,x1,y1,x2,y2,can='') :
+    def CreateLegend(self,x1,y1,x2,y2,can='') :
         #print x1,y1,x2,y2
-        if can == 'ratio' :
-            if self.ratiopad1.GetPrimitive('mylegend') :
-                self.ratiopad1.GetPrimitive('mylegend').Delete()
+        if can == 'RatioPadTop' :
+            if self.RatioPadTop.GetPrimitive('mylegend') :
+                self.RatioPadTop.GetPrimitive('mylegend').Delete()
+            self.RatioPadTop.cd()
         else :
             if self.can.GetPrimitive('mylegend') :
                 self.can.GetPrimitive('mylegend').Delete()
+            self.can.cd()
         self.leg = TLegend(x1,y1,x2,y2)
         self.leg.SetName('mylegend')
         self.leg.SetTextFont(42)
         self.leg.SetBorderSize(0)
         self.leg.SetFillStyle(0)
         
-    def recreateLegend(self,x1,y1,x2,y2,can='',skip=[]) :
+    def RecreateLegend(self,x1,y1,x2,y2,can='',skip=[]) :
 
-        self.createLegend(x1,y1,x2,y2,can=can)
+        self.CreateLegend(x1,y1,x2,y2,can=can)
         self.SetLegend(skip=skip)
         if ('colz' not in self.drawopt) and self.drawleg :
             self.can.cd()
-            if can == 'ratio' :
-                self.ratiopad1.cd()
+            if can == 'RatioPadTop' :
+                self.RatioPadTop.cd()
             self.leg.Draw()
         return
 
     def DrawHorizontal(self,yval,color=1,pct=[0.,1.],style=1,can='') :
         self.can.cd()
-        if can == 'ratiopad2' :
-            self.ratiopad2.cd()
+        if can == 'RatioPadBot' :
+            self.RatioPadBot.cd()
         a = TLine()
         a.SetLineColor(color)
         a.SetLineStyle(style)
@@ -459,8 +461,8 @@ class PlotObject :
 
     def DrawVertical(self,xval,color=1,pct=[0.,1.],style=1,can='') :
         self.can.cd()
-        if can == 'ratio' :
-            self.ratiocan.cd()
+        if can == 'RatioPadTop' :
+            self.RatioPadTop.cd()
         a = TLine()
         a.SetLineColor(color)
         a.SetLineStyle(style)
@@ -493,11 +495,11 @@ class PlotObject :
 
     def DrawAtlasPreliminary(self,x,y,angle=0,align='',size=0.035,can='',color=1,internal=True) :
         self.can.cd()
-        if can == 'ratio' : self.ratiopad1.cd()
+        if can == 'RatioPadTop' : self.RatioPadTop.cd()
         t = TLatex()
         t.SetNDC()
         t.SetTextSize(size)
-        if can == 'ratio' :
+        if can == 'RatioPadTop' :
             t.SetTextSize(0.05)
         t.SetTextFont(72)
         t.SetTextColor(color)
@@ -507,11 +509,11 @@ class PlotObject :
 
     def DrawLuminosity(self,x,y,angle=0,align='',size=0.035,can='',color=1,internal=True,lumi=20.3,sqrts=8) :
         self.can.cd()
-        if can == 'ratio' : self.ratiopad1.cd()
+        if can == 'RatioPadTop' : self.RatioPadTop.cd()
         t = TLatex()
         t.SetNDC()
         t.SetTextSize(size)
-        if can == 'ratio' :
+        if can == 'RatioPadTop' :
             t.SetTextSize(0.05)
         t.SetTextFont(42)
         t.SetTextColor(color)
@@ -521,7 +523,7 @@ class PlotObject :
 
 #     def DrawLuminosity(self,x,y,angle=0,align='',size=0.035,can='',color=1) :
 #         self.can.cd()
-#         if can == 'ratio' : self.ratiopad1.cd()
+#         if can == 'ratio' : self.RatioPadTop.cd()
 #         self.lumiLabel = TLegend(.2,.87-.1,.2,.87-.1)#, "#int L dt = %1.1f fb^{-1}"%20.3)
 #         self.lumiLabel.SetFillColor(0)
 #         self.lumiLabel.SetTextFont(42)
@@ -541,7 +543,7 @@ class PlotObject :
 
     def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035,can='',color=1) :
         self.can.cd()
-        if can == 'ratio' : self.ratiopad1.cd()
+        if can == 'RatioPadTop' : self.RatioPadTop.cd()
         t = TLatex()
         t.SetNDC()
         t.SetTextSize(size)
@@ -562,6 +564,24 @@ class PlotObject :
         nm = ''.join(ch for ch in nm if ch.isalnum())
         nm = nm.replace('PUPPIES','_')
         return nm
+
+    def SetYaxisRange(self,lo,hi) :
+        self.plots[0].GetYaxis().SetRangeUser(lo,hi)
+        return
+
+    # for ratio top axis
+    def SetTopYaxisRange(self,lo,hi) :
+        self.RatioTopPlot0.GetYaxis().SetRangeUser(lo,hi)
+        return
+
+    # for ratio bot axis
+    def SetBotYaxisRange(self,lo,hi) :
+        self.ratioplots[0].GetYaxis().SetRangeUser(lo,hi)
+
+    def SetPlotLabels(self,name_list) :
+        for p in range(len(name_list)) :
+            if p >= len(self.plots) : continue
+            self.plots[p].SetNameTitle(name_list[p],name_list[p])
 
     def MakeRatioPlot(self,den,nums,style='',divide='') :
         #
@@ -601,16 +621,17 @@ class PlotObject :
              ,'BotYLabelSize'  :0.12
              # BotYLabelOffset?
              ,'BotYLabelFont'  :42
+             ,'BotNDiv'        :[5,5,0]
                                  
              }
         if style == 'DiffXsec' :
-            print 'Using DiffXsec style'
+            #print 'Using DiffXsec style'
             x['canw'] = 500
             x['canh'] = 365+100
             x['1BottomMargin'] = 0.025
             x['2BottomMargin'] = 0.33
         if style == 'MoreRatio' :
-            print 'Using MoreRatio style'
+            #print 'Using MoreRatio style'
             x['div']  = 0.5
             x['canw'] = 500
             x['canh'] = 365+100
@@ -631,34 +652,34 @@ class PlotObject :
             x['BotYLabelSize'] = 0.09
             
         self.ratiocan = TCanvas(self.name+'_r',self.name+'_r',x['canw'],x['canh'])
-        self.ratiopad1 = TPad("pad1", "The pad 80% of the height",0.0,x['div'],1.0,1.0,21)
-        self.ratiopad1.SetBottomMargin(x['1BottomMargin'])
-        self.ratiopad2 = TPad("pad2", "The pad 20% of the height",0.0,0.0,1.0,x['div'],22)
-        self.ratiopad2.SetBottomMargin(x['2BottomMargin'])
-        self.ratiopad1.SetFillColor(0)
-        self.ratiopad2.SetFillColor(0)
-        self.ratiopad1.Draw()
-        self.ratiopad2.Draw()
+        self.RatioPadTop = TPad("pad1", "This is the top pad",0.0,x['div'],1.0,1.0,21)
+        self.RatioPadTop.SetBottomMargin(x['1BottomMargin'])
+        self.RatioPadBot = TPad("pad2", "This is the bottom pad",0.0,0.0,1.0,x['div'],22)
+        self.RatioPadBot.SetBottomMargin(x['2BottomMargin'])
+        self.RatioPadTop.SetFillColor(0)
+        self.RatioPadBot.SetFillColor(0)
+        self.RatioPadTop.Draw()
+        self.RatioPadBot.Draw()
         self.ratioplots = []
-        self.ratiopad1.cd()
-        self.ratioplot0 = self.plots[0].Clone()
-        self.ratioplot0.Draw(self.drawopt)
+        self.RatioPadTop.cd()
+        self.RatioTopPlot0 = self.plots[0].Clone()
+        self.RatioTopPlot0.Draw(self.drawopt)
         #
         #
         #
-        self.ratioplot0.GetXaxis().SetTitleSize  (x['TopXTitleSize'  ])
-        self.ratioplot0.GetXaxis().SetTitleOffset(x['TopXTitleOffset'])
-        self.ratioplot0.GetXaxis().SetTitleFont  (x['TopXTitleFont'  ])
-        self.ratioplot0.GetXaxis().SetLabelSize  (x['TopXLabelSize'  ])
-        self.ratioplot0.GetXaxis().SetLabelOffset(x['TopXLabelOffset'])
-        self.ratioplot0.GetXaxis().SetLabelFont  (x['TopXLabelFont'  ])    
+        self.RatioTopPlot0.GetXaxis().SetTitleSize  (x['TopXTitleSize'  ])
+        self.RatioTopPlot0.GetXaxis().SetTitleOffset(x['TopXTitleOffset'])
+        self.RatioTopPlot0.GetXaxis().SetTitleFont  (x['TopXTitleFont'  ])
+        self.RatioTopPlot0.GetXaxis().SetLabelSize  (x['TopXLabelSize'  ])
+        self.RatioTopPlot0.GetXaxis().SetLabelOffset(x['TopXLabelOffset'])
+        self.RatioTopPlot0.GetXaxis().SetLabelFont  (x['TopXLabelFont'  ])    
 
-        self.ratioplot0.GetYaxis().SetTitleSize  (x['TopYTitleSize'  ])
-        self.ratioplot0.GetYaxis().SetTitleOffset(x['TopYTitleOffset'])
-        self.ratioplot0.GetYaxis().SetTitleFont  (x['TopYTitleFont'  ])
-        self.ratioplot0.GetYaxis().SetLabelSize  (x['TopYLabelSize'  ])
+        self.RatioTopPlot0.GetYaxis().SetTitleSize  (x['TopYTitleSize'  ])
+        self.RatioTopPlot0.GetYaxis().SetTitleOffset(x['TopYTitleOffset'])
+        self.RatioTopPlot0.GetYaxis().SetTitleFont  (x['TopYTitleFont'  ])
+        self.RatioTopPlot0.GetYaxis().SetLabelSize  (x['TopYLabelSize'  ])
         # TopYLabelOffset?
-        self.ratioplot0.GetYaxis().SetLabelFont(x['TopYLabelFont'])
+        self.RatioTopPlot0.GetYaxis().SetLabelFont(x['TopYLabelFont'])
 
         sames = 'sames'
         for p in range(1,len(self.plots)) :
@@ -666,14 +687,19 @@ class PlotObject :
             sames = 'sames'
         sames = ''
         for p in nums :
+            if p >= len(self.plots) : continue
+            if p == den : continue
             self.ratioplots.append(self.plots[p].Clone())
-            key = self.ratioplots[-1].GetName()
+            key = self.ratioplots[-1].GetName()+'_Ratio'
             self.ratioplots[-1].SetNameTitle(key,key)
             #
             # Division options: '' (regular), 'B' (binomial)
             #
-            self.ratioplots[-1].Divide(self.ratioplots[-1],self.plots[den],1.,1.,divide)
-            self.ratiopad2.cd()
+            self.ratioplots[-1].Divide(self.ratioplots[-1],self.plots[den],1.,1.,'B' if divide == 'NoErr' else divide)
+            if divide == 'NoErr' :
+                for i in range(self.ratioplots[-1].GetNbinsX()) :
+                    self.ratioplots[-1].SetBinError(i+1,0)
+            self.RatioPadBot.cd()
             self.ratioplots[-1].Draw(sames+self.drawopt)
 
             self.ratioplots[-1].GetXaxis().SetTitleSize  (x['BotXTitleSize'  ])
@@ -685,12 +711,13 @@ class PlotObject :
             self.ratioplots[-1].GetYaxis().SetTitleOffset(x['BotYTitleOffset'])
             self.ratioplots[-1].GetYaxis().SetLabelSize  (x['BotYLabelSize'  ])
             # BotYLabelOffset?
+            self.ratioplots[-1].GetYaxis().SetNdivisions (x['BotNDiv'][0],x['BotNDiv'][1],x['BotNDiv'][2])
 
             self.ratioplots[-1].GetYaxis().SetTitle('Ratio')
-            self.ratioplots[-1].GetXaxis().SetTitle(self.ratioplot0.GetXaxis().GetTitle())
+            self.ratioplots[-1].GetXaxis().SetTitle(self.RatioTopPlot0.GetXaxis().GetTitle())
             sames = 'sames'
-
-        self.ratiopad1.cd()
+            
+        self.RatioPadTop.cd()
         self.leg.Draw()
         return
 
@@ -699,21 +726,33 @@ class PlotObject :
         self.SavePDF(name=name,can=can,dir=dir)
         self.SavePDF(name=name,can=can,extension='eps',dir=dir)
 
+    def CleanObjectNameForMacro(self,obj) :
+        obj.SetName(self.CleanNameForMacro(obj.GetName()))
+        obj.SetTitle(self.CleanNameForMacro(obj.GetTitle()))
+        return
+
     def SaveMacro(self,name= '',dir='',can='') :
         if name : name = self.CleanNameForMacro(name)
         for p in range(len(self.plots)) :
-            key = self.CleanNameForMacro(self.plots[p].GetName())
-            self.plots[p].SetName(key)
-            key = self.CleanNameForMacro(self.plots[p].GetTitle())
-            self.plots[p].SetTitle(key)
-        self.can.SetName(self.CleanNameForMacro(self.can.GetName()))
-        self.can.SetTitle(self.CleanNameForMacro(self.can.GetTitle()))
+            self.CleanObjectNameForMacro(self.plots[p])
+        self.CleanObjectNameForMacro(self.can)
         if not name : name = self.can.GetName()
         if dir : dir = dir+'/'
         if can == 'ratio' :
+            self.CleanObjectNameForMacro(self.ratiocan)
+            self.CleanObjectNameForMacro(self.RatioTopPlot0)
+            for p in range(len(self.ratioplots)) :
+                self.CleanObjectNameForMacro(self.ratioplots[p])
+            self.RatioPadTop.Update()
+            self.RatioPadBot.Update()
+            self.ratiocan.Update()
             self.ratiocan.SaveAs(dir+name+'.C')
             return        
+        self.can.Update()
         self.can.SaveAs(dir+name+'.C')
+        ##
+        ## Things that the macro thing gets wrong:
+        ##  - Bottom plot: GetXaxis()->SetTitleOffset()
         return
 
     def SavePDF(self,name='',extension='pdf',dir='',can='') :
