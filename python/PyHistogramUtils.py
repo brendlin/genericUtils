@@ -15,6 +15,12 @@ def getIntegralAllFlows(h) :
     assert total == middle+extra_bit+getIntegralXOverflows(h)+getIntegralXUnderflows(h),'Error in integral!'
     #assert ((total > 0) and (extra_bit/float(total) < 0.001)),'Error - significant unaccounted-for chunk!'
     return total
+# Assumes particular binning!
+def getIntegralAllFlowsMinusCrack(h) :
+    total = h.Integral(0,h.GetNbinsX()+1,0,h.GetNbinsY()+1)
+    crack = h.Integral(4,4,0,h.GetNbinsY()+1)
+    total = total - crack
+    return total
 def getIntegralXOverflows(h) :
    obin = h.GetNbinsX()+1
    #print 'Overflows:',h.Integral(obin,obin,-1,h.GetNbinsY()+1)

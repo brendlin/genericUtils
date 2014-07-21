@@ -99,7 +99,9 @@ def GetInHMS(seconds):
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 #------------------------------------------------------------------
-def GetFile(filename,fatal=True) :
+def getFile(filename,fatal=True) :
+    filename = filename.replace('/xrootd/srm/', 'root://hn.at3f//srm/')
+
     if ('eosatlas' in filename) or ('castoratlas' in filename) :
         tfile = TXNetFile(filename,'READ')
     else :
@@ -111,13 +113,16 @@ def GetFile(filename,fatal=True) :
         sys.exit()
     return tfile
 
+def GetFile(filename,fatal=True) :
+    return getfile(filename,fatal)
+
 def getTree(file,tree='') :
     nEvents = -1
     returntree = 0
     for item in file.GetListOfKeys() :
         itree = item.ReadObj()
         if tree and itree.GetName() != tree : continue
-        if itree.GetName() not in ['photon','egamma','physics'] : continue
+        if itree.GetName() not in ['photon','egamma','physics','trigger','electron_ID'] : continue
         if type(itree) == type(TTree()) :
             ievents = int(itree.GetEntries())
             if ievents > nEvents :

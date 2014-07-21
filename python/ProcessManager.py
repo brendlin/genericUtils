@@ -184,7 +184,7 @@ def CopyDirectoryContents(indir,outdir,keyword_plot='') :
         if i.GetClassName() == 'TDirectoryFile' :
             #print 'making dir',n
             MakeDirV2(outdir,n)
-            CopyDirectoryContents(indir.GetDirectory(n),outdir.GetDirectory(n))
+            CopyDirectoryContents(indir.GetDirectory(n),outdir.GetDirectory(n),keyword_plot)
         else :
             if keyword_plot and keyword_plot not in n : continue
             if n in list(a.GetName() for a in outdir.GetListOfKeys()) :
