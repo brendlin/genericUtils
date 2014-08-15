@@ -178,6 +178,7 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='') :
 def CopyDirectoryContents(indir,outdir,keyword_plot='') :
     #print 'indir:',indir.GetName()
     #print 'outdir:',outdir.GetName()
+    from ROOT import gROOT
     for i in indir.GetListOfKeys() :
         n = i.GetName()
         if not n : continue
@@ -188,10 +189,12 @@ def CopyDirectoryContents(indir,outdir,keyword_plot='') :
         else :
             if keyword_plot and keyword_plot not in n : continue
             if n in list(a.GetName() for a in outdir.GetListOfKeys()) :
-                print 'Error! Hist already exists! Hadding it:',n
+                print 'Warning: Hist already exists! Hadding it:',n
                 tmp = outdir.Get(n).Clone()
                 tmp.Add(i.ReadObj())
+                outdir.cd()
                 tmp.Write(tmp.GetName(),TObject.kOverwrite)
+                gROOT.ProcessLine('delete %s'%n)
                 continue
             outdir.cd()
             i.ReadObj().Write()
