@@ -114,7 +114,7 @@ def getFile(filename,fatal=True) :
     return tfile
 
 def GetFile(filename,fatal=True) :
-    return getfile(filename,fatal)
+    return getFile(filename,fatal)
 
 def getTree(file,tree='') :
     nEvents = -1
