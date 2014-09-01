@@ -204,3 +204,8 @@ def CleanNameForMacro(nm) :
     nm = ''.join(ch for ch in nm if ch.isalnum())
     nm = nm.replace('PUPPIES','_')
     return nm
+
+def EnsureSumw2(hist) :
+    if not hist.GetSumw2N() :
+        hist.Sumw2()
+    return
