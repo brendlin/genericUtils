@@ -65,13 +65,15 @@ class condorSubmit :
         self.start_time = time.time()
         self.jobids = []
 
-    def addJob(self,cmd,logname) :
+    def addJob(self,cmd,logname,Initialdir='') :
         # command in list form
         self.jobfiles.append(open(logname+'.job','w'))
 
+        if not Initialdir : Initialdir = os.getcwd()
+
         self.jobfiles[-1].write('universe   = vanilla'+'\n')
         self.jobfiles[-1].write('Executable = '+cmd[1]+'\n')
-        self.jobfiles[-1].write('Initialdir = '+os.getcwd()+'\n')
+        self.jobfiles[-1].write('Initialdir = '+Initialdir+'\n')
         self.jobfiles[-1].write('getenv     = True'+'\n')
         self.jobfiles[-1].write('output     = '+logname+'.out\n')
         self.jobfiles[-1].write('error      = '+logname+'.err\n')
@@ -201,6 +203,75 @@ def CopyDirectoryContents(indir,outdir,keyword_plot='') :
     #print 'copy finsihed'
     return
 
+#--------------------------------------------------------------------------------
+def SecureTransferSlot(copyWaitDir,outputfilename) :
+    import os,datetime
+    while len(os.listdir(copyWaitDir)) > 10 :
+        print 'Waiting to copy files.'
+        time.sleep(15)
+
+    ctime = datetime.datetime.now()
+    thetime = ctime.strftime('%Y-%m-%d_%H-%M-%S.%f')
+    id = outputfilename.split('/')[-1].replace('.root','')
+    copyWaitName = '%s/%s%s.log'%(copyWaitDir,thetime,id)
+    file = open(copyWaitName,'w')
+    file.write(copyWaitName+'\n')
+    file.close()
+    return copyWaitName
+
+def ReleaseTransferSlot(copyWaitName) :
+    if os.path.isfile(copyWaitName) :
+        os.remove(copyWaitName)
+    return
+
+#--------------------------------------------------------------------------------
+def CopyFilesToNode(args) :
+    import os,subprocess
+    new_args = []
+    os.system('mkdir -p tempdir') # So condor doesn't transfer these files if the job fails
+
+    for arg in args :
+        ##
+        ## SRM file name
+        ##
+        if 'srm://srm.hep.upenn.edu/' in arg :
+            srm_filename = arg.replace('srm://srm.hep.upenn.edu/disk/space00/','root://hn.at3f//')
+            new_arg = srm_filename.replace('root://hn.at3f//','')
+            new_arg = new_arg.replace('/','_')
+            new_arg = 'tempdir/'+new_arg
+            cmd = 'xrdcp %s %s'%(srm_filename,new_arg) # note xrdcp!
+            os.system(cmd)
+            new_args.append(new_arg)
+            continue
+
+        ##
+        ## Local, or Joey's linking thing.
+        ##
+        p = subprocess.Popen(["file", arg], stdout=subprocess.PIPE) # Finds where the link/file points
+        newfilename = p.communicate()[0] # Reads in the previous result
+
+        if not 'xrootd' in newfilename : # i.e. local file
+            new_arg = arg.replace('/','_')
+            new_arg = 'tempdir/'+new_arg
+            os.system('cp %s %s'%(arg,new_arg)) # note cp!
+
+        else : # i.e. file on SRM
+            newfilename = newfilename[newfilename.find("`")+1:newfilename.find("'")] # Parse the text
+            newfilename = newfilename.replace('/xrootd//srm/', 'root://hn.at3f//srm/') # For SRM
+            new_arg = newfilename.replace('/','_') # For condor copying
+            new_arg = 'tempdir/'+new_arg
+            os.system('xrdcp %s %s'%(newfilename,new_arg)) # note xrdcp!
+
+        new_args.append(new_arg)
+
+    print '########################################################'
+    print 'OLD ARGS:'
+    print args
+    print 'NEW ARGS:'
+    print new_args
+    print '########################################################'
+
+    return new_args
 
 #--------------------------------------------------------------------------------
 def AggregatePlots(dir,keyword,outname,keyword_plot='') : # outname does not include dir.
