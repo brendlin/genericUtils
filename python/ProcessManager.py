@@ -155,10 +155,11 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='') :
                 if len(filelist) <= nfilesperjob :
                     tmpoutname = [tmpdir+'/'+outname]
                 else :
-                    tmpoutname = [tmpdir+'/Iter%02d_%02d_%s' % (k,nsubs,outname)]
+                    tmpoutname = [tmpdir+'/Iter%02d_%02d_%s' % (k,nsubs,outname.replace('/',''))]
                     nsubs += 1
 
                 filelist2 += tmpoutname
+                print hadd1+tmpoutname+hadd2
                 Batch.addJob(hadd1+tmpoutname+hadd2,tmpoutname[0].replace('.root',''),doprint=False)
                 hadd2 = []
                 
@@ -204,9 +205,9 @@ def CopyDirectoryContents(indir,outdir,keyword_plot='') :
     return
 
 #--------------------------------------------------------------------------------
-def SecureTransferSlot(copyWaitDir,outputfilename) :
+def SecureTransferSlot(copyWaitDir,outputfilename,nConcurrentFileTransfers=10) :
     import os,datetime
-    while len(os.listdir(copyWaitDir)) > 10 :
+    while len(os.listdir(copyWaitDir)) > nConcurrentFileTransfers :
         print 'Waiting to copy files.'
         time.sleep(15)
 
