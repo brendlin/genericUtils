@@ -171,6 +171,7 @@ class PlotObject :
         # ranges : [[xmin,xmax],[ymin,ymax]]
         # i.e. [None,[.84,1.02]]
         
+        self.file = file
         self.dir = dir
         self.name = name
         self.can = TCanvas(name,name,canw,canh)
@@ -414,13 +415,17 @@ class PlotObject :
             self.leg.AddEntry(self.plots[pl],self.plots[pl].GetName(),'ple')
         return
 
-    def writeCan(self,file) :
+    def writeCan(self,can='') :
         #if self.normalized :
         #    ranges = GetReasonableRanges(self.normplots,self.ranges,self.log)
-        file.cd(self.dir)
+        self.file.cd(self.dir)
+        
+        if can == 'ratio' :
+            self.ratiocan.Write(self.name)
+            return
         self.can.SetLogy(self.log)
-        #print 'setting logy to',self.log
         self.can.Write(self.name)
+        return
 
     def CreateLegend(self,x1,y1,x2,y2,can='') :
         #print x1,y1,x2,y2
