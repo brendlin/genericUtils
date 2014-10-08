@@ -4,7 +4,7 @@ from ROOT import kRed,kMagenta,kBlue,kCyan,kGreen,kGray,kBlack,kOrange,kYellow,k
 from ROOT import TLatex,TAxis,TASImage,kTRUE
 #import AtlasStyle
 from array import array
-gROOT.SetBatch(True)
+#gROOT.SetBatch(True)
 
 #
 # TH1.SetDefaultSumw2(kTRUE) - very important for correctly plotting
@@ -58,7 +58,7 @@ color += color
 markerstyles = [20,21,22,23,24,25,26,27]
 
 graphtypes = [type(TGraph()),type(TGraphErrors()),type(TGraphAsymmErrors())]
-histtypes = [type(TH1F()),type(TH2F()),type(TProfile()),type(TH2F()),type(TH1D()),type(TH3F())]
+histtypes = [type(TH1F()),type(TH2F()),type(TProfile()),type(TH1D()),type(TH3F())]
 formulatypes = [type(TF1())]
 h1types = [type(TH1F()),type(TH1D()),type(TProfile()),type(TH1D())]
 #listtypes = [type(TList),type(THashList())]
@@ -194,6 +194,7 @@ class PlotObject :
         self.drawleg = drawleg
         self.watermark = watermark
         self.drawopts = []
+        self.text = []
 
         if self.watermark :
             #self.wmimage = TASImage('penn_notitle_10.pdf')
@@ -538,25 +539,26 @@ class PlotObject :
 #             self.lumiLabel.SetTextSize(0.05)
 #         self.lumiLabel.Draw()
             
-    def DrawText(self,x,y,text,angle=0,align='',size=0.035) :
+    def DrawText(self,x,y,text,angle=0,align='',size=0.035,can='') :
         self.can.cd()
-        t = TLatex()
-        t.SetTextSize(0.035)
-        if align == 'R': t.SetTextAlign(31)
-        if angle : t.SetTextAngle(angle)
-        t.DrawLatex(x,y,text)
+        if can == 'RatioPadTop' : self.RatioPadTop.cd()
+        self.text.append(TLatex())
+        self.text[-1].SetTextSize(size)
+        if align == 'R': self.text[-1].SetTextAlign(31)
+        if angle : self.text[-1].SetTextAngle(angle)
+        self.text[-1].DrawLatex(x,y,text)
 
     def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035,can='',color=1) :
         self.can.cd()
         if can == 'RatioPadTop' : self.RatioPadTop.cd()
-        t = TLatex()
-        t.SetNDC()
-        t.SetTextSize(size)
-        t.SetTextFont(42)
-        t.SetTextColor(color)
-        if align == 'R': t.SetTextAlign(31)
-        if angle : t.SetTextAngle(angle)
-        t.DrawLatex(x,y,text)
+        self.text.append(TLatex())
+        self.text[-1].SetNDC()
+        self.text[-1].SetTextSize(size)
+        self.text[-1].SetTextFont(42)
+        self.text[-1].SetTextColor(color)
+        if align == 'R': self.text[-1].SetTextAlign(31)
+        if angle : self.text[-1].SetTextAngle(angle)
+        self.text[-1].DrawLatex(x,y,text)
 
     def SetAxisLabels(self,xlabel,ylabel) :
         if len(self.plots) :
@@ -564,10 +566,14 @@ class PlotObject :
             self.plots[0].GetYaxis().SetTitle(ylabel)
 
     def CleanNameForMacro(self,nm) :
+        for i in range(10) :
+            nm = nm.replace('-%d'%i,'n%d'%i)
         nm = nm.replace(' ','_')
         nm = nm.replace('_','PUPPIES')
         nm = ''.join(ch for ch in nm if ch.isalnum())
         nm = nm.replace('PUPPIES','_')
+        nm = nm.replace('___','_')
+        nm = nm.replace('__','_')
         return nm
 
     def SetYaxisRange(self,lo,hi) :
@@ -593,11 +599,19 @@ class PlotObject :
         # You can use self.ratioplots[0].GetYaxis().SetNdivisions(5,5,0)
         # to change the ticks.
         #
+        #
+        # RatioPadTop
+        # - RatioTopPlot0 ( need a clone so I can manipulate ratio plot and regular plot separately)
+        # RatioPadBot
+        # - ratioplots (a list)
+        #
         x = {'div'              :0.3
              ,'canw'            :self.canw
              ,'canh'            :self.canh+100
              ,'1BottomMargin'   :0.020
+             ,'1TopMargin'      :0.05
              ,'2BottomMargin'   :0.30
+             ,'2TopMargin'      :0.30
 
              ,'TopXTitleSize'   :0.06
              ,'TopXTitleOffset' :0.85
@@ -612,6 +626,7 @@ class PlotObject :
              ,'TopYLabelSize'   :0.05
              # TopYLabelOffset?
              ,'TopYLabelFont'   :42
+             ,'TopNDiv'         :[5,5,0]
 
              ,'BotXTitleSize'  :0.14
              ,'BotXTitleOffset':1.0 
@@ -641,24 +656,27 @@ class PlotObject :
             x['canw'] = 500
             x['canh'] = 365+100
             x['1BottomMargin'] = 0.05
-            x['2BottomMargin'] = 0.20
+            x['1TopMargin']    = .1
+            x['2BottomMargin'] = 0.23
 
-            x['TopYTitleSize'] = 0.09
-            x['TopYTitleOffset'] = 0.80
+            x['TopYTitleSize'] = 0.11
+            x['TopYTitleOffset'] = 0.70
             x['TopYLabelSize'] = 0.09 
+            x['TopNDiv']       = [5,5,0]
             
-            x['BotXTitleSize'] = 0.09
+            x['BotXTitleSize'] = 0.11
             x['BotXTitleOffset'] = 0.90
             x['BotXLabelSize'] = 0.08
             x['BotXLabelOffset'] = 0.01
 
-            x['BotYTitleSize'] = 0.09
-            x['BotYTitleOffset'] = 0.85
+            x['BotYTitleSize'] = 0.11
+            x['BotYTitleOffset'] = 0.70
             x['BotYLabelSize'] = 0.09
             
         self.ratiocan = TCanvas(self.name+'_r',self.name+'_r',x['canw'],x['canh'])
         self.RatioPadTop = TPad("pad1", "This is the top pad",0.0,x['div'],1.0,1.0,21)
         self.RatioPadTop.SetBottomMargin(x['1BottomMargin'])
+        self.RatioPadTop.SetTopMargin(x['1TopMargin'])
         self.RatioPadBot = TPad("pad2", "This is the bottom pad",0.0,0.0,1.0,x['div'],22)
         self.RatioPadBot.SetBottomMargin(x['2BottomMargin'])
         self.RatioPadTop.SetFillColor(0)
@@ -685,6 +703,7 @@ class PlotObject :
         self.RatioTopPlot0.GetYaxis().SetLabelSize  (x['TopYLabelSize'  ])
         # TopYLabelOffset?
         self.RatioTopPlot0.GetYaxis().SetLabelFont(x['TopYLabelFont'])
+        self.RatioTopPlot0.GetYaxis().SetNdivisions (x['TopNDiv'][0],x['TopNDiv'][1],x['TopNDiv'][2])
 
         sames = 'sames'
         for p in range(1,len(self.plots)) :
@@ -727,6 +746,7 @@ class PlotObject :
         return
 
     def SaveAll(self,name='',dir='',can='') :
+        if not name : name = self.name
         self.SaveMacro(name=name,can=can,dir=dir)
         self.SavePDF(name=name,can=can,dir=dir)
         self.SavePDF(name=name,can=can,extension='eps',dir=dir)
@@ -737,6 +757,7 @@ class PlotObject :
         return
 
     def SaveMacro(self,name= '',dir='',can='') :
+        if not name : name = self.name
         if name : name = self.CleanNameForMacro(name)
         for p in range(len(self.plots)) :
             self.CleanObjectNameForMacro(self.plots[p])
@@ -761,6 +782,7 @@ class PlotObject :
         return
 
     def SavePDF(self,name='',extension='pdf',dir='',can='') :
+        if not name : name = self.name
         if name : name = self.CleanNameForMacro(name)
         do_epstopdf = (extension == 'pdf' and self.watermark)
         if not name : name = self.CleanNameForMacro(self.can.GetName())
@@ -785,6 +807,7 @@ def PlotObjectify(can,name='',drawtitle=True) :
     for i in list(a.GetName() for a in can.GetListOfPrimitives()) :
         if type(can.GetPrimitive(i)) in histtypes :
             plots.append(can.GetPrimitive(i).Clone())
+            #print i,'added'
         if type(can.GetPrimitive(i)) == type(TLatex()) :
             name1 = can.GetPrimitive(i).GetTitle()+'_new'
 
