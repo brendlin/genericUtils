@@ -36,7 +36,8 @@ gStyle.SetLineWidth(1)
 gStyle.SetFrameFillColor(0)
 gStyle.SetOptTitle(0)
 #
-gStyle.SetTitleFontSize(0.4)
+gStyle.SetTitleFont(43)
+gStyle.SetTitleFontSize(24)
 gStyle.SetTitleYOffset(1.75)
 gStyle.SetPaintTextFormat('4.1f ')
 gStyle.SetEndErrorSize(3)
@@ -204,33 +205,33 @@ class PlotObject :
             #self.wmimage = TASImage('penn_notitle_20_topright.pdf')
             self.wmimage = TASImage('penn_notitle_20_botright.pdf')
         for p in range(len(plots)) :
-            self.plots.append(0)
-            self.plots[p] = plots[p].Clone()
-            self.plots[p].SetName(plots[p].GetName()+'_plotversion_can_%s'%(self.name))
+            self.plots.append(plots[p].Clone())
+            self.plots[-1].SetName(plots[p].GetName()+'_plotversion_can_%s'%(self.name))
             self.plotLegNames.append(self.plots[p].GetTitle())
             self.plotLegSizes.append(len(self.plots[p].GetTitle()))
             
         self.plots[0].GetYaxis().SetTitleOffset(1.45)
-        self.plots[0].GetYaxis().SetTitleSize(0.05)
-        self.plots[0].GetYaxis().SetTitleFont(42)
+        self.plots[0].GetYaxis().SetTitleFont(43)
+        self.plots[0].GetYaxis().SetTitleSize(24)
 
-        self.plots[0].GetYaxis().SetLabelSize(0.04)
-        self.plots[0].GetYaxis().SetLabelFont(42)
+        self.plots[0].GetYaxis().SetLabelSize(24)
+        self.plots[0].GetYaxis().SetLabelFont(43)
 
-        self.plots[0].GetXaxis().SetTitleOffset(0.85)
-        self.plots[0].GetXaxis().SetTitleSize(0.05)
-        self.plots[0].GetXaxis().SetTitleFont(42)
+        self.plots[0].GetXaxis().SetLabelOffset(0.002)
+        self.plots[0].GetXaxis().SetTitleOffset(0.98)
+        self.plots[0].GetXaxis().SetTitleFont(43)
+        self.plots[0].GetXaxis().SetTitleSize(24)
 
-        self.plots[0].GetXaxis().SetLabelSize(0.04)
-        self.plots[0].GetXaxis().SetLabelFont(42)
+        self.plots[0].GetXaxis().SetLabelFont(43)
+        self.plots[0].GetXaxis().SetLabelSize(24)
 
         if type(self.plots[0]) in histtypes :
             self.plots[0].GetZaxis().SetTitleOffset(0.85)
-            self.plots[0].GetZaxis().SetTitleSize(0.05)
-            self.plots[0].GetZaxis().SetTitleFont(42)        
+            self.plots[0].GetZaxis().SetTitleFont(43)        
+            self.plots[0].GetZaxis().SetTitleSize(24)
 
-            self.plots[0].GetZaxis().SetLabelSize(0.04)
-            self.plots[0].GetZaxis().SetLabelFont(42)
+            self.plots[0].GetZaxis().SetLabelFont(43)
+            self.plots[0].GetZaxis().SetLabelSize(24)
 
         self.can.cd()
 
@@ -313,7 +314,7 @@ class PlotObject :
         if ('colz' not in self.drawopt) and self.drawleg :
             self.leg.Draw()
 
-        self.can.SetBottomMargin(0.10) # equivalent to Style.SetPadBottomMargin(0.10)
+        self.can.SetBottomMargin(0.11) # equivalent to Style.SetPadBottomMargin(0.10)
         self.can.SetLeftMargin  (0.16) # equivalent to Style.SetPadLeftMargin  (0.16)
         self.can.SetTopMargin   (0.05) # equivalent to Style.SetPadTopMargin   (0.05)
         self.can.SetRightMargin (0.05) # equivalent to Style.SetPadRightMargin (0.05)
@@ -337,7 +338,7 @@ class PlotObject :
         if self.drawtitle :
             self.title.SetNDC()
             self.title.SetTextSize(textsize)
-            self.title.SetTextFont(42)
+            self.title.SetTextFont(43)
             self.can.cd()
             self.title.Draw()
             self.can.SetTopMargin(0.1)
@@ -441,8 +442,10 @@ class PlotObject :
             self.can.cd()
         self.leg = TLegend(x1,y1,x2,y2)
         self.leg.SetMargin(0.1/(x2-x1))
+        self.leg.SetTextFont(43)
+        self.leg.SetTextSize(24)
         self.leg.SetName('mylegend')
-        self.leg.SetTextFont(42)
+        self.leg.SetTextFont(43)
         self.leg.SetBorderSize(0)
         self.leg.SetFillStyle(0)
         
@@ -510,11 +513,11 @@ class PlotObject :
         t.SetTextSize(size)
         if can == 'RatioPadTop' :
             t.SetTextSize(0.05)
-        t.SetTextFont(72)
+        t.SetTextFont(73)
         t.SetTextColor(color)
         if align == 'R': t.SetTextAlign(31)
         if angle : t.SetTextAngle(angle)
-        t.DrawLatex(x,y,'ATLAS #font[42]{Internal}')
+        t.DrawLatex(x,y,'ATLAS #font[43]{Internal}')
 
     def DrawLuminosity(self,x,y,angle=0,align='',size=0.035,can='',color=1,internal=True,lumi=20.3,sqrts=8) :
         self.can.cd()
@@ -524,7 +527,7 @@ class PlotObject :
         t.SetTextSize(size)
         if can == 'RatioPadTop' :
             t.SetTextSize(0.05)
-        t.SetTextFont(42)
+        t.SetTextFont(43)
         t.SetTextColor(color)
         if align == 'R': t.SetTextAlign(31)
         if angle : t.SetTextAngle(angle)
@@ -535,21 +538,21 @@ class PlotObject :
 #         if can == 'ratio' : self.RatioPadTop.cd()
 #         self.lumiLabel = TLegend(.2,.87-.1,.2,.87-.1)#, "#int L dt = %1.1f fb^{-1}"%20.3)
 #         self.lumiLabel.SetFillColor(0)
-#         self.lumiLabel.SetTextFont(42)
+#         self.lumiLabel.SetTextFont(43)
 #         self.lumiLabel.SetHeader("#sqrt{s} = 8 TeV, #scale[0.8]{#int} L dt = %1.1f fb^{-1}"%20.3)
 #         self.lumiLabel.SetTextSize(0.04)
 #         if can == 'ratio' :
 #             self.lumiLabel.SetTextSize(0.05)
 #         self.lumiLabel.Draw()
             
-    def DrawText(self,x,y,text,angle=0,align='',size=0.035,can='',color=1) :
+    def DrawText(self,x,y,text,angle=0,align='',size=24,can='',color=1) :
         self.can.cd()
         if can == 'RatioPadTop' : self.RatioPadTop.cd()
         self.text.append(TLatex())
+        self.text[-1].SetTextFont(43)
         self.text[-1].SetTextSize(size)
         if align == 'R': self.text[-1].SetTextAlign(31)
         if angle : self.text[-1].SetTextAngle(angle)
-        self.text[-1].SetTextFont(42)
         self.text[-1].SetTextColor(color)
         self.text[-1].DrawLatex(x,y,text)
 
@@ -559,7 +562,7 @@ class PlotObject :
         ynew = y*(pad.GetY2()-pad.GetY1())+pad.GetY1()
         return xnew,ynew
 
-    def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035,can='',color=1) :
+    def DrawTextNDC(self,x,y,text,angle=0,align='',size=24,can='',color=1) :
         if can == 'RatioPadTop' : 
             xpad,ypad = self.GetPadFromNDC(self.RatioPadTop,x,y)
         else :
@@ -619,39 +622,39 @@ class PlotObject :
              ,'1RightMargin'    :0.05
              ,'1LeftMargin'     :0.16
              ,'2BottomMargin'   :0.30
-             ,'2TopMargin'      :0.30
+             ,'2TopMargin'      :0.07
              ,'2RightMargin'    :0.05
              ,'2LeftMargin'     :0.16
 
-             ,'TopXTitleSize'   :0.06
+             ,'TopXTitleSize'   :24
              ,'TopXTitleOffset' :1.85
-             ,'TopXTitleFont'   :42
-             ,'TopXLabelSize'   :1.
+             ,'TopXTitleFont'   :43
+             ,'TopXLabelSize'   :24
              ,'TopXLabelOffset' :5.5
-             ,'TopXLabelFont'   :42
+             ,'TopXLabelFont'   :43
 
-             ,'TopYTitleSize'   :0.06
-             ,'TopYTitleOffset' :1.27
-             ,'TopYTitleFont'   :42
-             ,'TopYLabelSize'   :0.05
-             #,'TopYLabelOffset' :0.01
-             ,'TopYLabelFont'   :42
+             ,'TopYTitleSize'   :24
+             ,'TopYTitleOffset' :1.8
+             ,'TopYTitleFont'   :43
+             ,'TopYLabelSize'   :24
+             ,'TopYLabelFont'   :43
+             ,'TopYLabelOffset' :0.01
              ,'TopNDiv'         :[5,5,0]
 
-             ,'BotXTitleSize'  :0.14
-             ,'BotXTitleOffset':1.0 
-             ,'BotXTitleFont'  :42
-             ,'BotXLabelSize'  :0.12
-             ,'BotXLabelOffset':0.02
-             ,'BotXLabelFont'  :42
+             ,'BotXTitleSize'  :24
+             ,'BotXTitleOffset':3.3
+             ,'BotXTitleFont'  :43
+             ,'BotXLabelSize'  :24
+             ,'BotXLabelOffset':0.01
+             ,'BotXLabelFont'  :43
              ,'BotXTickLength' :.08
 
-             ,'BotYTitleSize'  :0.14
-             ,'BotYTitleOffset':0.55 
-             ,'BotYTitleFont'  :42
-             ,'BotYLabelSize'  :0.12
-             # BotYLabelOffset?
-             ,'BotYLabelFont'  :42
+             ,'BotYTitleSize'  :24
+             ,'BotYTitleOffset':1.8
+             ,'BotYTitleFont'  :43
+             ,'BotYLabelSize'  :24
+             ,'BotYLabelOffset':0.01
+             ,'BotYLabelFont'  :43
              ,'BotNDiv'        :[5,5,0]
                                  
              }
@@ -662,25 +665,13 @@ class PlotObject :
             x['canh'] = 365+100
             x['1BottomMargin'] = 0.055
             x['1TopMargin']    = 0.065
-            x['2BottomMargin'] = 0.33
-            x['2TopMargin']    = 0.1
+            x['2BottomMargin'] = 0.335
 
-            x['TopYTitleSize'] = 0.09
-            x['TopYTitleOffset'] = 0.86
-            x['TopYLabelSize'] = 0.07
-            x['TopYLabelOffset'] = 0.01
+            x['TopYTitleOffset'] = 1.37
+            x['BotXTitleOffset'] = 2.8
+            x['BotYTitleOffset'] = 1.37
+
             x['TopNDiv']       = [5,5,0]
-
-            x['BotXTitleSize'] = 0.15
-            x['BotXTitleOffset'] = 0.97
-            x['BotXLabelSize'] = 0.14
-            x['BotXLabelOffset'] = 0.02
-
-            x['BotYTitleSize']   = 0.17
-            x['BotYTitleOffset'] = 0.46
-            x['BotYLabelSize']   = 0.14
-            x['BotYLabelOffset'] = 0.01
-
             x['BotNDiv']        = [2,5,0]
             
         if style == 'MoreRatio' :
@@ -692,19 +683,14 @@ class PlotObject :
             x['1TopMargin']    = .1
             x['2BottomMargin'] = 0.23
 
-            x['TopYTitleSize'] = 0.11
-            x['TopYTitleOffset'] = 0.70
-            x['TopYLabelSize'] = 0.09 
+            x['TopYTitleOffset'] = 1.37
             x['TopNDiv']       = [5,5,0]
             
-            x['BotXTitleSize'] = 0.11
-            x['BotXTitleOffset'] = 0.90
-            x['BotXLabelSize'] = 0.08
-            x['BotXLabelOffset'] = 0.01
+            x['TopYTitleOffset'] = 1.37
+            x['BotXTitleOffset'] = 1.85
+            x['BotYTitleOffset'] = 1.37
 
-            x['BotYTitleSize'] = 0.11
-            x['BotYTitleOffset'] = 0.70
-            x['BotYLabelSize'] = 0.09
+            x['BotXLabelOffset'] = .005
             
         self.ratiocan = TCanvas(self.name+'_r',self.name+'_r',x['canw'],x['canh'])
         self.RatioPadTop = TPad("pad1", "This is the top pad",0.0,x['div'],1.0,1.0,21)
@@ -714,6 +700,7 @@ class PlotObject :
         self.RatioPadTop.SetRightMargin(x['1RightMargin'])
         self.RatioPadBot = TPad("pad2", "This is the bottom pad",0.0,0.0,1.0,x['div'],22)
         self.RatioPadBot.SetBottomMargin(x['2BottomMargin'])
+        self.RatioPadBot.SetTopMargin(x['2TopMargin'])
         self.RatioPadBot.SetLeftMargin(x['2LeftMargin'])
         self.RatioPadBot.SetRightMargin(x['2RightMargin'])
         self.RatioPadTop.SetFillColor(0)
@@ -739,7 +726,7 @@ class PlotObject :
         self.RatioTopPlot0.GetYaxis().SetTitleFont  (x['TopYTitleFont'  ])
         self.RatioTopPlot0.GetYaxis().SetLabelSize  (x['TopYLabelSize'  ])
         self.RatioTopPlot0.GetYaxis().SetLabelOffset(x['TopYLabelOffset'])
-        self.RatioTopPlot0.GetYaxis().SetLabelFont(x['TopYLabelFont'])
+        self.RatioTopPlot0.GetYaxis().SetLabelFont  (x['TopYLabelFont'  ])
         self.RatioTopPlot0.GetYaxis().SetNdivisions (x['TopNDiv'][0],x['TopNDiv'][1],x['TopNDiv'][2])
 
         sames = 'sames'
@@ -763,14 +750,18 @@ class PlotObject :
             self.RatioPadBot.cd()
             self.ratioplots[-1].Draw(sames+self.drawopt)
 
+            self.ratioplots[-1].GetXaxis().SetTitleFont  (x['BotXTitleFont'  ])
             self.ratioplots[-1].GetXaxis().SetTitleSize  (x['BotXTitleSize'  ])
             self.ratioplots[-1].GetXaxis().SetTitleOffset(x['BotXTitleOffset'])
+            self.ratioplots[-1].GetXaxis().SetLabelFont  (x['BotXLabelFont'  ])
             self.ratioplots[-1].GetXaxis().SetLabelSize  (x['BotXLabelSize'  ])
             self.ratioplots[-1].GetXaxis().SetLabelOffset(x['BotXLabelOffset'])
             self.ratioplots[-1].GetXaxis().SetTickSize   (x['BotXTickLength' ])
 
+            self.ratioplots[-1].GetYaxis().SetTitleFont  (x['BotYTitleFont'  ])
             self.ratioplots[-1].GetYaxis().SetTitleSize  (x['BotYTitleSize'  ])
             self.ratioplots[-1].GetYaxis().SetTitleOffset(x['BotYTitleOffset'])
+            self.ratioplots[-1].GetYaxis().SetLabelFont  (x['BotYLabelFont'  ])
             self.ratioplots[-1].GetYaxis().SetLabelSize  (x['BotYLabelSize'  ])
             self.ratioplots[-1].GetYaxis().SetLabelOffset(x['BotYLabelOffset'])
             self.ratioplots[-1].GetYaxis().SetNdivisions (x['BotNDiv'][0],x['BotNDiv'][1],x['BotNDiv'][2])
