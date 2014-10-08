@@ -18,7 +18,7 @@ def getIntegralAllFlows(h) :
 # Assumes particular binning!
 def getIntegralAllFlowsMinusCrack(h) :
     total = h.Integral(0,h.GetNbinsX()+1,0,h.GetNbinsY()+1)
-    crack = h.Integral(4,4,0,h.GetNbinsY()+1)
+    crack = h.Integral(5,5,0,h.GetNbinsY()+1)
     total = total - crack
     return total
 def getIntegralXOverflows(h) :
