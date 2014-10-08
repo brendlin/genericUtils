@@ -205,9 +205,10 @@ class PlotObject :
             self.wmimage = TASImage('penn_notitle_20_botright.pdf')
         for p in range(len(plots)) :
             self.plots.append(0)
-            self.plots[p] = plots[p]
-            self.plotLegNames.append(self.plots[p].GetName())
-            self.plotLegSizes.append(len(self.plots[p].GetName()))
+            self.plots[p] = plots[p].Clone()
+            self.plots[p].SetName(plots[p].GetName()+'_plotversion_can_%s'%(self.name))
+            self.plotLegNames.append(self.plots[p].GetTitle())
+            self.plotLegSizes.append(len(self.plots[p].GetTitle()))
             
         self.plots[0].GetYaxis().SetTitleOffset(1.45)
         self.plots[0].GetYaxis().SetTitleSize(0.05)
@@ -412,8 +413,8 @@ class PlotObject :
     def SetLegend(self,skip=[]) :
         for pl in range(len(self.plots)) :
             if pl in skip : continue
-            # print 'adding entry',self.plots[pl].GetName()
-            self.leg.AddEntry(self.plots[pl],self.plots[pl].GetName(),'ple')
+            # print 'adding entry',self.plots[pl].GetTitle()
+            self.leg.AddEntry(self.plots[pl],self.plots[pl].GetTitle(),'ple')
         return
 
     def writeCan(self,can='') :
@@ -439,6 +440,7 @@ class PlotObject :
                 self.can.GetPrimitive('mylegend').Delete()
             self.can.cd()
         self.leg = TLegend(x1,y1,x2,y2)
+        self.leg.SetMargin(0.1/(x2-x1))
         self.leg.SetName('mylegend')
         self.leg.SetTextFont(42)
         self.leg.SetBorderSize(0)
@@ -477,10 +479,11 @@ class PlotObject :
 
     def AddPlots(self,plots,drawopt='') :
         for pl in range(len(plots)) :
-            self.plots.append(plots[pl])
+            self.plots.append(plots[pl].Clone())
+            self.plots[-1].SetName(plots[pl].GetName()+'_plotversion_can_%s'%(self.name))
         self.can.cd()
         for pl in range(len(plots)) : # Don't do 'for plot in plots!'
-            self.leg.AddEntry(plots[pl],plots[pl].GetName(),'le')
+            self.leg.AddEntry(plots[pl],plots[pl].GetTitle(),'le')
             # plots[pl].SetMarkerSize(self.markersize)
             plots[pl].SetLineWidth(2)
             plots[pl].SetLineColor(color[self.nplots])
@@ -539,26 +542,29 @@ class PlotObject :
 #             self.lumiLabel.SetTextSize(0.05)
 #         self.lumiLabel.Draw()
             
-    def DrawText(self,x,y,text,angle=0,align='',size=0.035,can='') :
+    def DrawText(self,x,y,text,angle=0,align='',size=0.035,can='',color=1) :
         self.can.cd()
         if can == 'RatioPadTop' : self.RatioPadTop.cd()
         self.text.append(TLatex())
         self.text[-1].SetTextSize(size)
         if align == 'R': self.text[-1].SetTextAlign(31)
         if angle : self.text[-1].SetTextAngle(angle)
-        self.text[-1].DrawLatex(x,y,text)
-
-    def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035,can='',color=1) :
-        self.can.cd()
-        if can == 'RatioPadTop' : self.RatioPadTop.cd()
-        self.text.append(TLatex())
-        self.text[-1].SetNDC()
-        self.text[-1].SetTextSize(size)
         self.text[-1].SetTextFont(42)
         self.text[-1].SetTextColor(color)
-        if align == 'R': self.text[-1].SetTextAlign(31)
-        if angle : self.text[-1].SetTextAngle(angle)
         self.text[-1].DrawLatex(x,y,text)
+
+    def GetPadFromNDC(self,pad,x,y) :
+        pad.Update()
+        xnew = x*(pad.GetX2()-pad.GetX1())+pad.GetX1()
+        ynew = y*(pad.GetY2()-pad.GetY1())+pad.GetY1()
+        return xnew,ynew
+
+    def DrawTextNDC(self,x,y,text,angle=0,align='',size=0.035,can='',color=1) :
+        if can == 'RatioPadTop' : 
+            xpad,ypad = self.GetPadFromNDC(self.RatioPadTop,x,y)
+        else :
+            xpad,ypad = self.GetPadFromNDC(self.can,x,y)
+        self.DrawText(xpad,ypad,text,angle=angle,align=align,size=size,can=can)
 
     def SetAxisLabels(self,xlabel,ylabel) :
         if len(self.plots) :
@@ -610,11 +616,15 @@ class PlotObject :
              ,'canh'            :self.canh+100
              ,'1BottomMargin'   :0.020
              ,'1TopMargin'      :0.05
+             ,'1RightMargin'    :0.05
+             ,'1LeftMargin'     :0.16
              ,'2BottomMargin'   :0.30
              ,'2TopMargin'      :0.30
+             ,'2RightMargin'    :0.05
+             ,'2LeftMargin'     :0.16
 
              ,'TopXTitleSize'   :0.06
-             ,'TopXTitleOffset' :0.85
+             ,'TopXTitleOffset' :1.85
              ,'TopXTitleFont'   :42
              ,'TopXLabelSize'   :1.
              ,'TopXLabelOffset' :5.5
@@ -624,7 +634,7 @@ class PlotObject :
              ,'TopYTitleOffset' :1.27
              ,'TopYTitleFont'   :42
              ,'TopYLabelSize'   :0.05
-             # TopYLabelOffset?
+             #,'TopYLabelOffset' :0.01
              ,'TopYLabelFont'   :42
              ,'TopNDiv'         :[5,5,0]
 
@@ -700,8 +710,12 @@ class PlotObject :
         self.RatioPadTop = TPad("pad1", "This is the top pad",0.0,x['div'],1.0,1.0,21)
         self.RatioPadTop.SetBottomMargin(x['1BottomMargin'])
         self.RatioPadTop.SetTopMargin(x['1TopMargin'])
+        self.RatioPadTop.SetLeftMargin(x['1LeftMargin'])
+        self.RatioPadTop.SetRightMargin(x['1RightMargin'])
         self.RatioPadBot = TPad("pad2", "This is the bottom pad",0.0,0.0,1.0,x['div'],22)
         self.RatioPadBot.SetBottomMargin(x['2BottomMargin'])
+        self.RatioPadBot.SetLeftMargin(x['2LeftMargin'])
+        self.RatioPadBot.SetRightMargin(x['2RightMargin'])
         self.RatioPadTop.SetFillColor(0)
         self.RatioPadBot.SetFillColor(0)
         self.RatioPadTop.Draw()
