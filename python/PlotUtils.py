@@ -634,6 +634,7 @@ class PlotObject :
              ,'BotXLabelSize'  :0.12
              ,'BotXLabelOffset':0.02
              ,'BotXLabelFont'  :42
+             ,'BotXTickLength' :.08
 
              ,'BotYTitleSize'  :0.14
              ,'BotYTitleOffset':0.55 
@@ -646,10 +647,32 @@ class PlotObject :
              }
         if style == 'DiffXsec' :
             #print 'Using DiffXsec style'
+            x['div']  = 0.35
             x['canw'] = 500
             x['canh'] = 365+100
-            x['1BottomMargin'] = 0.025
+            x['1BottomMargin'] = 0.055
+            x['1TopMargin']    = 0.065
             x['2BottomMargin'] = 0.33
+            x['2TopMargin']    = 0.1
+
+            x['TopYTitleSize'] = 0.09
+            x['TopYTitleOffset'] = 0.86
+            x['TopYLabelSize'] = 0.07
+            x['TopYLabelOffset'] = 0.01
+            x['TopNDiv']       = [5,5,0]
+
+            x['BotXTitleSize'] = 0.15
+            x['BotXTitleOffset'] = 0.97
+            x['BotXLabelSize'] = 0.14
+            x['BotXLabelOffset'] = 0.02
+
+            x['BotYTitleSize']   = 0.17
+            x['BotYTitleOffset'] = 0.46
+            x['BotYLabelSize']   = 0.14
+            x['BotYLabelOffset'] = 0.01
+
+            x['BotNDiv']        = [2,5,0]
+            
         if style == 'MoreRatio' :
             #print 'Using MoreRatio style'
             x['div']  = 0.5
@@ -701,7 +724,7 @@ class PlotObject :
         self.RatioTopPlot0.GetYaxis().SetTitleOffset(x['TopYTitleOffset'])
         self.RatioTopPlot0.GetYaxis().SetTitleFont  (x['TopYTitleFont'  ])
         self.RatioTopPlot0.GetYaxis().SetLabelSize  (x['TopYLabelSize'  ])
-        # TopYLabelOffset?
+        self.RatioTopPlot0.GetYaxis().SetLabelOffset(x['TopYLabelOffset'])
         self.RatioTopPlot0.GetYaxis().SetLabelFont(x['TopYLabelFont'])
         self.RatioTopPlot0.GetYaxis().SetNdivisions (x['TopNDiv'][0],x['TopNDiv'][1],x['TopNDiv'][2])
 
@@ -730,11 +753,12 @@ class PlotObject :
             self.ratioplots[-1].GetXaxis().SetTitleOffset(x['BotXTitleOffset'])
             self.ratioplots[-1].GetXaxis().SetLabelSize  (x['BotXLabelSize'  ])
             self.ratioplots[-1].GetXaxis().SetLabelOffset(x['BotXLabelOffset'])
+            self.ratioplots[-1].GetXaxis().SetTickSize   (x['BotXTickLength' ])
 
             self.ratioplots[-1].GetYaxis().SetTitleSize  (x['BotYTitleSize'  ])
             self.ratioplots[-1].GetYaxis().SetTitleOffset(x['BotYTitleOffset'])
             self.ratioplots[-1].GetYaxis().SetLabelSize  (x['BotYLabelSize'  ])
-            # BotYLabelOffset?
+            self.ratioplots[-1].GetYaxis().SetLabelOffset(x['BotYLabelOffset'])
             self.ratioplots[-1].GetYaxis().SetNdivisions (x['BotNDiv'][0],x['BotNDiv'][1],x['BotNDiv'][2])
 
             self.ratioplots[-1].GetYaxis().SetTitle('Ratio')
