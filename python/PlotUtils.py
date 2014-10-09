@@ -196,6 +196,7 @@ class PlotObject :
         self.watermark = watermark
         self.drawopts = []
         self.text = []
+        self.legentries = []
 
         if self.watermark :
             #self.wmimage = TASImage('penn_notitle_10.pdf')
@@ -328,7 +329,7 @@ class PlotObject :
         if writecan : self.writeCan(file)
         return
 
-    def DrawTitle(self,title='',textsize=0.050,x=0.1,y=0.93) :
+    def DrawTitle(self,title='',textsize=24,x=0.1,y=0.93) :
         if self.can.GetPrimitive('title') :
             self.can.GetPrimitive('title').Delete()
         if not title :
@@ -412,10 +413,11 @@ class PlotObject :
         return
 
     def SetLegend(self,skip=[]) :
+        self.legentries = []
         for pl in range(len(self.plots)) :
             if pl in skip : continue
             # print 'adding entry',self.plots[pl].GetTitle()
-            self.leg.AddEntry(self.plots[pl],self.plots[pl].GetTitle(),'ple')
+            self.legentries.append(self.leg.AddEntry(self.plots[pl],self.plots[pl].GetTitle(),'ple'))
         return
 
     def writeCan(self,can='') :
@@ -430,7 +432,7 @@ class PlotObject :
         self.can.Write(self.name)
         return
 
-    def CreateLegend(self,x1,y1,x2,y2,can='') :
+    def CreateLegend(self,x1,y1,x2,y2,can='',tsize=20) :
         #print x1,y1,x2,y2
         if can == 'RatioPadTop' :
             if self.RatioPadTop.GetPrimitive('mylegend') :
@@ -443,15 +445,15 @@ class PlotObject :
         self.leg = TLegend(x1,y1,x2,y2)
         self.leg.SetMargin(0.1/(x2-x1))
         self.leg.SetTextFont(43)
-        self.leg.SetTextSize(24)
+        self.leg.SetTextSize(tsize)
         self.leg.SetName('mylegend')
         self.leg.SetTextFont(43)
         self.leg.SetBorderSize(0)
         self.leg.SetFillStyle(0)
         
-    def RecreateLegend(self,x1,y1,x2,y2,can='',skip=[]) :
+    def RecreateLegend(self,x1,y1,x2,y2,can='',skip=[],tsize=20) :
 
-        self.CreateLegend(x1,y1,x2,y2,can=can)
+        self.CreateLegend(x1,y1,x2,y2,can=can,tsize=tsize)
         self.SetLegend(skip=skip)
         if ('colz' not in self.drawopt) and self.drawleg :
             self.can.cd()
@@ -486,7 +488,7 @@ class PlotObject :
             self.plots[-1].SetName(plots[pl].GetName()+'_plotversion_can_%s'%(self.name))
         self.can.cd()
         for pl in range(len(plots)) : # Don't do 'for plot in plots!'
-            self.leg.AddEntry(plots[pl],plots[pl].GetTitle(),'le')
+            self.legentries.append(self.leg.AddEntry(plots[pl],plots[pl].GetTitle(),'le'))
             # plots[pl].SetMarkerSize(self.markersize)
             plots[pl].SetLineWidth(2)
             plots[pl].SetLineColor(color[self.nplots])
