@@ -128,6 +128,7 @@ case $HOSTNAME in
     #echo adding myscripts
     export PATH=$PATH:/bin/myscripts
     # adding to python path
+    export genericUtils=$brendlin/genericUtils/
     export PYTHONPATH=$PYTHONPATH:$egammaframe/python:$genericUtils/python
     # aliases
     export ppc=/Users/kurtbrendlinger/Documents/pennHighEnergy/talks/130708_PPC_HiggsTalk/proceedings/aipproc_8s
@@ -168,7 +169,6 @@ case $HOSTNAME in
     export utilities=$brendlin/genericUtils/
     export egammaframe=$brendlin/egammaFrame/
     export egammacore=$brendlin/egammaCore/
-    export genericUtils=$brendlin/genericUtils/
     export penn=kurb@at3i00.hep.upenn.edu
     #
     export pennsvn=svn+ssh://brendlin@svn.cern.ch/reps/penn
