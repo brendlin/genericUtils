@@ -1,0 +1,223 @@
+#!/bin/bash
+
+myhost () { 
+    hostname|awk -F. '{print $1}' 
+}
+#returns the last 2 fields of the working directory
+pwdtail () {
+    pwd|awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'
+}
+isdq2 () {
+    [ -n "$DQ2_HOME" ] && echo "[*]"
+}
+getps1 () {
+case $HOSTNAME in 
+    (Macintosh.local)      echo '['${USER:0:4}']['`pwdtail`] ;;
+    (at3i00.hep.upenn.edu) echo '['${USER}'.`myhost`]'[`pwdtail`]`isdq2` ;;
+    (*)                    echo '['${USER}'.`myhost`]'[`pwdtail`]`isdq2` ;;
+esac
+}
+PS1='`getps1` '
+
+# Larger Bash History
+HISTFILESIZE=5000
+
+# This is to turn on i-search (in conjunction with reverse-i-search)
+stty -ixon
+
+# Python
+export PYTHONSTARTUP=~/.pystartup
+
+export EMAIL_RECIPIENT=kurt.brendlinger@gmail.com
+export RUCIO_ACCOUNT=brendlin
+export nickname=brendlin
+export pennsvn=svn+ssh://brendlin@svn.cern.ch/reps/penn/
+export svnatlasoff=svn+ssh://brendlin@svn.cern.ch/reps/atlasoff/
+
+alias 'nemacs=emacs -nw'
+alias 'asdf=%emacs'
+alias 'sdfg=root -l *.root'
+alias 'keepmealive=xterm -name "$USER" -e sh ~brendlin/public/eauxvives.sh &'
+alias 'launchTMVA=root -l $ROOTSYS/tmva/test/TMVAGui.C'
+
+gitit () {
+    eval "$(ssh-agent -s)"
+    ssh-add ~/.ssh/id_rsa_github
+}
+cern () {
+    kinit brendlin@CERN.CH ;
+    aklog
+}
+susysetup () {
+case $HOSTNAME in
+    (Macintosh.local)
+    cd $brendlin/SusyElectroweak
+    source RootCore/scripts/setup.sh
+    export me=`pwd`
+    cd -
+    ;;
+    (at3i00.hep.upenn.edu)  
+    cd $HOME/testarea/SusyElectroweak
+    source ASETUP
+    export me=`pwd`
+    ;;
+    (*)
+    echo 'No susysetup set up for '$HOSTNAME
+    ;;
+}
+hsgsetup () {
+case $HOSTNAME in
+    (at3i00.hep.upenn.edu)
+    if [ $# -eq 0 ]
+        then
+	cd $HOME/testarea/hsg2_4
+    else
+        echo 'Setting up HSG2 code here'
+    fi
+    export me=`pwd`
+    # setup atlas version (need it for the python version I think)
+    # BECAUSE THIS IS COMMENTED, "from argparse import ArgumentParser" will fail
+    export myVersion=17.7.0
+    asetup $myVersion,here
+    # do this AFTERWARD for RootCore compatibility
+    # localSetupROOT # uh apparently have to do this by hand
+    # setup sframe
+    cd Higgs4lDev/SFrame/SFrame;
+    source setup.sh;
+    cd -
+    # setup RootCore. Apparently order matters. Do this AFTER the asetup.
+    cd Higgs4lDev/SFrame/RootCore
+    source RootCore/scripts/setup.sh
+    cd -
+    ;;
+    (*)
+    echo 'No hsgsetup set up for '$HOSTNAME
+    ;;    
+esac
+}
+egsetup () {
+case $HOSTNAME in
+    (at3i00.hep.upenn.edu)
+    source eg.sh
+    #cd $HOME/testarea/MyArbitraryTestDirectory
+    cd $HOME/testarea/CleanEgammaCoreDir
+    export me=`pwd`
+    export PYTHONPATH=$PYTHONPATH:$me/egammaCore/config
+    source RootCore/scripts/setup.sh
+    ;;
+    (*)
+    echo 'No egsetup set up for '$HOSTNAME
+    ;;    
+esac
+}
+
+
+case $HOSTNAME in
+    (Macintosh.local)
+    source /Developer/CMT/v1r20p20090520/mgr/setup.sh
+    cd /Users/kurtbrendlinger/root
+    . bin/thisroot.sh;
+    cd -;
+    echo Setting up ROOT v6-00-02... done.
+    # MacPorts Installer addition on 2010-11-10_at_17:10:09: adding an appropriate PATH variable for use with MacPorts.
+    export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+    # Finished adapting your PATH environment variable for use with MacPorts.
+    . /sw/bin/init.sh
+    #echo Setting up Fink... done.
+    #echo adding myscripts
+    export PATH=$PATH:/bin/myscripts
+    # adding to python path
+    export PYTHONPATH=$PYTHONPATH:$egammaframe/python:$genericUtils/python
+    # aliases
+    export ppc=/Users/kurtbrendlinger/Documents/pennHighEnergy/talks/130708_PPC_HiggsTalk/proceedings/aipproc_8s
+    alias 'textedit=/Applications/TextEdit.app/Contents/MacOS/TextEdit'
+    alias 'lxplus=caffeinate -i ssh -Y brendlin@lxplus0190.cern.ch'
+    alias 'lxplusrand=caffeinate -i ssh -Y brendlin@lxplus.cern.ch'
+    # slc6
+    alias 'lxplus0028=caffeinate -i ssh -Y brendlin@lxplus0028.cern.ch'
+    alias 'lxplus0049=caffeinate -i ssh -Y brendlin@lxplus0049.cern.ch'
+    alias 'lxplus0190=caffeinate -i ssh -Y brendlin@lxplus0190.cern.ch'
+    alias 'lxplus0569=caffeinate -i ssh -Y brendlin@lxplus0569.cern.ch'
+    alias 'lxplusscreen=caffeinate -i ssh -Y brendlin@lxplus419.cern.ch'
+    alias 'tier3screen=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
+
+    alias 'higgs=caffeinate -i ssh -Y kurb@higgs.hep.upenn.edu'
+    alias 'dionysus=caffeinate -i ssh -Y kurb@dionysus.hep.upenn.edu'
+    export pennscp=kurb@at3i00.hep.upenn.edu
+    export lxscp=brendlin@lxplus0190.cern.ch
+
+    alias 'atlasgw=caffeinate -i ssh -Y brendlin@atlasgw.cern.ch'
+    alias 'atlidali=caffeinate -i ssh -Y atlidali@lxplus415.cern.ch'
+    alias 'tier3=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
+    alias 'cdpenn=cd Documents/PennHighEnergy/'
+    alias 'whoareyou=echo No more questions.'
+    alias 'usa=ssh -D 8080 kurb@at3i00.hep.upenn.edu'
+    alias 'usa_heph=ssh -D 8080 kurb@hephaestus.hep.upenn.edu'
+    alias 'usatwo=ssh -D 8080 kurb@nereus.hep.upenn.edu'
+    alias 'taneycat=caffeinate -i ssh -Y taneycat@69.242.1.96'
+    alias 'torrent=ssh -L 9091:localhost:9091 taneycat@69.242.1.96'
+    #
+    export alignment=/Users/kurtbrendlinger/Documents/pennHighEnergy/alignment/
+    export egamma=/Users/kurtbrendlinger/Documents/pennHighEnergy/egamma/
+    #export workflow=/Users/kurtbrendlinger/Documents/pennHighEnergy/workflow/
+    export workflow=/Users/kurtbrendlinger/Documents/pennHighEnergy/workflow_14_01/
+    export ecore=/home/kurb/testarea/17.7.0/egammaCore/
+    export eframe=/home/kurb/testarea/17.7.0/egammaFrame/
+    export brendlin=/Users/kurtbrendlinger/Documents/pennHighEnergy
+    export utilities=$brendlin/genericUtils/
+    export egammaframe=$brendlin/egammaFrame/
+    export egammacore=$brendlin/egammaCore/
+    export genericUtils=$brendlin/genericUtils/
+    export penn=kurb@at3i00.hep.upenn.edu
+    #
+    export pennsvn=svn+ssh://brendlin@svn.cern.ch/reps/penn
+    export svnatlasoff=svn+ssh://brendlin@svn.cern.ch/reps/atlasoff
+    #
+    export scpbrendlin=brendlin@lxplus.cern.ch:/
+    export scpatlidali=atlidali@lxplus.cern.ch:/
+    ;;
+    (at3i00.hep.upenn.edu)
+    echo setting up atlas
+    setupATLAS
+    alias r=localSetupROOT
+    alias xrdls='xrd hn.at3f dirlist '
+    #
+    export xrdprefix=root://hn.at3f///srm/
+    export mybase=/home/kurb/
+    export mydir=/disk/userdata00/atlas_data2/kurb/
+    export mi=$mydir/2013/
+    export pennweb=/home/u2/kurb/html/
+    echo done
+    alias duls='du -sk * | sort -nr | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done'
+    ;;
+    (lxplus*)
+    # EOS mounting
+    source /afs/cern.ch/project/eos/installation/pro/etc/setup.sh
+    # PyAMI                                                                                                                                                                                                          
+    source /afs/cern.ch/atlas/software/tools/pyAMI/setup.sh
+    #
+    export brendlin=/afs/cern.ch/user/b/brendlin/
+    export trt=/afs/cern.ch/atlas/calib/id/calib_1/TRTAlignment/
+    export atlidali=/afs/cern.ch/user/a/atlidali/w1/users/brendlin/testarea/16.6.4.3/
+    export public=/afs/cern.ch/user/b/brendlin/public/
+    export scratch=/afs/cern.ch/user/b/brendlin/scratch0
+    #
+    alias 'bjobs=bjobs -w'
+    alias 'bjbos=bjobs -w'
+    alias 'bjosb=bjobs -w'
+    alias 'bq=bqueues -u '$USER
+    ;;
+    (*)
+    echo 'No further aliases or exports.'
+    ;;
+esac 
+
+alias 'sgrep=echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; echo ~~~~~~~~~~~~~~~~~~~~~~~\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; \
+grep -n -i -R --exclude=*~ --exclude=*686* --exclude=*.svn* --exclude=*.makesav --exclude=*.make \
+--exclude=*.o --exclude=*nstallAre* '
+
+
+
