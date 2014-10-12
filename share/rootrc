@@ -1,0 +1,23 @@
+#
+# Put this in the following location: $HOME/.rootrc
+# You have to make 2 changes to path names, depending on where you check out genericUtils
+#
+
+Unix.*.Root.MacroPath:      .:$(HOME)/Documents/pennHighEnergy/genericUtils/share:$ROOTSYS/tmva/test:
+Rint.Logon:          $(HOME)/Documents/pennHighEnergy/genericUtils/share/rootlogon.C
+Rint.Logoff:
+
+Browser.Name:                TRootBrowser
+# Browser Options (plugins)
+# F: File browser E: Text Editor H: HTML browser
+# C: Canvas I: I/O redirection P: Proof G: GL viewer
+Browser.Options:             FECI
+# Can be either small, big, list, details
+Browser.IconStyle:           small
+# Can be either name, type, size, date
+Browser.SortBy:              name
+Browser.GroupView:           10000
+Browser.ShowHidden:          no
+Browser.AutoThumbnail:       yes
+# Start URL for the TRootBrowser embedded HTML renderer
+Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
