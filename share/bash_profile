@@ -13,8 +13,8 @@ isdq2 () {
 getps1 () {
 case $HOSTNAME in 
     (Macintosh.local)      echo '['${USER:0:4}']['`pwdtail`] ;;
-    (at3i00.hep.upenn.edu) echo '['${USER}'.`myhost`]'[`pwdtail`]`isdq2` ;;
-    (*)                    echo '['${USER}'.`myhost`]'[`pwdtail`]`isdq2` ;;
+    (at3i00.hep.upenn.edu) echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2` ;;
+    (*)                    echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2` ;;
 esac
 }
 PS1='`getps1` '
