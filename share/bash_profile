@@ -64,6 +64,7 @@ case $HOSTNAME in
     (*)
     echo 'No susysetup set up for '$HOSTNAME
     ;;
+esac
 }
 hsgsetup () {
 case $HOSTNAME in
