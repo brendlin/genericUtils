@@ -12,9 +12,9 @@ isdq2 () {
 }
 getps1 () {
 case $HOSTNAME in 
-    (Macintosh.local)      echo '['${USER:0:4}']['`pwdtail`] ;;
-    (at3i00.hep.upenn.edu) echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2` ;;
-    (*)                    echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2` ;;
+    (Macintosh.local | pb-d-*) echo '['${USER:0:4}']['`pwdtail`] ;;
+    (at3i00.hep.upenn.edu)     echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2` ;;
+    (*)                        echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2` ;;
 esac
 }
 PS1='`getps1` '
@@ -50,7 +50,7 @@ cern () {
 }
 susysetup () {
 case $HOSTNAME in
-    (Macintosh.local)
+    (Macintosh.local | pb-d-*)
     cd $brendlin/SusyElectroweak
     source RootCore/scripts/setup.sh
     export me=`pwd`
@@ -114,7 +114,7 @@ esac
 
 
 case $HOSTNAME in
-    (Macintosh.local)
+    (Macintosh.local | pb-d-*)
     source /Developer/CMT/v1r20p20090520/mgr/setup.sh
     cd /Users/kurtbrendlinger/root
     . bin/thisroot.sh;
