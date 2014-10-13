@@ -61,6 +61,10 @@ case $HOSTNAME in
     source ASETUP
     export me=`pwd`
     ;;
+    (lxplus*)
+    source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
+    source ~/susy.sh
+    ;;
     (*)
     echo 'No susysetup set up for '$HOSTNAME
     ;;
