@@ -201,6 +201,7 @@ case $HOSTNAME in
     # PyAMI                                                                                                                                                                                                          
     source /afs/cern.ch/atlas/software/tools/pyAMI/setup.sh
     #
+    export mydir=/afs/cern.ch/work/b/brendlin/
     export brendlin=/afs/cern.ch/user/b/brendlin/
     export trt=/afs/cern.ch/atlas/calib/id/calib_1/TRTAlignment/
     export atlidali=/afs/cern.ch/user/a/atlidali/w1/users/brendlin/testarea/16.6.4.3/
