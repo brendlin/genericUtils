@@ -132,6 +132,7 @@ case $HOSTNAME in
     #echo adding myscripts
     export PATH=$PATH:/bin/myscripts
     # adding to python path
+    export brendlin=/Users/kurtbrendlinger/Documents/pennHighEnergy
     export genericUtils=$brendlin/genericUtils/
     export PYTHONPATH=$PYTHONPATH:$egammaframe/python:$genericUtils/python
     # aliases
@@ -169,7 +170,6 @@ case $HOSTNAME in
     export workflow=/Users/kurtbrendlinger/Documents/pennHighEnergy/workflow_14_01/
     export ecore=/home/kurb/testarea/17.7.0/egammaCore/
     export eframe=/home/kurb/testarea/17.7.0/egammaFrame/
-    export brendlin=/Users/kurtbrendlinger/Documents/pennHighEnergy
     export utilities=$brendlin/genericUtils/
     export egammaframe=$brendlin/egammaFrame/
     export egammacore=$brendlin/egammaCore/
