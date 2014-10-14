@@ -120,60 +120,78 @@ class condorSubmit :
         return
 
 #--------------------------------------------------------------------------------
+def chunkList(orig,nperchunk) :
+    new = []
+    for i in range(0,len(orig),nperchunk) :
+        new.append(orig[i:i+nperchunk])
+    return new
+
+#--------------------------------------------------------------------------------
 def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='') :
+    #
+    # if outname does not have a '/' in it, then it is put into the directory 'dir'.
+    # Otherwise it is put in whatever directory you specified.
+    #
     import os
+    movetodir = not ('/' in outname)
+    if (not movetodir) and (not (outname[0] == '/')) :
+        outname = os.path.abspath(outname)
+    if not os.path.exists(os.path.dirname(outname)) :
+        print 'Error! %s does not exist.'%(os.path.dirname(outname))
+        return
+
     USER = os.getenv('USER')
-    if not tmpdir : tmpdir = '/tmp/%s/tmphadd/'%USER
-    if not os.path.isdir(tmpdir) :
-        os.mkdir(tmpdir)
+    if not tmpdir :
+        tmpdir = '/tmp/%s/tmphadd/'%USER
     from time import strftime,localtime
     tmpdir = tmpdir+strftime("%d_%m_%Y_%H_%M_%S", localtime())+'/'
-    if not os.path.isdir(tmpdir) :
-        os.mkdir(tmpdir)    
+    os.system('mkdir -p %s'%(tmpdir))
     filelist = []
-    filelist2 = []
+    filelist_nextiter = []
     for i in os.listdir(dir) :
         if (keyword in i) and ('.root' in i) :
             if i == outname : continue
             if 'Iter' in i : continue
-            filelist.append(dir+'/'+i)
+            filelist.append(os.path.abspath(dir+'/'+i))
 
     filelist.sort()
     Batch = kBatchLocal(15)
 
     # each iter
-    for k in range(100) :
-        hadd1 = ['hadd','-f']
-        hadd2 = []
+    for k in range(10) :
         nsubs = 0
-        for file in filelist :
-            i = filelist.index(file)
-            hadd2.append(file)
-            if (len(hadd2) == nfilesperjob) or (i == len(filelist)-1) :
+        file_chunks = chunkList(filelist,nfilesperjob)
+        for i,file_chunk in enumerate(file_chunks) :
+            
+            if len(filelist) <= nfilesperjob :
+                tmpoutname = os.path.abspath(tmpdir+'/'+outname)
+                if not movetodir :
+                    tmpoutname = outname
+                logname = os.path.abspath(tmpdir+'/Iter%02d_%02d_%s'%(k,nsubs,outname.replace('/','_')))
+                logname = logname.replace('.root','')
+            else :
+                tmpoutname = os.path.abspath(tmpdir+'/Iter%02d_%02d_%s'%(k,nsubs,outname.replace('/','_')))
+                logname = tmpoutname.replace('.root','')
+                nsubs += 1
 
-                # output name
-                if len(filelist) <= nfilesperjob :
-                    tmpoutname = [tmpdir+'/'+outname]
-                else :
-                    tmpoutname = [tmpdir+'/Iter%02d_%02d_%s' % (k,nsubs,outname.replace('/',''))]
-                    nsubs += 1
+            filelist_nextiter.append(tmpoutname)
+            cmd = ['hadd','-f',tmpoutname]+file_chunk
+            print ' '.join(cmd)
+            Batch.addJob(cmd,logname,doprint=False)
 
-                filelist2 += tmpoutname
-                print hadd1+tmpoutname+hadd2
-                Batch.addJob(hadd1+tmpoutname+hadd2,tmpoutname[0].replace('.root',''),doprint=False)
-                hadd2 = []
-                
         Batch.wait()
-        if len(filelist2) == 1 : break
+        if len(filelist_nextiter) == 1 : break
 
-        filelist = []
-        for file in filelist2 :
-            filelist.append(file)
-        filelist2 = []
+        filelist = filelist_nextiter
+        filelist_nextiter = []
         
-    os.system('mv '+tmpdir+'/'+outname+' '+dir)
-    print 'Hadd succeeded.'
+    result = outname
+    if movetodir :
+        os.system('mv '+tmpdir+'/'+outname+' '+dir)
+        result = os.path.abspath(dir+'/'+outname)
+    print 'Hadd succeeded. Result is',result
     os.system('rm '+tmpdir+'/*')
+    os.system('rmdir '+tmpdir)
     return
 
 
