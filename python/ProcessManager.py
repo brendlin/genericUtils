@@ -29,17 +29,20 @@ class kBatchLocal :
         return
 
     def poll(self) :
+        njobs_prev = 0
         for i in range(1000000) :
             njobs = 0
             for subproc in self.subprocs :
                 njobs += 1 if (subproc.poll() == None) else 0
             if njobs < self.maxnjobs :
-                print 'njobs:',njobs,'. Adding.'
+                if njobs_prev == self.maxnjobs : print
+                print 'njobs: %d. Adding.'%(njobs)
                 break
             else :
                 stdout.write("\rWaiting for jobs to clear: %d (%s)" % (njobs,GetInHMS(time.time() - self.start_time)))
                 stdout.flush()
                 time.sleep(5)
+            njobs_prev = njobs
         return
 
     def wait(self) :
@@ -133,12 +136,20 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='') :
     # Otherwise it is put in whatever directory you specified.
     #
     import os
-    movetodir = not ('/' in outname)
-    if (not movetodir) and (not (outname[0] == '/')) :
+    put_result_in_dir = not ('/' in outname)
+    if put_result_in_dir :
+        outname = os.path.abspath(dir+'/'+outname)
+    if (not put_result_in_dir) and (not (outname[0] == '/')) :
         outname = os.path.abspath(outname)
     if not os.path.exists(os.path.dirname(outname)) :
         print 'Error! %s does not exist.'%(os.path.dirname(outname))
         return
+
+    print '--- BigHadd'
+    print 'Directory:  ',os.path.abspath(dir)
+    print 'Keyword:    ',keyword
+    print 'output name:',outname
+    print '---'
 
     USER = os.getenv('USER')
     if not tmpdir :
@@ -164,19 +175,17 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='') :
         for i,file_chunk in enumerate(file_chunks) :
             
             if len(filelist) <= nfilesperjob :
-                tmpoutname = os.path.abspath(tmpdir+'/'+outname)
-                if not movetodir :
-                    tmpoutname = outname
-                logname = os.path.abspath(tmpdir+'/Iter%02d_%02d_%s'%(k,nsubs,outname.replace('/','_')))
+                tmpoutname = outname
+                logname = os.path.abspath(tmpdir+'/Iter%02d_%02d_%s'%(k,nsubs,os.path.basename(outname)))
                 logname = logname.replace('.root','')
             else :
-                tmpoutname = os.path.abspath(tmpdir+'/Iter%02d_%02d_%s'%(k,nsubs,outname.replace('/','_')))
+                tmpoutname = os.path.abspath(tmpdir+'/Iter%02d_%02d_%s'%(k,nsubs,os.path.basename(outname)))
                 logname = tmpoutname.replace('.root','')
                 nsubs += 1
 
             filelist_nextiter.append(tmpoutname)
             cmd = ['hadd','-f',tmpoutname]+file_chunk
-            print ' '.join(cmd)
+            #print ' '.join(cmd)
             Batch.addJob(cmd,logname,doprint=False)
 
         Batch.wait()
@@ -185,11 +194,7 @@ def BigHadd(dir,keyword,outname,nfilesperjob=5,tmpdir='') :
         filelist = filelist_nextiter
         filelist_nextiter = []
         
-    result = outname
-    if movetodir :
-        os.system('mv '+tmpdir+'/'+outname+' '+dir)
-        result = os.path.abspath(dir+'/'+outname)
-    print 'Hadd succeeded. Result is',result
+    print 'Hadd succeeded. Result is',outname
     os.system('rm '+tmpdir+'/*')
     os.system('rmdir '+tmpdir)
     return
