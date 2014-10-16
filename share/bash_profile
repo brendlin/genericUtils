@@ -10,11 +10,14 @@ pwdtail () {
 isdq2 () {
     [ -n "$DQ2_HOME" ] && echo "[*]"
 }
+isScreen () {
+    [ $TERM = "screen" ] && echo "[S]"
+}
 getps1 () {
 case $HOSTNAME in 
-    (Macintosh.local | pb-d-*) echo '['${USER:0:4}']['`pwdtail`] ;;
-    (at3i00.hep.upenn.edu)     echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2` ;;
-    (*)                        echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2` ;;
+    (Macintosh.local | pb-d-*) echo '['${USER:0:4}']['`pwdtail`]`isScreen` ;;
+    (at3i00.hep.upenn.edu)     echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
+    (*)                        echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
 esac
 }
 PS1='`getps1` '
@@ -183,7 +186,10 @@ case $HOSTNAME in
     ;;
     (at3i00.hep.upenn.edu)
     echo setting up atlas
-    setupATLAS
+    export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+    alias 'setupATLAS=source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh'
+    # setupATLAS below:
+    source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
     alias r=localSetupROOT
     alias xrdls='xrd hn.at3f dirlist '
     #
