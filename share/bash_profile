@@ -15,7 +15,7 @@ isScreen () {
 }
 getps1 () {
 case $HOSTNAME in 
-    (Macintosh.local | pb-d-*) echo '['${USER:0:4}']['`pwdtail`]`isScreen` ;;
+    (Macintosh.local | macintosh.* | pb-d-*) echo '['${USER:0:4}']['`pwdtail`]`isScreen` ;;
     (at3i00.hep.upenn.edu)     echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
     (*)                        echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
 esac
@@ -53,7 +53,7 @@ cern () {
 }
 susysetup () {
 case $HOSTNAME in
-    (Macintosh.local | pb-d-*)
+    (Macintosh.local | macintosh.* | pb-d-*)
     cd $brendlin/SusyElectroweak
     source RootCore/scripts/setup.sh
     export me=`pwd`
@@ -121,7 +121,7 @@ esac
 
 
 case $HOSTNAME in
-    (Macintosh.local | pb-d-*)
+    (Macintosh.local | macintosh.* | pb-d-*)
     source /Developer/CMT/v1r20p20090520/mgr/setup.sh
     cd /Users/kurtbrendlinger/root
     . bin/thisroot.sh;
