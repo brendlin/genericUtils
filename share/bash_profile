@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# If not running interactively, don't do anything
+[ ! -t 0 ] && return
+
 myhost () { 
     hostname|awk -F. '{print $1}' 
 }
