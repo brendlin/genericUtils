@@ -18,9 +18,10 @@ isScreen () {
 }
 getps1 () {
 case $HOSTNAME in 
-    (Macintosh.local | macintosh.* | pb-d-*) echo '['${USER:0:4}']['`pwdtail`]`isScreen` ;;
     (at3i00.hep.upenn.edu)     echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
-    (*)                        echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
+    (lxplus*)                  echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
+    #(Macintosh.local | macintosh.* | pb-d-*) 
+    (*) echo '['${USER:0:4}']['`pwdtail`]`isScreen` ;;
 esac
 }
 PS1='`getps1` '
@@ -56,12 +57,6 @@ cern () {
 }
 susysetup () {
 case $HOSTNAME in
-    (Macintosh.local | macintosh.* | pb-d-*)
-    cd $brendlin/SusyElectroweak
-    source RootCore/scripts/setup.sh
-    export me=`pwd`
-    cd -
-    ;;
     (at3i00.hep.upenn.edu)  
     cd $HOME/testarea/SusyElectroweak
     source ASETUP
@@ -72,7 +67,11 @@ case $HOSTNAME in
     source ~/susy.sh
     ;;
     (*)
-    echo 'No susysetup set up for '$HOSTNAME
+    #(Macintosh.local | macintosh.* | pb-d-*)
+    cd $brendlin/SusyElectroweak
+    source RootCore/scripts/setup.sh
+    export me=`pwd`
+    cd -
     ;;
 esac
 }
@@ -124,7 +123,43 @@ esac
 
 
 case $HOSTNAME in
-    (Macintosh.local | macintosh.* | pb-d-*)
+    (at3i00.hep.upenn.edu)
+    echo setting up atlas
+    export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+    alias 'setupATLAS=source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh'
+    # setupATLAS below:
+    source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
+    alias r=localSetupROOT
+    alias xrdls='xrd hn.at3f dirlist '
+    #
+    export xrdprefix=root://hn.at3f///srm/
+    export mybase=/home/kurb/
+    export mydir=/disk/userdata00/atlas_data2/kurb/
+    export mi=$mydir/2013/
+    export pennweb=/home/u2/kurb/html/
+    echo done
+    alias duls='du -sk * | sort -nr | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done'
+    ;;
+    (lxplus*)
+    # EOS mounting
+    source /afs/cern.ch/project/eos/installation/pro/etc/setup.sh
+    # PyAMI                                                                                                                                                                                                          
+    source /afs/cern.ch/atlas/software/tools/pyAMI/setup.sh
+    #
+    export mydir=/afs/cern.ch/work/b/brendlin/
+    export brendlin=/afs/cern.ch/user/b/brendlin/
+    export trt=/afs/cern.ch/atlas/calib/id/calib_1/TRTAlignment/
+    export atlidali=/afs/cern.ch/user/a/atlidali/w1/users/brendlin/testarea/16.6.4.3/
+    export public=/afs/cern.ch/user/b/brendlin/public/
+    export scratch=/afs/cern.ch/user/b/brendlin/scratch0
+    #
+    alias 'bjobs=bjobs -w'
+    alias 'bjbos=bjobs -w'
+    alias 'bjosb=bjobs -w'
+    alias 'bq=bqueues -u '$USER
+    ;;
+    #(Macintosh.local | macintosh.* | pb-d-*)
+    (*)
     source /Developer/CMT/v1r20p20090520/mgr/setup.sh
     cd /Users/kurtbrendlinger/root
     . bin/thisroot.sh;
@@ -186,44 +221,6 @@ case $HOSTNAME in
     #
     export scpbrendlin=brendlin@lxplus.cern.ch:/
     export scpatlidali=atlidali@lxplus.cern.ch:/
-    ;;
-    (at3i00.hep.upenn.edu)
-    echo setting up atlas
-    export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
-    alias 'setupATLAS=source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh'
-    # setupATLAS below:
-    source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
-    alias r=localSetupROOT
-    alias xrdls='xrd hn.at3f dirlist '
-    #
-    export xrdprefix=root://hn.at3f///srm/
-    export mybase=/home/kurb/
-    export mydir=/disk/userdata00/atlas_data2/kurb/
-    export mi=$mydir/2013/
-    export pennweb=/home/u2/kurb/html/
-    echo done
-    alias duls='du -sk * | sort -nr | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done'
-    ;;
-    (lxplus*)
-    # EOS mounting
-    source /afs/cern.ch/project/eos/installation/pro/etc/setup.sh
-    # PyAMI                                                                                                                                                                                                          
-    source /afs/cern.ch/atlas/software/tools/pyAMI/setup.sh
-    #
-    export mydir=/afs/cern.ch/work/b/brendlin/
-    export brendlin=/afs/cern.ch/user/b/brendlin/
-    export trt=/afs/cern.ch/atlas/calib/id/calib_1/TRTAlignment/
-    export atlidali=/afs/cern.ch/user/a/atlidali/w1/users/brendlin/testarea/16.6.4.3/
-    export public=/afs/cern.ch/user/b/brendlin/public/
-    export scratch=/afs/cern.ch/user/b/brendlin/scratch0
-    #
-    alias 'bjobs=bjobs -w'
-    alias 'bjbos=bjobs -w'
-    alias 'bjosb=bjobs -w'
-    alias 'bq=bqueues -u '$USER
-    ;;
-    (*)
-    echo 'No further aliases or exports.'
     ;;
 esac 
 

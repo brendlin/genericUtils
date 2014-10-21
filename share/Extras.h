@@ -32,6 +32,26 @@ TH1F* SF(TH2* h,TH2* err,int bin){
   return hist;
 }
 
+TH1F* SF(TH2* h,TH2* err,TH2* err2,int bin){
+  TH1F* hist;
+  TH1F* error;
+  TH1F* error2;
+  stringstream name1,name2,name3;
+  name1 << h->GetName() << bin;
+  name2 << err->GetName() << bin;
+  name3 << err2->GetName() << bin;
+  string name1s = name1.str();
+  string name2s = name2.str();
+  string name3s = name3.str();
+  hist   = (TH1F*)h->ProjectionY(name1s.c_str(),bin,bin);
+  error  = (TH1F*)err->ProjectionY(name2s.c_str(),bin,bin);
+  error2 = (TH1F*)err2->ProjectionY(name3s.c_str(),bin,bin);
+  for(int i=0;i<hist->GetNbinsX();i++){
+    hist->SetBinError(i+1,sqrt(pow(error->GetBinContent(i+1),2)+pow(error2->GetBinContent(i+1),2)));
+  }
+  return hist;
+}
+
 TH1F* hist(const char* name,TCanvas* c){
   std::cout << "##################################" << std::endl;
   std::cout << "#" << std::endl;
