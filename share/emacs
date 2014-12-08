@@ -1,0 +1,177 @@
+(custom-set-variables
+ '(default-input-method "rfc1345")
+ '(load-home-init-file t t)
+ '(auto-compression-mode t nil (jka-compr))
+ '(case-fold-search t)
+ '(global-font-lock-mode t nil (font-lock))
+ '(show-paren-mode t nil (paren))
+ '(ps-font-size 14)
+ '(current-language-environment "English"))
+(custom-set-faces)
+
+;(add-to-list 'load-path "~/.emacs.d")
+;(require 'undo-tree.el)
+;(global-undo-tree-mode 1)
+
+(global-set-key [S-iso-lefttab] 'dabbrev-expand)
+
+(setq tab-width 4)
+(global-set-key [(tab)] 'indent-or-expand)
+
+; Take out later
+(global-set-key [lefttab] 'dabbrev-expand)
+(global-set-key "\e[Z" 'dabbrev-expand)
+(global-set-key "\M-c" 'comment-region)
+(global-set-key "\M-u" 'uncomment-region)
+
+;(global-set-key "\M-c" 'undo-tree-redo)
+
+(normal-erase-is-backspace-mode 0)
+(global-set-key "\C-h" 'backward-delete-char-untabify)
+;(global-set-key "\C-h" 'delete-backward-char)
+(global-set-key "\M-h" 'backward-kill-word)
+(global-set-key "\C-q" 'query-replace-regexp)
+(global-set-key "\C-l" 'goto-line)
+(global-set-key "\M-n" 'forward-paragraph)
+(global-set-key "\M-p" 'backward-paragraph)
+;(global-set-key "\C-p" 'ispell-buffer)
+(define-key global-map [(control return)] 'ispell-word)
+
+; Map C-c C-v to the following function
+(define-key global-map [(control c) (control v)] 'atl-switch-src)
+
+; Switches between .h and .cxx files
+(defun atl-switch-src ()
+  (interactive)
+  (setq filename buffer-file-name)
+  (setq path (split-string filename "/"))
+  (if (not (string-equal (car path) ""))
+      (setq path (cons "" path)))
+  (setq len (length path))
+  (setq pkg (nth (- len 3) path))
+  
+  (if (string-match "\\.h" filename)
+      (progn
+        (setcar (nthcdr (- len 2) path) "src")
+        (setq tmppath (mapconcat 'identity path "/"))
+        (string-match "\\.h" tmppath)
+        (setq hpath (replace-match ".cxx" nil nil tmppath))))
+  
+  (if (string-match "\\.cxx" filename)
+      (progn
+        (setcar (nthcdr (- len 2) path) pkg)
+        (setq tmppath (mapconcat 'identity path "/"))
+        (string-match "\\.cxx" tmppath)
+        (setq hpath (replace-match ".h" nil nil tmppath))))
+  
+  (find-file hpath))
+
+(set-default-font "-adobe-courier-bold-r-normal--14-100-100-100-m-90-iso10646-1")
+;(set-default-font "-misc-fixed-medium-r-normal--13-100-100-100-c-70-iso8859-1")
+;Get rid of welcome screen?
+;(setq inhibit-startup-echo-area-message t) 
+;(setq initial-scratch-message nil)
+;(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+
+;turn off the backup files
+(setq make-backup-files nil)
+
+(setq minibuffer-max-depth nil)
+
+;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+; from my computer
+;
+; TAB COMPLETION FROM SOME GUY ON THE INTERNET ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(global-set-key [(tab)] 'indent-or-expand)
+
+(defun indent-or-expand (arg)
+  "Either indent according to mode, or expand the word preceding
+point."
+  (interactive "*P")
+  (if (and
+       (or (bobp) (= ?w (char-syntax (char-before))))
+       (or (eobp) (not (= ?w (char-syntax (char-after))))))
+      (dabbrev-expand arg)
+    (indent-according-to-mode)))
+
+;(global-set-key [tab] 'indent-or-expand)
+
+;(defun my-tab-fix ()
+;  (global-set-key [tab] 'indent-or-expand))
+
+(add-hook 'c-mode-hook          'indent-or-expand)
+;(add-hook 'sh-mode-hook         'my-tab-fix)
+;(add-hook 'emacs-lisp-mode-hook 'my-tab-fix)
+
+; My own addition.....  ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(setq tab-width 4)
+
+; From atlidali .emacs file: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(custom-set-variables
+ '(default-input-method "rfc1345")
+ '(load-home-init-file t t)
+ '(auto-compression-mode t nil (jka-compr))
+ '(case-fold-search t)
+ '(global-font-lock-mode t nil (font-lock))
+ '(show-paren-mode t nil (paren))
+ '(ps-font-size 14)
+ '(current-language-environment "English"))
+(custom-set-faces)
+
+(global-set-key [S-iso-lefttab] 'dabbrev-expand)
+
+(global-set-key "\C-h" 'backward-delete-char-untabify)
+;(global-set-key "\C-h" 'delete-backward-char)
+(global-set-key "\M-h" 'backward-kill-word)
+(global-set-key "\C-q" 'query-replace-regexp)
+(global-set-key "\C-l" 'goto-line)
+(global-set-key "\M-n" 'forward-paragraph)
+(global-set-key "\M-p" 'backward-paragraph)
+;(global-set-key "\C-p" 'ispell-buffer)
+(define-key global-map [(control return)] 'ispell-word)
+
+; Map C-c C-v to the following function
+(define-key global-map [(control c) (control v)] 'atl-switch-src)
+
+; Switches between .h and .cxx files
+(defun atl-switch-src ()
+  (interactive)
+  (setq filename buffer-file-name)
+  (setq path (split-string filename "/"))
+  (if (not (string-equal (car path) ""))
+      (setq path (cons "" path)))
+  (setq len (length path))
+  (setq pkg (nth (- len 3) path))
+  
+  (if (string-match "\\.h" filename)
+      (progn
+        (setcar (nthcdr (- len 2) path) "src")
+        (setq tmppath (mapconcat 'identity path "/"))
+        (string-match "\\.h" tmppath)
+        (setq hpath (replace-match ".cxx" nil nil tmppath))))
+  
+  (if (string-match "\\.cxx" filename)
+      (progn
+        (setcar (nthcdr (- len 2) path) pkg)
+        (setq tmppath (mapconcat 'identity path "/"))
+        (string-match "\\.cxx" tmppath)
+        (setq hpath (replace-match ".h" nil nil tmppath))))
+  
+  (find-file hpath))
+
+(set-default-font "-adobe-courier-bold-r-normal--14-100-100-100-m-90-iso10646-1")
+;(set-default-font "-misc-fixed-medium-r-normal--13-100-100-100-c-70-iso8859-1")
+;Get rid of welcome screen?
+;(setq inhibit-startup-echo-area-message t) 
+;(setq initial-scratch-message nil)
+;(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+
+;turn off the backup files
+(setq make-backup-files nil)
+
+(setq minibuffer-max-depth nil)
