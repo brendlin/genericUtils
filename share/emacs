@@ -9,6 +9,12 @@
  '(current-language-environment "English"))
 (custom-set-faces)
 
+; Set indentation correctly in c files
+; void sth()
+; {
+; }
+(c-set-offset 'substatement-open 0)
+
 ;(add-to-list 'load-path "~/.emacs.d")
 ;(require 'undo-tree.el)
 ;(global-undo-tree-mode 1)
