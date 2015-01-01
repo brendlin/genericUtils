@@ -15,6 +15,9 @@
 ; }
 (c-set-offset 'substatement-open 0)
 
+; Set tabs to be whitespace
+(setq-default indent-tabs-mode nil)
+
 ;(add-to-list 'load-path "~/.emacs.d")
 ;(require 'undo-tree.el)
 ;(global-undo-tree-mode 1)
