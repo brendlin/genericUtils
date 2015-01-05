@@ -55,6 +55,12 @@ cern () {
     kinit brendlin@CERN.CH ;
     aklog
 }
+run2setup () {
+    cd $HOME/testarea/Run2Susy
+    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalROOTSetup.sh --rootVersion 5.34.22-x86_64-slc6-gcc48-opt
+    source RootCore/scripts/setup.sh
+    export me=`pwd`    
+}
 susysetup () {
 case $HOSTNAME in
     (*.hep.upenn.edu)  
