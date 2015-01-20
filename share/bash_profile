@@ -46,6 +46,7 @@ alias 'asdf=%emacs'
 alias 'sdfg=root -l *.root'
 alias 'keepmealive=xterm -name "$USER" -e sh ~brendlin/public/eauxvives.sh &'
 alias 'launchTMVA=root -l $ROOTSYS/tmva/test/TMVAGui.C'
+alias 'kpbook=pbook -c "sync()" && pbook -c "show()" | grep -e JobsetID -e failed -e running -e activated -e merging -e lastUpdate >& /tmp/kpbook.txt && grep -B 2 failed /tmp/kpbook.txt'
 
 gitit () {
     eval "$(ssh-agent -s)"
