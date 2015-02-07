@@ -1,0 +1,46 @@
+% Copyright 2007 by Till Tantau
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Public License.
+%
+% See the file doc/licenses/LICENSE for more details.
+
+\ProvidesPackageRCS $Header: /cvsroot/latex-beamer/latex-beamer/themes/color/beamercolorthemepenn.sty,v 1.4 2007/01/28 20:48:24 tantau Exp $
+
+\definecolor{pennred}{cmyk}{0,1,0.65,0.34}
+\definecolor{pennblue}{cmyk}{1,0.65,0,0.30}
+
+
+
+\mode<presentation>
+
+\setbeamercolor*{palette primary}{use=structure,fg=white,bg= pennblue}
+\setbeamercolor*{palette secondary}{use=structure,fg=white,bg= pennblue}
+\setbeamercolor*{palette tertiary}{use=structure,fg=white,bg= pennblue}
+\setbeamercolor*{palette quaternary}{fg=white,bg= pennred}
+
+\setbeamercolor*{sidebar}{use=structure,bg= pennblue}
+  
+\setbeamercolor*{palette sidebar primary}{use=structure,fg=structure.fg!10}
+\setbeamercolor*{palette sidebar secondary}{fg=white}
+\setbeamercolor*{palette sidebar tertiary}{use=structure,fg=structure.fg!50}
+\setbeamercolor*{palette sidebar quaternary}{fg=white}
+
+\setbeamercolor*{titlelike}{parent=palette primary}
+
+\setbeamercolor*{separation line}{}
+\setbeamercolor*{fine separation line}{}
+
+\setbeamercolor{itemize item}{fg=pennblue}
+\setbeamercolor{itemize subitem}{fg=pennblue}
+\setbeamercolor{itemize subsubitem}{fg=pennblue}
+\setbeamercolor{enumerate item}{fg=pennblue}
+\setbeamercolor{enumerate subitem}{fg=pennblue}
+\setbeamercolor{enumerate subsubitem}{fg=pennblue}
+\setbeamercolor{description item}{fg=pennblue}
+
+
+\mode
+<all>
