@@ -122,7 +122,7 @@ def getTree(file,tree='') :
     for item in file.GetListOfKeys() :
         itree = item.ReadObj()
         if tree and itree.GetName() != tree : continue
-        if itree.GetName() not in ['photon','egamma','physics','trigger','electron_ID'] : continue
+        if itree.GetName() not in ['photon','egamma','physics','trigger','electron_ID','tree'] : continue
         if type(itree) == type(TTree()) :
             ievents = int(itree.GetEntries())
             if ievents > nEvents :
