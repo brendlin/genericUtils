@@ -21,4 +21,4 @@ PACKAGE_NOOPT    = 0
 PACKAGE_NOCC     = 0
 PACKAGE_REFLEX   = 0
 
-include $(ROOTCOREDIR)/Makefile-common
+include $(ROOTCOREBIN)/Makefile-common
