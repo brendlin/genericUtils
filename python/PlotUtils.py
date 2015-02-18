@@ -255,7 +255,7 @@ class PlotObject :
         # The effect is about 2 points (i.e. 18 vs 20 font)
         #
         self.axes_properties['YTitleSize'  ] = 22  
-        self.axes_properties['YTitleOffset'] = 1.45
+        self.axes_properties['YTitleOffset'] = 1.75
         self.axes_properties['YTitleFont'  ] = 43  
         self.axes_properties['YLabelSize'  ] = 22  
         self.axes_properties['YLabelFont'  ] = 43  
@@ -648,6 +648,12 @@ class PlotObject :
         if len(self.plots) :
             self.plots[0].GetXaxis().SetTitle(xlabel)
             self.plots[0].GetYaxis().SetTitle(ylabel)
+        if hasattr(self,'RatioPadBot') :
+            self.ratioplots[-1].GetXaxis().SetTitle(xlabel)
+            self.RatioPadBot.Update()
+        if hasattr(self,'RatioPadTop') :
+            self.RatioTopPlot0.GetYaxis().SetTitle(ylabel)
+            self.RatioPadTop.Update()
         if hasattr(self,'stack') :
             self.stack.GetXaxis().SetTitle(xlabel)
             self.stack.GetYaxis().SetTitle(ylabel)
@@ -694,98 +700,100 @@ class PlotObject :
         # RatioPadBot
         # - ratioplots (a list)
         #
-        x = {'div'              :0.3
-             ,'canw'            :self.canw
-             ,'canh'            :self.canh+100
-             ,'1BottomMargin'   :0.020
-             ,'1TopMargin'      :0.05
-             ,'1RightMargin'    :0.05
-             ,'1LeftMargin'     :0.16
-             ,'2BottomMargin'   :0.30
-             ,'2TopMargin'      :0.07
-             ,'2RightMargin'    :0.05
-             ,'2LeftMargin'     :0.16
+        pads_properties = {'div'              :0.3
+                           ,'canw'            :self.canw
+                           ,'canh'            :self.canh+100
+                           ,'1BottomMargin'   :0.020
+                           ,'1TopMargin'      :0.05
+                           ,'1RightMargin'    :0.05
+                           ,'1LeftMargin'     :0.16
+                           ,'2BottomMargin'   :0.30
+                           ,'2TopMargin'      :0.07
+                           ,'2RightMargin'    :0.05
+                           ,'2LeftMargin'     :0.16
+                           }
 
-             ,'TopXTitleSize'   :22
-             ,'TopXTitleOffset' :1.85
-             ,'TopXTitleFont'   :43
-             ,'TopXLabelSize'   :22
-             ,'TopXLabelOffset' :5.5
-             ,'TopXLabelFont'   :43
+        top_axes_properties = {'XTitleSize'   :22
+                               ,'XTitleOffset' :1.85
+                               ,'XTitleFont'   :43
+                               ,'XLabelSize'   :22
+                               ,'XLabelOffset' :5.5
+                               ,'XLabelFont'   :43
 
-             ,'TopYTitleSize'   :22
-             ,'TopYTitleOffset' :1.8
-             ,'TopYTitleFont'   :43
-             ,'TopYLabelSize'   :22
-             ,'TopYLabelFont'   :43
-             ,'TopYLabelOffset' :0.01
-             ,'TopNDiv'         :[5,5,0]
+                               ,'YTitleSize'   :22
+                               ,'YTitleOffset' :2.25
+                               ,'YTitleFont'   :43
+                               ,'YLabelSize'   :22
+                               ,'YLabelFont'   :43
+                               ,'YLabelOffset' :0.01
+                               ,'NDiv'         :[5,5,0]
+                               }
 
-             ,'BotXTitleSize'  :22
-             ,'BotXTitleOffset':3.3
-             ,'BotXTitleFont'  :43
-             ,'BotXLabelSize'  :22
-             ,'BotXLabelOffset':0.01
-             ,'BotXLabelFont'  :43
-             ,'BotXTickLength' :.08
+        bot_axes_properties = {'XTitleSize'  :22
+                               ,'XTitleOffset':3.3
+                               ,'XTitleFont'  :43
+                               ,'XLabelSize'  :22
+                               ,'XLabelOffset':0.01
+                               ,'XLabelFont'  :43
+                               ,'XTickLength' :.08
+                               
+                               ,'YTitleSize'  :22
+                               ,'YTitleOffset':2.25
+                               ,'YTitleFont'  :43
+                               ,'YLabelSize'  :22
+                               ,'YLabelOffset':0.01
+                               ,'YLabelFont'  :43
+                               ,'NDiv'        :[5,5,0]
+                               }
 
-             ,'BotYTitleSize'  :22
-             ,'BotYTitleOffset':1.8
-             ,'BotYTitleFont'  :43
-             ,'BotYLabelSize'  :22
-             ,'BotYLabelOffset':0.01
-             ,'BotYLabelFont'  :43
-             ,'BotNDiv'        :[5,5,0]
-                                 
-             }
         if style == 'DiffXsec' :
             #print 'Using DiffXsec style'
-            x['div']  = 0.35
-            x['canw'] = 500
-            x['canh'] = 365+100
-            x['1BottomMargin'] = 0.055
-            x['1TopMargin']    = 0.065
-            x['2BottomMargin'] = 0.335
+            pads_properties['div']  = 0.35
+            pads_properties['canw'] = 500
+            pads_properties['canh'] = 365+100
+            pads_properties['1BottomMargin'] = 0.055
+            pads_properties['1TopMargin']    = 0.065
+            pads_properties['2BottomMargin'] = 0.335
 
-            x['TopYTitleOffset'] = 1.37
+            top_axes_properties['YTitleOffset'] = 1.37
             x['BotXTitleOffset'] = 2.8
             x['BotYTitleOffset'] = 1.37
 
-            x['TopNDiv']       = [5,5,0]
+            top_axes_properties['NDiv']       = [5,5,0]
             x['BotNDiv']        = [2,5,0]
             
         if style == 'MoreRatio' :
             #print 'Using MoreRatio style'
-            x['div']  = 0.5
-            x['canw'] = 500
-            x['canh'] = 365+100
-            x['1BottomMargin'] = 0.05
-            x['1TopMargin']    = .1
-            x['2BottomMargin'] = 0.23
+            pads_properties['div']  = 0.5
+            pads_properties['canw'] = 500
+            pads_properties['canh'] = 365+100
+            pads_properties['1BottomMargin'] = 0.05
+            pads_properties['1TopMargin']    = .1
+            pads_properties['2BottomMargin'] = 0.23
 
-            x['TopYTitleOffset'] = 1.37
-            x['TopNDiv']       = [5,5,0]
+            top_axes_properties['YTitleOffset'] = 1.37
+            top_axes_properties['NDiv']       = [5,5,0]
             
-            x['TopYTitleOffset'] = 1.37
+            top_axes_properties['YTitleOffset'] = 1.37
             x['BotXTitleOffset'] = 1.85
             x['BotYTitleOffset'] = 1.37
 
             x['BotXLabelOffset'] = .005
             
         #self.ratiocan = TCanvas(self.name+'_r',self.name+'_r',x['canw'],x['canh'])
-        self.can.SetCanvasSize(x['canw'],x['canh'])
-        self.can.SetWindowSize(x['canw']+4,x['canh']+28) # a hacky thing to resize the window accordingly
+        self.can.SetCanvasSize(pads_properties['canw'],pads_properties['canh'])
+        self.can.SetWindowSize(pads_properties['canw']+4,pads_properties['canh']+28) # a hacky thing to resize the window accordingly
         self.can.cd()
-        self.RatioPadTop = TPad("pad1", "This is the top pad",0.0,x['div'],1.0,1.0,21)
-        self.RatioPadTop.SetBottomMargin(x['1BottomMargin'])
-        self.RatioPadTop.SetTopMargin(x['1TopMargin'])
-        self.RatioPadTop.SetLeftMargin(x['1LeftMargin'])
-        self.RatioPadTop.SetRightMargin(x['1RightMargin'])
-        self.RatioPadBot = TPad("pad2", "This is the bottom pad",0.0,0.0,1.0,x['div'],22)
-        self.RatioPadBot.SetBottomMargin(x['2BottomMargin'])
-        self.RatioPadBot.SetTopMargin(x['2TopMargin'])
-        self.RatioPadBot.SetLeftMargin(x['2LeftMargin'])
-        self.RatioPadBot.SetRightMargin(x['2RightMargin'])
+        self.RatioPadTop = TPad("pad1", "This is the top pad",0.0,pads_properties['div'],1.0,1.0,21)
+        self.RatioPadTop.SetBottomMargin(pads_properties['1BottomMargin'])
+        self.RatioPadTop.SetTopMargin(pads_properties['1TopMargin'])
+        self.RatioPadTop.SetLeftMargin(pads_properties['1LeftMargin'])
+        self.RatioPadTop.SetRightMargin(pads_properties['1RightMargin'])
+        self.RatioPadBot = TPad("pad2", "This is the bottom pad",0.0,0.0,1.0,pads_properties['div'],22)
+        self.RatioPadBot.SetBottomMargin(pads_properties['2BottomMargin'])
+        self.RatioPadBot.SetTopMargin(pads_properties['2TopMargin'])
+        self.RatioPadBot.SetLeftMargin(pads_properties['2LeftMargin'])
+        self.RatioPadBot.SetRightMargin(pads_properties['2RightMargin'])
         self.RatioPadTop.SetFillColor(0)
         self.RatioPadBot.SetFillColor(0)
         self.RatioPadTop.Draw()
@@ -797,20 +805,7 @@ class PlotObject :
         #
         #
         #
-        self.RatioTopPlot0.GetXaxis().SetTitleSize  (x['TopXTitleSize'  ])
-        self.RatioTopPlot0.GetXaxis().SetTitleOffset(x['TopXTitleOffset'])
-        self.RatioTopPlot0.GetXaxis().SetTitleFont  (x['TopXTitleFont'  ])
-        self.RatioTopPlot0.GetXaxis().SetLabelSize  (x['TopXLabelSize'  ])
-        self.RatioTopPlot0.GetXaxis().SetLabelOffset(x['TopXLabelOffset'])
-        self.RatioTopPlot0.GetXaxis().SetLabelFont  (x['TopXLabelFont'  ])    
-
-        self.RatioTopPlot0.GetYaxis().SetTitleSize  (x['TopYTitleSize'  ])
-        self.RatioTopPlot0.GetYaxis().SetTitleOffset(x['TopYTitleOffset'])
-        self.RatioTopPlot0.GetYaxis().SetTitleFont  (x['TopYTitleFont'  ])
-        self.RatioTopPlot0.GetYaxis().SetLabelSize  (x['TopYLabelSize'  ])
-        self.RatioTopPlot0.GetYaxis().SetLabelOffset(x['TopYLabelOffset'])
-        self.RatioTopPlot0.GetYaxis().SetLabelFont  (x['TopYLabelFont'  ])
-        self.RatioTopPlot0.GetYaxis().SetNdivisions (x['TopNDiv'][0],x['TopNDiv'][1],x['TopNDiv'][2])
+        SetAxisProperties(self.RatioTopPlot0,top_axes_properties)
 
         sames = 'sames'
         for p in range(1,len(self.plots)) :
@@ -833,21 +828,7 @@ class PlotObject :
             self.RatioPadBot.cd()
             self.ratioplots[-1].Draw(sames+self.drawopt)
 
-            self.ratioplots[-1].GetXaxis().SetTitleFont  (x['BotXTitleFont'  ])
-            self.ratioplots[-1].GetXaxis().SetTitleSize  (x['BotXTitleSize'  ])
-            self.ratioplots[-1].GetXaxis().SetTitleOffset(x['BotXTitleOffset'])
-            self.ratioplots[-1].GetXaxis().SetLabelFont  (x['BotXLabelFont'  ])
-            self.ratioplots[-1].GetXaxis().SetLabelSize  (x['BotXLabelSize'  ])
-            self.ratioplots[-1].GetXaxis().SetLabelOffset(x['BotXLabelOffset'])
-            self.ratioplots[-1].GetXaxis().SetTickSize   (x['BotXTickLength' ])
-
-            self.ratioplots[-1].GetYaxis().SetTitleFont  (x['BotYTitleFont'  ])
-            self.ratioplots[-1].GetYaxis().SetTitleSize  (x['BotYTitleSize'  ])
-            self.ratioplots[-1].GetYaxis().SetTitleOffset(x['BotYTitleOffset'])
-            self.ratioplots[-1].GetYaxis().SetLabelFont  (x['BotYLabelFont'  ])
-            self.ratioplots[-1].GetYaxis().SetLabelSize  (x['BotYLabelSize'  ])
-            self.ratioplots[-1].GetYaxis().SetLabelOffset(x['BotYLabelOffset'])
-            self.ratioplots[-1].GetYaxis().SetNdivisions (x['BotNDiv'][0],x['BotNDiv'][1],x['BotNDiv'][2])
+            SetAxisProperties(self.ratioplots[-1],bot_axes_properties)
 
             self.ratioplots[-1].GetYaxis().SetTitle('Ratio')
             self.ratioplots[-1].GetXaxis().SetTitle(self.RatioTopPlot0.GetXaxis().GetTitle())
