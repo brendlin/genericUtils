@@ -37,7 +37,7 @@ gStyle.SetFrameFillColor(0)
 gStyle.SetOptTitle(0)
 #
 gStyle.SetTitleFont(43)
-gStyle.SetTitleFontSize(24)
+gStyle.SetTitleFontSize(22)
 gStyle.SetTitleYOffset(1.75)
 gStyle.SetPaintTextFormat('4.1f ')
 gStyle.SetEndErrorSize(3)
@@ -250,49 +250,32 @@ class PlotObject :
             self.plotLegSizes.append(len(self.plots[p].GetTitle()))
 
         self.axes_properties = dict()
-        self.axes_properties['YTitleSize'  ] = 24  
+        #
+        # NOTE that in ROOT rendering the font size is slightly smaller than in pdf viewers!
+        # The effect is about 2 points (i.e. 18 vs 20 font)
+        #
+        self.axes_properties['YTitleSize'  ] = 22  
         self.axes_properties['YTitleOffset'] = 1.45
         self.axes_properties['YTitleFont'  ] = 43  
-        self.axes_properties['YLabelSize'  ] = 24  
+        self.axes_properties['YLabelSize'  ] = 22  
         self.axes_properties['YLabelFont'  ] = 43  
 
-        self.axes_properties['XTitleSize'  ] = 24   
+        self.axes_properties['XTitleSize'  ] = 22   
         self.axes_properties['XTitleOffset'] = 0.98 
         self.axes_properties['XTitleFont'  ] = 43   
-        self.axes_properties['XLabelSize'  ] = 24
+        self.axes_properties['XLabelSize'  ] = 22
         self.axes_properties['XLabelOffset'] = 0.002
         self.axes_properties['XLabelFont'  ] = 43
 
         if type(self.plots[0]) in histtypes :
-            self.axes_properties['ZTitleSize'  ] = 24 
+            self.axes_properties['ZTitleSize'  ] = 22 
             self.axes_properties['ZTitleOffset'] = 0.85
             self.axes_properties['ZTitleFont'  ] = 43 
-            self.axes_properties['ZLabelSize'  ] = 24 
+            self.axes_properties['ZLabelSize'  ] = 22 
             self.axes_properties['ZLabelFont'  ] = 43 
         
         SetAxisProperties(self.plots[0],self.axes_properties)
         self.can.Update()
-        
-#         self.plots[0].GetYaxis().SetTitleOffset(1.45)
-#         self.plots[0].GetYaxis().SetTitleFont  (43  )
-#         self.plots[0].GetYaxis().SetTitleSize  (24  )
-#         self.plots[0].GetYaxis().SetLabelSize  (24  )
-#         self.plots[0].GetYaxis().SetLabelFont  (43  )
-
-#         self.plots[0].GetXaxis().SetLabelOffset(0.002)
-#         self.plots[0].GetXaxis().SetTitleOffset(0.98 )
-#         self.plots[0].GetXaxis().SetTitleFont  (43   )
-#         self.plots[0].GetXaxis().SetTitleSize  (24   )
-#         self.plots[0].GetXaxis().SetLabelFont  (43)
-#         self.plots[0].GetXaxis().SetLabelSize  (24)
-
-#         if type(self.plots[0]) in histtypes :
-#             self.plots[0].GetZaxis().SetTitleOffset(0.85)
-#             self.plots[0].GetZaxis().SetTitleFont  (43)        
-#             self.plots[0].GetZaxis().SetTitleSize  (24)
-#             self.plots[0].GetZaxis().SetLabelFont  (43)
-#             self.plots[0].GetZaxis().SetLabelSize  (24)  
-
         self.can.cd()
 
         legHeight = 0.06*len(self.plots)
@@ -389,7 +372,7 @@ class PlotObject :
         self.can.Update()
         return
 
-    def DrawTitle(self,title='',textsize=24,x=0.1,y=0.93) :
+    def DrawTitle(self,title='',textsize=22,x=0.1,y=0.93) :
         if self.can.GetPrimitive('title') :
             self.can.GetPrimitive('title').Delete()
         if not title :
@@ -510,7 +493,7 @@ class PlotObject :
         self.can.Write(self.name)
         return
 
-    def CreateLegend(self,x1,y1,x2,y2,tsize=20,ncolumns=1) :
+    def CreateLegend(self,x1,y1,x2,y2,tsize=18,ncolumns=1) :
         #print x1,y1,x2,y2
         if hasattr(self,'RatioPadTop') :
             if self.RatioPadTop.GetPrimitive('mylegend') :
@@ -531,7 +514,7 @@ class PlotObject :
         self.leg.SetNColumns(ncolumns)
         #self.leg.SetMargin((y2-y1)*ncolumns/(max(len(plots),totalentries)))
         
-    def RecreateLegend(self,x1,y1,x2,y2,skip=[],tsize=20,drawopt='ple',ncolumns=1,totalentries=0) :
+    def RecreateLegend(self,x1,y1,x2,y2,skip=[],tsize=18,drawopt='ple',ncolumns=1,totalentries=0) :
 
         self.CreateLegend(x1,y1,x2,y2,tsize=tsize,ncolumns=ncolumns)
         self.SetLegend(skip=skip,drawopt=drawopt,totalentries=totalentries)
@@ -592,7 +575,7 @@ class PlotObject :
             self.nplots += 1
         self.can.Update()
 
-    def DrawAtlasPreliminary(self,x=.2,y=.9,angle=0,align='',size=20,can='',color=1,internal=True) :
+    def DrawAtlasPreliminary(self,x=.2,y=.9,angle=0,align='',size=18,can='',color=1,internal=True) :
         self.can.cd()
         if can == 'Top' : self.RatioPadTop.cd()
         t = TLatex()
@@ -610,7 +593,7 @@ class PlotObject :
         t.SetTextSize(size)
         self.can.Update()
 
-    def DrawLuminosity(self,x=.2,y=.84,angle=0,align='',size=20,can='',color=1,internal=True,lumi=20.3,sqrts=8) :
+    def DrawLuminosity(self,x=.2,y=.84,angle=0,align='',size=18,can='',color=1,internal=True,lumi=20.3,sqrts=8) :
         self.can.cd()
         if can == 'Top' : self.RatioPadTop.cd()
         t = TLatex()
@@ -637,7 +620,7 @@ class PlotObject :
 #             self.lumiLabel.SetTextSize(0.05)
 #         self.lumiLabel.Draw()
             
-    def DrawText(self,x,y,text,angle=0,align='',size=24,can='',color=1) :
+    def DrawText(self,x,y,text,angle=0,align='',size=22,can='',color=1) :
         self.can.cd()
         if can == 'Top' : self.RatioPadTop.cd()
         self.text.append(TLatex())
@@ -654,7 +637,7 @@ class PlotObject :
         ynew = y*(pad.GetY2()-pad.GetY1())+pad.GetY1()
         return xnew,ynew
 
-    def DrawTextNDC(self,x,y,text,angle=0,align='',size=24,can='',color=1) :
+    def DrawTextNDC(self,x,y,text,angle=0,align='',size=22,can='',color=1) :
         if can == 'Top' : 
             xpad,ypad = self.GetPadFromNDC(self.RatioPadTop,x,y)
         else :
@@ -723,33 +706,33 @@ class PlotObject :
              ,'2RightMargin'    :0.05
              ,'2LeftMargin'     :0.16
 
-             ,'TopXTitleSize'   :24
+             ,'TopXTitleSize'   :22
              ,'TopXTitleOffset' :1.85
              ,'TopXTitleFont'   :43
-             ,'TopXLabelSize'   :24
+             ,'TopXLabelSize'   :22
              ,'TopXLabelOffset' :5.5
              ,'TopXLabelFont'   :43
 
-             ,'TopYTitleSize'   :24
+             ,'TopYTitleSize'   :22
              ,'TopYTitleOffset' :1.8
              ,'TopYTitleFont'   :43
-             ,'TopYLabelSize'   :24
+             ,'TopYLabelSize'   :22
              ,'TopYLabelFont'   :43
              ,'TopYLabelOffset' :0.01
              ,'TopNDiv'         :[5,5,0]
 
-             ,'BotXTitleSize'  :24
+             ,'BotXTitleSize'  :22
              ,'BotXTitleOffset':3.3
              ,'BotXTitleFont'  :43
-             ,'BotXLabelSize'  :24
+             ,'BotXLabelSize'  :22
              ,'BotXLabelOffset':0.01
              ,'BotXLabelFont'  :43
              ,'BotXTickLength' :.08
 
-             ,'BotYTitleSize'  :24
+             ,'BotYTitleSize'  :22
              ,'BotYTitleOffset':1.8
              ,'BotYTitleFont'  :43
-             ,'BotYLabelSize'  :24
+             ,'BotYLabelSize'  :22
              ,'BotYLabelOffset':0.01
              ,'BotYLabelFont'  :43
              ,'BotNDiv'        :[5,5,0]
