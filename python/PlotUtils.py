@@ -81,6 +81,32 @@ h1types = [type(TH1F()),type(TH1D()),type(TProfile()),type(TH1D())]
 #     p.Draw("sames")
 #     return a,p
 
+def SetAxisProperties(plot,the_dict) :
+    if 'XTitleSize'   in the_dict.keys() : plot.GetXaxis().SetTitleSize  (the_dict['XTitleSize'  ])
+    if 'XTitleOffset' in the_dict.keys() : plot.GetXaxis().SetTitleOffset(the_dict['XTitleOffset'])
+    if 'XTitleFont'   in the_dict.keys() : plot.GetXaxis().SetTitleFont  (the_dict['XTitleFont'  ])
+    if 'XLabelSize'   in the_dict.keys() : plot.GetXaxis().SetLabelSize  (the_dict['XLabelSize'  ])
+    if 'XLabelOffset' in the_dict.keys() : plot.GetXaxis().SetLabelOffset(the_dict['XLabelOffset'])
+    if 'XLabelFont'   in the_dict.keys() : plot.GetXaxis().SetLabelFont  (the_dict['XLabelFont'  ])    
+                     
+    if 'YTitleSize'   in the_dict.keys() : plot.GetYaxis().SetTitleSize  (the_dict['YTitleSize'  ])
+    if 'YTitleOffset' in the_dict.keys() : plot.GetYaxis().SetTitleOffset(the_dict['YTitleOffset'])
+    if 'YTitleFont'   in the_dict.keys() : plot.GetYaxis().SetTitleFont  (the_dict['YTitleFont'  ])
+    if 'YLabelSize'   in the_dict.keys() : plot.GetYaxis().SetLabelSize  (the_dict['YLabelSize'  ])
+    if 'YLabelOffset' in the_dict.keys() : plot.GetYaxis().SetLabelOffset(the_dict['YLabelOffset'])
+    if 'YLabelFont'   in the_dict.keys() : plot.GetYaxis().SetLabelFont  (the_dict['YLabelFont'  ])
+    if 'NDiv'         in the_dict.keys() : plot.GetYaxis().SetNdivisions (the_dict['NDiv'][0],the_dict['NDiv'][1],the_dict['NDiv'][2])
+
+    if type(plot) == type(THStack()) :
+        return
+    if 'ZTitleSize'   in the_dict.keys() : plot.GetZaxis().SetTitleSize  (the_dict['ZTitleSize'  ])
+    if 'ZTitleOffset' in the_dict.keys() : plot.GetZaxis().SetTitleOffset(the_dict['ZTitleOffset'])
+    if 'ZTitleFont'   in the_dict.keys() : plot.GetZaxis().SetTitleFont  (the_dict['ZTitleFont'  ])
+    if 'ZLabelSize'   in the_dict.keys() : plot.GetZaxis().SetLabelSize  (the_dict['ZLabelSize'  ])
+    if 'ZLabelOffset' in the_dict.keys() : plot.GetZaxis().SetLabelOffset(the_dict['ZLabelOffset'])
+    if 'ZLabelFont'   in the_dict.keys() : plot.GetZaxis().SetLabelFont  (the_dict['ZLabelFont'  ])
+    return
+
 def GetZaxisReasonableRanges(hist,forcelow=None,forcehigh=None) :
     if type(hist) is not type(TH2F()) :
         print 'Error in Z axis.'
@@ -98,7 +124,7 @@ def GetZaxisReasonableRanges(hist,forcelow=None,forcehigh=None) :
         maxz = forcehigh
     hist.GetZaxis().SetRangeUser(minz,maxz)
 
-def GetReasonableRanges(plots,ranges=0,log=False):
+def GetReasonableRanges(plots,ranges=0,log=False,extra_top_factor=1):
     minx,miny,maxx,maxy = 0.,0.,1.,1.
     for pl in range(len(plots)) :
         localminx,localmaxx,localminy,localmaxy = 0.,0.,1.,1.
@@ -128,14 +154,26 @@ def GetReasonableRanges(plots,ranges=0,log=False):
     newminy = 1.1*miny if miny<0 else 0.9*miny
     newmaxy = 1.1*maxy if maxy>0 else 0.9*maxy
 
+    newmaxy = newmaxy*extra_top_factor
+
     if ranges :
         if ranges[0] : minx = ranges[0][0]
         if ranges[0] : maxx = ranges[0][1]
         if ranges[1] : newminy = ranges[1][0]
         if ranges[1] : newmaxy = ranges[1][1]
+
+    print 'newminy was',newminy
     if log and (newminy <= 0.) and (newmaxy >= 0.) :
-        #print 'Trying to fix!'
-        newminy = min(0.5,0.01*newmaxy)
+        #newminy = min(0.5,0.01*newmaxy)
+        newminy = 1000000
+        for pl in range(len(plots)) :
+            for i in range(plots[pl].GetNbinsX()) :
+                bc = plots[pl].GetBinContent(i+1)
+                if bc <= 0 :
+                    bc = newminy
+                newminy = min(newminy,bc*0.9)
+
+        print 'set newminy to',newminy
 
     #print 'miny,maxy:',newminy,newmaxy
 
@@ -210,29 +248,50 @@ class PlotObject :
             self.plots[-1].SetName(plots[p].GetName()+'_plotversion_can_%s'%(self.name))
             self.plotLegNames.append(self.plots[p].GetTitle())
             self.plotLegSizes.append(len(self.plots[p].GetTitle()))
-            
-        self.plots[0].GetYaxis().SetTitleOffset(1.45)
-        self.plots[0].GetYaxis().SetTitleFont(43)
-        self.plots[0].GetYaxis().SetTitleSize(24)
 
-        self.plots[0].GetYaxis().SetLabelSize(24)
-        self.plots[0].GetYaxis().SetLabelFont(43)
+        self.axes_properties = dict()
+        self.axes_properties['YTitleSize'  ] = 24  
+        self.axes_properties['YTitleOffset'] = 1.45
+        self.axes_properties['YTitleFont'  ] = 43  
+        self.axes_properties['YLabelSize'  ] = 24  
+        self.axes_properties['YLabelFont'  ] = 43  
 
-        self.plots[0].GetXaxis().SetLabelOffset(0.002)
-        self.plots[0].GetXaxis().SetTitleOffset(0.98)
-        self.plots[0].GetXaxis().SetTitleFont(43)
-        self.plots[0].GetXaxis().SetTitleSize(24)
-
-        self.plots[0].GetXaxis().SetLabelFont(43)
-        self.plots[0].GetXaxis().SetLabelSize(24)
+        self.axes_properties['XTitleSize'  ] = 24   
+        self.axes_properties['XTitleOffset'] = 0.98 
+        self.axes_properties['XTitleFont'  ] = 43   
+        self.axes_properties['XLabelSize'  ] = 24
+        self.axes_properties['XLabelOffset'] = 0.002
+        self.axes_properties['XLabelFont'  ] = 43
 
         if type(self.plots[0]) in histtypes :
-            self.plots[0].GetZaxis().SetTitleOffset(0.85)
-            self.plots[0].GetZaxis().SetTitleFont(43)        
-            self.plots[0].GetZaxis().SetTitleSize(24)
+            self.axes_properties['ZTitleSize'  ] = 24 
+            self.axes_properties['ZTitleOffset'] = 0.85
+            self.axes_properties['ZTitleFont'  ] = 43 
+            self.axes_properties['ZLabelSize'  ] = 24 
+            self.axes_properties['ZLabelFont'  ] = 43 
+        
+        SetAxisProperties(self.plots[0],self.axes_properties)
+        self.can.Update()
+        
+#         self.plots[0].GetYaxis().SetTitleOffset(1.45)
+#         self.plots[0].GetYaxis().SetTitleFont  (43  )
+#         self.plots[0].GetYaxis().SetTitleSize  (24  )
+#         self.plots[0].GetYaxis().SetLabelSize  (24  )
+#         self.plots[0].GetYaxis().SetLabelFont  (43  )
 
-            self.plots[0].GetZaxis().SetLabelFont(43)
-            self.plots[0].GetZaxis().SetLabelSize(24)
+#         self.plots[0].GetXaxis().SetLabelOffset(0.002)
+#         self.plots[0].GetXaxis().SetTitleOffset(0.98 )
+#         self.plots[0].GetXaxis().SetTitleFont  (43   )
+#         self.plots[0].GetXaxis().SetTitleSize  (24   )
+#         self.plots[0].GetXaxis().SetLabelFont  (43)
+#         self.plots[0].GetXaxis().SetLabelSize  (24)
+
+#         if type(self.plots[0]) in histtypes :
+#             self.plots[0].GetZaxis().SetTitleOffset(0.85)
+#             self.plots[0].GetZaxis().SetTitleFont  (43)        
+#             self.plots[0].GetZaxis().SetTitleSize  (24)
+#             self.plots[0].GetZaxis().SetLabelFont  (43)
+#             self.plots[0].GetZaxis().SetLabelSize  (24)  
 
         self.can.cd()
 
@@ -533,21 +592,25 @@ class PlotObject :
             self.nplots += 1
         self.can.Update()
 
-    def DrawAtlasPreliminary(self,x,y,angle=0,align='',size=0.035,can='',color=1,internal=True) :
+    def DrawAtlasPreliminary(self,x=.2,y=.9,angle=0,align='',size=20,can='',color=1,internal=True) :
         self.can.cd()
         if can == 'Top' : self.RatioPadTop.cd()
         t = TLatex()
         t.SetNDC()
         t.SetTextSize(size)
-        if can == 'Top' :
-            t.SetTextSize(0.05)
+        #if can == 'Top' :
+        #    t.SetTextSize(0.05)
         t.SetTextFont(73)
         t.SetTextColor(color)
         if align == 'R': t.SetTextAlign(31)
         if angle : t.SetTextAngle(angle)
-        t.DrawLatex(x,y,'ATLAS #font[43]{Internal}')
+        status = 'Preliminary'
+        if internal : status = 'Internal'
+        t.DrawLatex(x,y,'ATLAS #font[42]{%s}'%(status)) # for some reason 42 is appropriate, not 43
+        t.SetTextSize(size)
+        self.can.Update()
 
-    def DrawLuminosity(self,x,y,angle=0,align='',size=0.035,can='',color=1,internal=True,lumi=20.3,sqrts=8) :
+    def DrawLuminosity(self,x=.2,y=.84,angle=0,align='',size=20,can='',color=1,internal=True,lumi=20.3,sqrts=8) :
         self.can.cd()
         if can == 'Top' : self.RatioPadTop.cd()
         t = TLatex()
@@ -560,6 +623,7 @@ class PlotObject :
         if align == 'R': t.SetTextAlign(31)
         if angle : t.SetTextAngle(angle)
         t.DrawLatex(x,y,'#sqrt{s} = %d TeV, #lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(sqrts,lumi))
+        self.can.Update()
 
 #     def DrawLuminosity(self,x,y,angle=0,align='',size=0.035,can='',color=1) :
 #         self.can.cd()
@@ -601,6 +665,10 @@ class PlotObject :
         if len(self.plots) :
             self.plots[0].GetXaxis().SetTitle(xlabel)
             self.plots[0].GetYaxis().SetTitle(ylabel)
+        if hasattr(self,'stack') :
+            self.stack.GetXaxis().SetTitle(xlabel)
+            self.stack.GetYaxis().SetTitle(ylabel)
+        self.can.Update()
 
     def CleanNameForMacro(self,nm) :
         for i in range(10) :
@@ -806,6 +874,20 @@ class PlotObject :
         self.leg.Draw()
         return
 
+    def MakeRoomForLabels(self) :
+        self.can.cd()
+        extra_top_factor = 1.5/1.1 # factor of 2
+        if self.log :
+            extra_top_factor = 1000.
+        ranges = GetReasonableRanges(self.plots,log=self.log,extra_top_factor=extra_top_factor)
+        if hasattr(self,'stack') :
+            if self.log :
+                self.stack.SetMinimum(ranges[2]*5) # Root logy does not do this correctly?? extra factor of 5?
+            self.stack.SetMaximum(ranges[3])
+            print ranges
+        self.can.Update()
+        return
+
     def MakeStackPlot(self,indices=[]) :
         #
         # Call this after calling the constructor and adding all the plots you want.
@@ -822,7 +904,9 @@ class PlotObject :
         self.can.cd()
         self.stack.Draw('hist')
         self.leg.Draw()
+        SetAxisProperties(self.stack,self.axes_properties)
         self.can.Update()
+        self.can.RedrawAxis()
         return
 
     def SaveAll(self,name='',dir='') :
@@ -855,6 +939,8 @@ class PlotObject :
         ##
         ## Things that the macro thing gets wrong:
         ##  - Bottom plot: GetXaxis()->SetTitleOffset()
+        ##  - THStack: individual histograms must have SetLineWidth set by hand
+        ##  - Legend SetNColumns must be set by hand
         return
 
     def SavePDF(self,name='',extension='pdf',dir='') :
