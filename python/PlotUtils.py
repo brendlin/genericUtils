@@ -652,7 +652,6 @@ class PlotObject :
             self.ratioplots[-1].GetXaxis().SetTitle(xlabel)
             self.RatioPadBot.Update()
         if hasattr(self,'RatioPadTop') :
-            self.RatioTopPlot0.GetYaxis().SetTitle(ylabel)
             self.RatioPadTop.Update()
         if hasattr(self,'stack') :
             self.stack.GetXaxis().SetTitle(xlabel)
@@ -676,7 +675,7 @@ class PlotObject :
 
     # for ratio top axis
     def SetTopYaxisRange(self,lo,hi) :
-        self.RatioTopPlot0.GetYaxis().SetRangeUser(lo,hi)
+        self.plots[0].GetYaxis().SetRangeUser(lo,hi)
         return
 
     # for ratio bot axis
@@ -696,7 +695,7 @@ class PlotObject :
         #
         #
         # RatioPadTop
-        # - RatioTopPlot0 ( need a clone so I can manipulate ratio plot and regular plot separately)
+        # - plots[0]
         # RatioPadBot
         # - ratioplots (a list)
         #
@@ -800,15 +799,14 @@ class PlotObject :
         self.RatioPadBot.Draw()
         self.ratioplots = []
         self.RatioPadTop.cd()
-        self.RatioTopPlot0 = self.plots[0].Clone()
-        self.RatioTopPlot0.Draw(self.drawopt)
+        self.RatioPadTop.SetLogy(self.log)
         #
         #
         #
-        SetAxisProperties(self.RatioTopPlot0,top_axes_properties)
+        SetAxisProperties(self.plots[0],top_axes_properties)
 
         sames = 'sames'
-        for p in range(1,len(self.plots)) :
+        for p in range(0,len(self.plots)) :
             self.plots[p].Draw(sames+self.drawopt)
             sames = 'sames'
         sames = ''
@@ -831,7 +829,7 @@ class PlotObject :
             SetAxisProperties(self.ratioplots[-1],bot_axes_properties)
 
             self.ratioplots[-1].GetYaxis().SetTitle('Ratio')
-            self.ratioplots[-1].GetXaxis().SetTitle(self.RatioTopPlot0.GetXaxis().GetTitle())
+            self.ratioplots[-1].GetXaxis().SetTitle(self.plots[0].GetXaxis().GetTitle())
             sames = 'sames'
             
         self.RatioPadTop.cd()
@@ -892,7 +890,6 @@ class PlotObject :
         self.CleanObjectNameForMacro(self.can)
         if not name : name = self.can.GetName()
         if dir : dir = dir+'/'
-        if hasattr(self,'RatioTopPlot0') : self.CleanObjectNameForMacro(self.RatioTopPlot0)
         if hasattr(self,'ratioplots') :
             for p in range(len(self.ratioplots)) :
                 self.CleanObjectNameForMacro(self.ratioplots[p])
