@@ -1,5 +1,5 @@
 from ROOT import TCanvas,TLegend,TGraph,TGraphErrors,TGraphAsymmErrors,TH1F,gROOT,TF1,TH1
-from ROOT import TLine,TMath,TPad,gStyle,TROOT,TText,TProfile,TH2F,TH1D,TH3F
+from ROOT import TLine,TMath,TPad,gStyle,TROOT,TText,TProfile,TH2F,TH1D,TH3F,THStack
 from ROOT import kRed,kMagenta,kBlue,kCyan,kGreen,kGray,kBlack,kOrange,kYellow,kAzure
 from ROOT import TLatex,TAxis,TASImage,kTRUE
 #import AtlasStyle
@@ -327,6 +327,7 @@ class PlotObject :
 
         self.can.SetLogy(self.log)
         if writecan : self.writeCan(file)
+        self.can.Update()
         return
 
     def DrawTitle(self,title='',textsize=24,x=0.1,y=0.93) :
@@ -344,15 +345,17 @@ class PlotObject :
             self.title.Draw()
             self.can.SetTopMargin(0.1)
 
-    def SetColors(self,these_colors=color) :
+    def SetColors(self,these_colors=color,set_fill=False,line_color_black=False) :
 
         if not these_colors : return
         for pl in range(len(self.plots)) :
             self.plots[pl].SetMarkerColor(these_colors[pl])
             self.plots[pl].SetLineColor(these_colors[pl])
+            if line_color_black :
+                self.plots[pl].SetLineColor(1)
             self.plots[pl].SetMarkerSize(self.markersize)
             # self.plots[pl].SetFillColor(these_colors[pl])
-            if (self.plots[pl].GetFillStyle() != 1001) :
+            if set_fill :
                 self.plots[pl].SetFillColor(these_colors[pl])
 
 #         for pl in range(len(self.normplots)) :
@@ -412,29 +415,45 @@ class PlotObject :
 
         return
 
-    def SetLegend(self,skip=[]) :
+    def SetLegend(self,skip=[],drawopt='ple',totalentries=0) :
+        if type(drawopt) != type([]) :
+            drawopt = [drawopt]*len(self.plots)
         self.legentries = []
+        total = 0
         for pl in range(len(self.plots)) :
             if pl in skip : continue
             # print 'adding entry',self.plots[pl].GetTitle()
-            self.legentries.append(self.leg.AddEntry(self.plots[pl],self.plots[pl].GetTitle(),'ple'))
+            total += 1
+            self.legentries.append(self.leg.AddEntry(self.plots[pl]
+                                                     ,self.plots[pl].GetTitle()
+                                                     ,drawopt[pl]))
+        #
+        # Add empty entries to ensure a standard layout
+        #
+        for i in range(100) :
+            if totalentries == 0 : break
+            self.legentries.append(self.leg.AddEntry(None
+                                                     ,''
+                                                     ,''))
+            total += 1
+            if total == totalentries : break
+        # recipe for making roughly square boxes
+        h = self.leg.GetY2()-self.leg.GetY1()
+        w = self.leg.GetX2()-self.leg.GetX1()
+        self.leg.SetMargin(self.leg.GetNColumns()*h/float(self.leg.GetNRows()*w))
         return
 
-    def writeCan(self,can='') :
+    def writeCan(self) :
         #if self.normalized :
         #    ranges = GetReasonableRanges(self.normplots,self.ranges,self.log)
         self.file.cd(self.dir)
-        
-        if can == 'ratio' :
-            self.ratiocan.Write(self.name)
-            return
         self.can.SetLogy(self.log)
         self.can.Write(self.name)
         return
 
-    def CreateLegend(self,x1,y1,x2,y2,can='',tsize=20) :
+    def CreateLegend(self,x1,y1,x2,y2,tsize=20,ncolumns=1) :
         #print x1,y1,x2,y2
-        if can == 'RatioPadTop' :
+        if hasattr(self,'RatioPadTop') :
             if self.RatioPadTop.GetPrimitive('mylegend') :
                 self.RatioPadTop.GetPrimitive('mylegend').Delete()
             self.RatioPadTop.cd()
@@ -450,21 +469,26 @@ class PlotObject :
         self.leg.SetTextFont(43)
         self.leg.SetBorderSize(0)
         self.leg.SetFillStyle(0)
+        self.leg.SetNColumns(ncolumns)
+        #self.leg.SetMargin((y2-y1)*ncolumns/(max(len(plots),totalentries)))
         
-    def RecreateLegend(self,x1,y1,x2,y2,can='',skip=[],tsize=20) :
+    def RecreateLegend(self,x1,y1,x2,y2,skip=[],tsize=20,drawopt='ple',ncolumns=1,totalentries=0) :
 
-        self.CreateLegend(x1,y1,x2,y2,can=can,tsize=tsize)
-        self.SetLegend(skip=skip)
+        self.CreateLegend(x1,y1,x2,y2,tsize=tsize,ncolumns=ncolumns)
+        self.SetLegend(skip=skip,drawopt=drawopt,totalentries=totalentries)
         if ('colz' not in self.drawopt) and self.drawleg :
             self.can.cd()
-            if can == 'RatioPadTop' :
+            if hasattr(self,'RatioPadTop') :
                 self.RatioPadTop.cd()
             self.leg.Draw()
+        self.can.Update()
         return
 
     def DrawHorizontal(self,yval,color=1,pct=[0.,1.],style=1,can='') :
         self.can.cd()
-        if can == 'RatioPadBot' :
+        if can == 'Bot' :
+            self.RatioPadBot.cd()
+        if can == 'Top' :
             self.RatioPadBot.cd()
         a = TLine()
         a.SetLineColor(color)
@@ -474,7 +498,9 @@ class PlotObject :
 
     def DrawVertical(self,xval,color=1,pct=[0.,1.],style=1,can='') :
         self.can.cd()
-        if can == 'RatioPadTop' :
+        if can == 'Bot' :
+            self.RatioPadTop.cd()
+        if can == 'Top' :
             self.RatioPadTop.cd()
         a = TLine()
         a.SetLineColor(color)
@@ -509,11 +535,11 @@ class PlotObject :
 
     def DrawAtlasPreliminary(self,x,y,angle=0,align='',size=0.035,can='',color=1,internal=True) :
         self.can.cd()
-        if can == 'RatioPadTop' : self.RatioPadTop.cd()
+        if can == 'Top' : self.RatioPadTop.cd()
         t = TLatex()
         t.SetNDC()
         t.SetTextSize(size)
-        if can == 'RatioPadTop' :
+        if can == 'Top' :
             t.SetTextSize(0.05)
         t.SetTextFont(73)
         t.SetTextColor(color)
@@ -523,11 +549,11 @@ class PlotObject :
 
     def DrawLuminosity(self,x,y,angle=0,align='',size=0.035,can='',color=1,internal=True,lumi=20.3,sqrts=8) :
         self.can.cd()
-        if can == 'RatioPadTop' : self.RatioPadTop.cd()
+        if can == 'Top' : self.RatioPadTop.cd()
         t = TLatex()
         t.SetNDC()
         t.SetTextSize(size)
-        if can == 'RatioPadTop' :
+        if can == 'Top' :
             t.SetTextSize(0.05)
         t.SetTextFont(43)
         t.SetTextColor(color)
@@ -549,7 +575,7 @@ class PlotObject :
             
     def DrawText(self,x,y,text,angle=0,align='',size=24,can='',color=1) :
         self.can.cd()
-        if can == 'RatioPadTop' : self.RatioPadTop.cd()
+        if can == 'Top' : self.RatioPadTop.cd()
         self.text.append(TLatex())
         self.text[-1].SetTextFont(43)
         self.text[-1].SetTextSize(size)
@@ -565,7 +591,7 @@ class PlotObject :
         return xnew,ynew
 
     def DrawTextNDC(self,x,y,text,angle=0,align='',size=24,can='',color=1) :
-        if can == 'RatioPadTop' : 
+        if can == 'Top' : 
             xpad,ypad = self.GetPadFromNDC(self.RatioPadTop,x,y)
         else :
             xpad,ypad = self.GetPadFromNDC(self.can,x,y)
@@ -606,6 +632,7 @@ class PlotObject :
             self.plots[p].SetNameTitle(name_list[p],name_list[p])
 
     def MakeRatioPlot(self,den,nums,style='',divide='') :
+        self.can.Clear()
         #
         # You can use self.ratioplots[0].GetYaxis().SetNdivisions(5,5,0)
         # to change the ticks.
@@ -694,7 +721,10 @@ class PlotObject :
 
             x['BotXLabelOffset'] = .005
             
-        self.ratiocan = TCanvas(self.name+'_r',self.name+'_r',x['canw'],x['canh'])
+        #self.ratiocan = TCanvas(self.name+'_r',self.name+'_r',x['canw'],x['canh'])
+        self.can.SetCanvasSize(x['canw'],x['canh'])
+        self.can.SetWindowSize(x['canw']+4,x['canh']+28) # a hacky thing to resize the window accordingly
+        self.can.cd()
         self.RatioPadTop = TPad("pad1", "This is the top pad",0.0,x['div'],1.0,1.0,21)
         self.RatioPadTop.SetBottomMargin(x['1BottomMargin'])
         self.RatioPadTop.SetTopMargin(x['1TopMargin'])
@@ -776,18 +806,37 @@ class PlotObject :
         self.leg.Draw()
         return
 
-    def SaveAll(self,name='',dir='',can='') :
+    def MakeStackPlot(self,indices=[]) :
+        #
+        # Call this after calling the constructor and adding all the plots you want.
+        # The indices are the things you want to stack.
+        #
+        if not indices :
+            indices = list(i for i in range(len(self.plots)))
+        self.can.Clear()
+        self.stack = THStack('stack','stack')
+        #self.SetColors(set_fill=True) # this will set the fill now
+        for i in indices :
+            #self.plots[i].SetLineColor(1) # black
+            self.stack.Add(self.plots[i])
+        self.can.cd()
+        self.stack.Draw('hist')
+        self.leg.Draw()
+        self.can.Update()
+        return
+
+    def SaveAll(self,name='',dir='') :
         if not name : name = self.name
-        self.SaveMacro(name=name,can=can,dir=dir)
-        self.SavePDF(name=name,can=can,dir=dir)
-        self.SavePDF(name=name,can=can,extension='eps',dir=dir)
+        self.SaveMacro(name=name,dir=dir)
+        self.SavePDF(name=name,dir=dir)
+        self.SavePDF(name=name,extension='eps',dir=dir)
 
     def CleanObjectNameForMacro(self,obj) :
         obj.SetName(self.CleanNameForMacro(obj.GetName()))
         obj.SetTitle(self.CleanNameForMacro(obj.GetTitle()))
         return
 
-    def SaveMacro(self,name= '',dir='',can='') :
+    def SaveMacro(self,name= '',dir='') :
         if not name : name = self.name
         if name : name = self.CleanNameForMacro(name)
         for p in range(len(self.plots)) :
@@ -795,16 +844,12 @@ class PlotObject :
         self.CleanObjectNameForMacro(self.can)
         if not name : name = self.can.GetName()
         if dir : dir = dir+'/'
-        if can == 'ratio' :
-            self.CleanObjectNameForMacro(self.ratiocan)
-            self.CleanObjectNameForMacro(self.RatioTopPlot0)
+        if hasattr(self,'RatioTopPlot0') : self.CleanObjectNameForMacro(self.RatioTopPlot0)
+        if hasattr(self,'ratioplots') :
             for p in range(len(self.ratioplots)) :
                 self.CleanObjectNameForMacro(self.ratioplots[p])
-            self.RatioPadTop.Update()
-            self.RatioPadBot.Update()
-            self.ratiocan.Update()
-            self.ratiocan.SaveAs(dir+name+'.C')
-            return        
+        if hasattr(self,'self.RatioPadTop') : self.RatioPadTop.Update()
+        if hasattr(self,'self.RatioPadBot') : self.RatioPadBot.Update()
         self.can.Update()
         self.can.SaveAs(dir+name+'.C')
         ##
@@ -812,7 +857,7 @@ class PlotObject :
         ##  - Bottom plot: GetXaxis()->SetTitleOffset()
         return
 
-    def SavePDF(self,name='',extension='pdf',dir='',can='') :
+    def SavePDF(self,name='',extension='pdf',dir='') :
         if not name : name = self.name
         if name : name = self.CleanNameForMacro(name)
         do_epstopdf = (extension == 'pdf' and self.watermark)
@@ -824,9 +869,6 @@ class PlotObject :
             os.system('epstopdf %s.%s'%(name,extension))
             return
         if dir : dir = dir+'/'
-        if can == 'ratio' :
-            self.ratiocan.SaveAs('%s%s.%s'%(dir,name,extension))
-            return
         self.can.SaveAs('%s%s.%s'%(dir,name,extension))
         return
 
@@ -835,12 +877,18 @@ def SmartPlotify(can,name='') :
 
 def PlotObjectify(can,name='',drawtitle=True) :
     plots = []
+    name1 = ''
     for i in list(a.GetName() for a in can.GetListOfPrimitives()) :
         if type(can.GetPrimitive(i)) in histtypes :
             plots.append(can.GetPrimitive(i).Clone())
             #print i,'added'
         if type(can.GetPrimitive(i)) == type(TLatex()) :
             name1 = can.GetPrimitive(i).GetTitle()+'_new'
-
+        if type(can.GetPrimitive(i)) == type(TPad()) and can.GetPrimitive(i).GetName() == 'pad1' :
+            for j in list(a.GetName() for a in can.GetPrimitive(i).GetListOfPrimitives()) :
+                if type(can.GetPrimitive(i).GetPrimitive(j)) in histtypes :
+                    plots.append(can.GetPrimitive(i).GetPrimitive(j).Clone())
+    if not name1 :
+        name1 = plots[0].GetName()+'_can'
     return PlotObject(name if name else name1,plots,drawopt='',drawtitle=drawtitle)
 
