@@ -162,7 +162,6 @@ def GetReasonableRanges(plots,ranges=0,log=False,extra_top_factor=1):
         if ranges[1] : newminy = ranges[1][0]
         if ranges[1] : newmaxy = ranges[1][1]
 
-    print 'newminy was',newminy
     if log and (newminy <= 0.) and (newmaxy >= 0.) :
         #newminy = min(0.5,0.01*newmaxy)
         newminy = 1000000
@@ -172,8 +171,6 @@ def GetReasonableRanges(plots,ranges=0,log=False,extra_top_factor=1):
                 if bc <= 0 :
                     bc = newminy
                 newminy = min(newminy,bc*0.9)
-
-        print 'set newminy to',newminy
 
     #print 'miny,maxy:',newminy,newmaxy
 
@@ -457,12 +454,13 @@ class PlotObject :
 
         return
 
-    def SetLegend(self,skip=[],drawopt='ple',totalentries=0) :
+    def SetLegend(self,skip=[],drawopt='ple',totalentries=0,reverse_order=False) :
         if type(drawopt) != type([]) :
             drawopt = [drawopt]*len(self.plots)
         self.legentries = []
         total = 0
-        for pl in range(len(self.plots)) :
+        the_range = reversed(range(len(self.plots))) if reverse_order else range(len(self.plots))
+        for pl in the_range :
             if pl in skip : continue
             # print 'adding entry',self.plots[pl].GetTitle()
             total += 1
@@ -514,10 +512,10 @@ class PlotObject :
         self.leg.SetNColumns(ncolumns)
         #self.leg.SetMargin((y2-y1)*ncolumns/(max(len(plots),totalentries)))
         
-    def RecreateLegend(self,x1,y1,x2,y2,skip=[],tsize=18,drawopt='ple',ncolumns=1,totalentries=0) :
+    def RecreateLegend(self,x1,y1,x2,y2,skip=[],tsize=18,drawopt='ple',ncolumns=1,totalentries=0,reverse_order=False) :
 
         self.CreateLegend(x1,y1,x2,y2,tsize=tsize,ncolumns=ncolumns)
-        self.SetLegend(skip=skip,drawopt=drawopt,totalentries=totalentries)
+        self.SetLegend(skip=skip,drawopt=drawopt,totalentries=totalentries,reverse_order=reverse_order)
         if ('colz' not in self.drawopt) and self.drawleg :
             self.can.cd()
             if hasattr(self,'RatioPadTop') :
@@ -846,7 +844,6 @@ class PlotObject :
             if self.log :
                 self.stack.SetMinimum(ranges[2]*5) # Root logy does not do this correctly?? extra factor of 5?
             self.stack.SetMaximum(ranges[3])
-            print ranges
         self.can.Update()
         return
 
