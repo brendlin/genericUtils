@@ -154,13 +154,14 @@ def GetReasonableRanges(plots,ranges=0,log=False,extra_top_factor=1):
     newminy = 1.1*miny if miny<0 else 0.9*miny
     newmaxy = 1.1*maxy if maxy>0 else 0.9*maxy
 
-    newmaxy = newmaxy*extra_top_factor
 
     if ranges :
         if ranges[0] : minx = ranges[0][0]
         if ranges[0] : maxx = ranges[0][1]
         if ranges[1] : newminy = ranges[1][0]
         if ranges[1] : newmaxy = ranges[1][1]
+
+    #print 'newminy was',newminy
 
     if log and (newminy <= 0.) and (newmaxy >= 0.) :
         #newminy = min(0.5,0.01*newmaxy)
@@ -170,7 +171,13 @@ def GetReasonableRanges(plots,ranges=0,log=False,extra_top_factor=1):
                 bc = plots[pl].GetBinContent(i+1)
                 if bc <= 0 :
                     bc = newminy
-                newminy = min(newminy,bc*0.9)
+                #print bc
+                newminy = min(newminy,bc)
+        newminy = newminy*0.5
+
+    #print 'newminy is',newminy
+
+    newmaxy = newmaxy*extra_top_factor
 
     #print 'miny,maxy:',newminy,newmaxy
 
@@ -476,7 +483,7 @@ class PlotObject :
                                                      ,''
                                                      ,''))
             total += 1
-            if total == totalentries : break
+            if total >= totalentries : break
         # recipe for making roughly square boxes
         h = self.leg.GetY2()-self.leg.GetY1()
         w = self.leg.GetX2()-self.leg.GetX1()
