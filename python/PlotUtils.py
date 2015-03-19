@@ -372,7 +372,7 @@ class PlotObject :
         self.DrawTitle()
 
         self.can.SetLogy(self.log)
-        if writecan : self.writeCan(file)
+        if writecan : self.writeCan()
         self.can.Update()
         return
 
