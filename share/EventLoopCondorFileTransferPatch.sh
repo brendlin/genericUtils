@@ -71,15 +71,12 @@ sed -i "s/$theline/$theline1\\
           gSystem->Exec(command.c_str());\\
           std::cout << \"Transfer end.\" << std::endl;\\
           std::cout << \"Checking that file exists \" << \"tempdir\/\"+new_name << std::endl;\\
-          TFile* tmp_file = TFile::Open((\"tempdir\/\"+new_name).c_str());\\
-          if (!tmp_file->IsZombie()) {\\
-            tmp_file->Close();\\
+          if (std::ifstream((\"tempdir\/\"+new_name).c_str())) { \\
             std::cout << \"File exists: tempdir\/\" << new_name << std::endl;\\
             std::cout << \"Breaking out of queue. \" << std::endl;\\
             gSystem->Exec((\"rm \"   +vetodir+\"\/\"+new_name).c_str());\\
             break;\\
           } else {\\
-            tmp_file->Close();\\
             std::cout << \"File transfer failed. Retrying.\" << std::endl;\\
           }\\
         }\\
