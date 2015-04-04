@@ -55,17 +55,35 @@ sed -i "s/$theline/$theline1\\
       std::cout << \"Veto directory: \" << vetodir << std::endl;\\
       TSystemDirectory dir(vetodir.c_str(),vetodir.c_str());\\
       int nfiles = 0;\\
+      bool have_lock = false;\\
       while(true){ \\
         nfiles = dir.GetListOfFiles()->GetEntries();\\
-        if (nfiles < 8+2) break; \/\/ Limit to 8 file transfers. \"..\" and \".\" are the +2\\
-        std::cout << \"nfiles = \" << nfiles << \". waiting.\" << std::endl;\\
-        sleep(5);\\
+        if (nfiles >= 8+2 \&\& !have_lock) { \/\/ Limit to 8 file transfers. \"..\" and \".\" are the +2\\
+          std::cout << \"nfiles = \" << nfiles << \". waiting.\" << std::endl;\\
+          sleep(5);\\
+        }\\
+        else {\\
+          if (!have_lock){\\
+            gSystem->Exec((\"touch \"+vetodir+\"\/\"+new_name).c_str());\\
+          }\\
+          have_lock = true;\\
+          std::cout << \"Transfer begin for \" << new_name << std::endl;\\
+          gSystem->Exec(command.c_str());\\
+          std::cout << \"Transfer end.\" << std::endl;\\
+          std::cout << \"Checking that file exists \" << \"tempdir\/\"+new_name << std::endl;\\
+          TFile* tmp_file = TFile::Open((\"tempdir\/\"+new_name).c_str());\\
+          if (!tmp_file->IsZombie()) {\\
+            tmp_file->Close();\\
+            std::cout << \"File exists: tempdir\/\" << new_name << std::endl;\\
+            std::cout << \"Breaking out of queue. \" << std::endl;\\
+            gSystem->Exec((\"rm \"   +vetodir+\"\/\"+new_name).c_str());\\
+            break;\\
+          } else {\\
+            tmp_file->Close();\\
+            std::cout << \"File transfer failed. Retrying.\" << std::endl;\\
+          }\\
+        }\\
       }\\
-      std::cout << \"Transfer begin for \" << new_name << std::endl;\\
-      gSystem->Exec((\"touch \"+vetodir+\"\/\"+new_name).c_str());\\
-      gSystem->Exec(command.c_str());\\
-      gSystem->Exec((\"rm \"   +vetodir+\"\/\"+new_name).c_str());\\
-      std::cout << \"Transfer end for \" << new_name << std::endl;\\
       std::auto_ptr<TFile> inFile (TFile::Open ((\"tempdir\/\"+new_name).c_str()));\\
       \/\//g" EventLoop/Root/BatchWorker.cxx
 
