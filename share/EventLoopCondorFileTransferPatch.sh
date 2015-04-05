@@ -56,6 +56,7 @@ sed -i "s/$theline/$theline1\\
       TSystemDirectory dir(vetodir.c_str(),vetodir.c_str());\\
       int nfiles = 0;\\
       bool have_lock = false;\\
+      int ntries = 0;\\
       while(true){ \\
         nfiles = dir.GetListOfFiles()->GetEntries();\\
         if (nfiles >= 8+2 \&\& !have_lock) { \/\/ Limit to 8 file transfers. \"..\" and \".\" are the +2\\
@@ -68,7 +69,9 @@ sed -i "s/$theline/$theline1\\
           }\\
           have_lock = true;\\
           std::cout << \"Transfer begin for \" << new_name << std::endl;\\
+          std::cout << command << std::endl;\\
           gSystem->Exec(command.c_str());\\
+          ntries++;\\
           std::cout << \"Transfer end.\" << std::endl;\\
           std::cout << \"Checking that file exists \" << \"tempdir\/\"+new_name << std::endl;\\
           if (std::ifstream((\"tempdir\/\"+new_name).c_str())) { \\
@@ -77,7 +80,12 @@ sed -i "s/$theline/$theline1\\
             gSystem->Exec((\"rm \"   +vetodir+\"\/\"+new_name).c_str());\\
             break;\\
           } else {\\
+            if (ntries > 10) {\\
+              std::cout << \"File transfer failed 10 times. Exiting.\" << std::endl;\\
+              break;\\
+            }\\
             std::cout << \"File transfer failed. Retrying.\" << std::endl;\\
+            sleep(5);\\
           }\\
         }\\
       }\\
