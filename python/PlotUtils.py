@@ -598,7 +598,7 @@ class PlotObject :
         t.SetTextSize(size)
         self.can.Update()
 
-    def DrawLuminosity(self,x=.2,y=.84,angle=0,align='',size=18,can='',color=1,internal=True,lumi=20.3,sqrts=8) :
+    def DrawLuminosity(self,x=.2,y=.84,angle=0,align='',size=18,can='',color=1,internal=True,lumi=20.3,sqrts=8,two_lines=True) :
         self.can.cd()
         if can == 'Top' : self.RatioPadTop.cd()
         t = TLatex()
@@ -610,7 +610,11 @@ class PlotObject :
         t.SetTextColor(color)
         if align == 'R': t.SetTextAlign(31)
         if angle : t.SetTextAngle(angle)
-        t.DrawLatex(x,y,'#sqrt{s} = %d TeV, #lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(sqrts,lumi))
+        if two_lines :
+            t.DrawLatex(x,y,'#sqrt{s} = %d TeV'%(sqrts))
+            t.DrawLatex(x,y-.06,'#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(lumi))
+        else :
+            t.DrawLatex(x,y,'#sqrt{s} = %d TeV, #lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(sqrts,lumi))
         self.can.Update()
 
 #     def DrawLuminosity(self,x,y,angle=0,align='',size=0.035,can='',color=1) :
@@ -676,6 +680,8 @@ class PlotObject :
 
     def SetYaxisRange(self,lo,hi) :
         self.plots[0].GetYaxis().SetRangeUser(lo,hi)
+        self.ymin = lo
+        self.ymax = hi
         return
 
     # for ratio top axis
