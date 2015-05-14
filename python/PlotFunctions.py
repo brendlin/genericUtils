@@ -7,15 +7,17 @@
 # SetColors(can,[color1,color2,color3...])
 # DrawAtlasInternal(can)
 # DrawLuminosity(can)
-# SetPlotStyle(can,options...)
 # MakeLegend(can,x1,x2,y1,y2,options...)
 # SetupStyle()
-#
-# # MakeRatioPlot() Coming soon!
+# FormatCanvas(can,options...) - must be run AFTER the first histograms are added!
+# RatioCanvas()
+# ConvertToDifferential()
+# SetYaxisRange(can)
 # # DrawText() Coming soon!
 # # DrawHorizontalLine() Coming soon!
 # # DrawVerticalLine() Coming soon!
-# # SetStyles() Coming soon!
+# # SetMarkerStyles() Coming soon!
+# # SetFillStyles() Coming soon!
 #
 ###
 
@@ -25,6 +27,15 @@
 #
 global tobject_collector;
 tobject_collector = []
+
+def ConvertToDifferential(hist) :
+    for i in range(hist.GetNbinsX()) :
+        content = hist.GetBinContent(i+1)
+        error = hist.GetBinError(i+1)
+        width = hist.GetBinWidth(i+1)
+        hist.SetBinContent(i+1,content/float(width))
+        hist.SetBinError(i+1,error/float(width))
+    return
 
 def AddHistogram(can,hist,drawopt='pE1') :
     from ROOT import TH1F
@@ -40,7 +51,10 @@ def AddHistogram(can,hist,drawopt='pE1') :
     can.cd()
     tmp.Draw(drawopt)
 
-def SetAxisLabels(can,xlabel,ylabel) :
+def SetAxisLabels(can,xlabel,ylabel,yratiolabel='ratio') :
+    if 'pad_top' in (a.GetName() for a in can.GetListOfPrimitives()) :
+        SetAxisLabels(can.GetPrimitive('pad_bot'),xlabel,yratiolabel)
+        SetAxisLabels(can.GetPrimitive('pad_top'),'',ylabel)
     for i in can.GetListOfPrimitives() :
         if hasattr(i,'GetXaxis') :
             i.GetXaxis().SetTitle(xlabel)
@@ -48,7 +62,10 @@ def SetAxisLabels(can,xlabel,ylabel) :
             break
     return
 
-def SetStyles(marker_styles=[],marker_sizes=[]) :
+def SetMarkerStyles(marker_styles=[],marker_sizes=[]) :
+    return
+
+def SetFillStyles(marker_styles=[],marker_sizes=[]) :
     return
 
 def SetColors(can,these_colors=[]) :
@@ -63,19 +80,29 @@ def SetColors(can,these_colors=[]) :
                         ,21,22,23,24,25,26,27,28,29,30
                         ]
         
+    the_primitives = can.GetListOfPrimitives()
+    if can.GetPrimitive('pad_top') :
+        the_primitives = can.GetPrimitive('pad_top').GetListOfPrimitives()
+
     color_count = 0
-    for i in can.GetListOfPrimitives() :
-        if hasattr(i,'SetLineColor') :
+    for i in the_primitives :
+        if hasattr(i,'SetLineColor') and hasattr(i,'SetMarkerColor') :
             i.SetLineColor(these_colors[color_count])
-        if hasattr(i,'SetMarkerColor') :
             i.SetMarkerColor(these_colors[color_count])
+            #
+            # Check if there is a bottom pad, with ratios...
+            #
+            if can.GetPrimitive('pad_bot') :
+                original_name = i.GetName().replace('pad_top_','')
+                j = can.GetPrimitive('pad_bot').GetPrimitive('pad_bot_%s_ratio'%(original_name))
+                if j :
+                    print j.GetName()
+                    j.SetLineColor(these_colors[color_count])
+                    j.SetMarkerColor(these_colors[color_count])
             color_count += 1
         if color_count >= len(these_colors) :
             break
     
-    return
-
-def MakeRatioPlot() :
     return
 
 def DrawAtlasInternal(can,x=.2,y=.9,angle=0,align='',size=18,preliminary=False) :
@@ -91,6 +118,7 @@ def DrawAtlasInternal(can,x=.2,y=.9,angle=0,align='',size=18,preliminary=False) 
     if preliminary : status = 'Preliminary'
     t.DrawLatex(x,y,'ATLAS #font[42]{%s}'%(status)) # for some reason 42 is appropriate, not 43
     t.SetTextSize(size)
+    can.Modified()
     can.Update()
     return
 
@@ -107,9 +135,10 @@ def DrawLuminosity(can,x=.2,y=.84,angle=0,align='',size=18,lumi=20.3,sqrts=8,two
     if angle : t.SetTextAngle(angle)
     if two_lines :
         t.DrawLatex(x,y,'#sqrt{s} = %d TeV'%(sqrts))
-        t.DrawLatex(x,y-.06,'#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(lumi))
+        t.DrawLatex(x,y-0.06,'#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(lumi))
     else :
         t.DrawLatex(x,y,'#sqrt{s} = %d TeV, #lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(sqrts,lumi))
+    can.Modified()
     can.Update()
     return
 
@@ -150,10 +179,12 @@ def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1) :
     h = leg.GetY2()-leg.GetY1()
     w = leg.GetX2()-leg.GetX1()
     leg.SetMargin(leg.GetNColumns()*h/float(leg.GetNRows()*w))
+    can.cd()
     leg.Draw()
+    can.Modified()
     can.Update()
 
-def SetPlotStyle(can
+def FormatCanvas(can
                  ,XTitleSize   = 22
                  ,XTitleOffset = 0.98
                  ,XTitleFont   = 43
@@ -176,15 +207,37 @@ def SetPlotStyle(can
                  ,ZLabelOffset = 0.002
                  ,ZLabelFont   = 43
                  ) :
+
+    if can.GetPrimitive('pad_top') :
+        FormatCanvas(can.GetPrimitive('pad_top'),XLabelOffset=0.1
+                     ,XTitleSize=XTitleSize,XTitleOffset=XTitleOffset,XTitleFont=XTitleFont
+                     ,XLabelSize=XLabelSize,XLabelFont=XLabelFont
+                     ,YTitleSize=YTitleSize,YTitleOffset=YTitleOffset,YTitleFont=YTitleFont
+                     ,YLabelSize=YLabelSize,YLabelOffset=YLabelOffset,YLabelFont=YLabelFont,YNDiv=YNDiv
+                     ,ZTitleSize=ZTitleSize,ZTitleOffset=ZTitleOffset,ZTitleFont=ZTitleFont
+                     ,ZLabelSize=ZLabelSize,ZLabelOffset=ZLabelOffset,ZLabelFont=ZLabelFont
+                     )
+    if can.GetPrimitive('pad_bot') :
+        FormatCanvas(can.GetPrimitive('pad_bot')
+                     ,XTitleSize=XTitleSize,XTitleOffset=XTitleOffset,XTitleFont=XTitleFont
+                     ,XLabelSize=XLabelSize,XLabelOffset=XLabelOffset,XLabelFont=XLabelFont
+                     ,YTitleSize=YTitleSize,YTitleOffset=YTitleOffset,YTitleFont=YTitleFont
+                     ,YLabelSize=YLabelSize,YLabelOffset=YLabelOffset,YLabelFont=YLabelFont,YNDiv=YNDiv
+                     ,ZTitleSize=ZTitleSize,ZTitleOffset=ZTitleOffset,ZTitleFont=ZTitleFont
+                     ,ZLabelSize=ZLabelSize,ZLabelOffset=ZLabelOffset,ZLabelFont=ZLabelFont
+                     )
+
     for i in can.GetListOfPrimitives() :
         if not hasattr(i,'GetXaxis') :
             continue
         i.GetXaxis().SetTitleSize  (XTitleSize  )
-        i.GetXaxis().SetTitleOffset(XTitleOffset)
+        i.GetXaxis().SetTitleOffset(XTitleOffset/float(can.GetHNDC()))
         i.GetXaxis().SetTitleFont  (XTitleFont  )
         i.GetXaxis().SetLabelSize  (XLabelSize  )
-        i.GetXaxis().SetLabelOffset(XLabelOffset)
+        i.GetXaxis().SetLabelOffset(XLabelOffset/float(can.GetHNDC()))
         i.GetXaxis().SetLabelFont  (XLabelFont  )
+
+        i.GetXaxis().SetTickLength(0.02/float(can.GetHNDC()))
         
         i.GetYaxis().SetTitleSize  (YTitleSize  )
         i.GetYaxis().SetTitleOffset(YTitleOffset)
@@ -202,6 +255,9 @@ def SetPlotStyle(can
         i.GetZaxis().SetLabelFont  (ZLabelFont  )
 
         break
+
+    can.Modified()
+    can.Update()
     return
 
 def SetupStyle() :
@@ -256,3 +312,63 @@ def SetupStyle() :
     gROOT.SetStyle("mystyle")
 
     return
+
+def RatioCanvas(canvas_name,canvas_title,canw=500,canh=600,ratio_size_as_fraction=0.35) :
+    from ROOT import TCanvas,TPad
+    c = TCanvas(canvas_name,canvas_title,canw,canh)
+    c.cd()
+    top = TPad("pad_top", "This is the top pad",0.0,ratio_size_as_fraction,1.0,1.0)
+    top.SetBottomMargin(0.02/float(top.GetHNDC()))
+    top.SetTopMargin   (0.04/float(top.GetHNDC()))
+    top.SetRightMargin (0.05 )
+    top.SetLeftMargin  (0.16 )
+    top.SetFillColor(0)
+    top.Draw()
+    tobject_collector.append(top)
+
+    c.cd()
+    bot = TPad("pad_bot", "This is the bottom pad",0.0,0.0,1.0,ratio_size_as_fraction)
+    bot.SetBottomMargin(0.09/float(bot.GetHNDC()))
+    bot.SetTopMargin   (0.02/float(bot.GetHNDC()))
+    bot.SetRightMargin (0.05)
+    bot.SetLeftMargin  (0.16)
+    bot.SetFillColor(0)
+    bot.Draw()
+    tobject_collector.append(bot)
+    
+    return c
+
+def SetLeftMargin(can,margin) :
+    if 'pad_top' in (a.GetName() for a in can.GetListOfPrimitives()) :
+        SetLeftMargin(can.GetPrimitive('pad_top'),margin)
+    if 'pad_bot' in (a.GetName() for a in can.GetListOfPrimitives()) :
+        SetLeftMargin(can.GetPrimitive('pad_bot'),margin)
+    can.SetLeftMargin(margin)
+    can.Modified()
+    can.Update()
+
+def SetYaxisRange(can,min,max) :
+    for i in can.GetListOfPrimitives() :
+        if hasattr(i,'GetYaxis') :
+            i.GetYaxis().SetRangeUser(min,max)
+            break
+    return
+
+def GetTopPad(can) :
+    return can.GetPrimitive('pad_top')
+
+def GetBotPad(can) :
+    return can.GetPrimitive('pad_bot')
+
+def AddHistogramTop(can,hist) :
+    AddHistogram(can.GetPrimitive('pad_top'),hist)
+
+def AddHistogramBot(can,hist) :
+    AddHistogram(can.GetPrimitive('pad_bot'),hist)
+
+def AddRatio(can,hist,ref_hist,divide='') : # "" for uncorrelated, "B" for binomial
+    ratioplot = hist.Clone()
+    ratioplot.SetName(hist.GetName()+'_ratio')
+    ratioplot.Divide(hist,ref_hist,1.,1.,divide)
+    AddHistogram(can.GetPrimitive('pad_top'),hist)
+    AddHistogram(can.GetPrimitive('pad_bot'),ratioplot)
