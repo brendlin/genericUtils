@@ -38,15 +38,22 @@ def ConvertToDifferential(hist) :
     return
 
 def AddHistogram(can,hist,drawopt='pE1') :
-    from ROOT import TH1F
+    from ROOT import TH1,TGraph
     tmp = hist.Clone()
-    if type(TH1F()) in list(type(a) for a in can.GetListOfPrimitives()) :
+    is_graph = issubclass(type(hist),TGraph)
+
+    plot_exists = list(issubclass(type(a),TH1) for a in can.GetListOfPrimitives())
+    plot_exists += list(issubclass(type(a),TGraph) for a in can.GetListOfPrimitives())
+
+    if (not is_graph) and (True in plot_exists) :
         drawopt += 'sames'
-    else :
-        tmp.GetXaxis().SetTitleOffset(0.98)
+    if is_graph and not (True in plot_exists) :
+        drawopt += 'a'
+
     tobject_collector.append(tmp)
     tmp.SetMarkerSize(1)
     tmp.SetMarkerStyle(20)
+    print tmp.GetName()
     tmp.SetName('%s_%s'%(can.GetName(),hist.GetName()))
     can.cd()
     tmp.Draw(drawopt)
@@ -89,6 +96,7 @@ def SetColors(can,these_colors=[]) :
         if hasattr(i,'SetLineColor') and hasattr(i,'SetMarkerColor') :
             i.SetLineColor(these_colors[color_count])
             i.SetMarkerColor(these_colors[color_count])
+            i.SetFillColor(0)
             #
             # Check if there is a bottom pad, with ratios...
             #
@@ -99,6 +107,7 @@ def SetColors(can,these_colors=[]) :
                     print j.GetName()
                     j.SetLineColor(these_colors[color_count])
                     j.SetMarkerColor(these_colors[color_count])
+                    j.SetFillColor(0)
             color_count += 1
         if color_count >= len(these_colors) :
             break
@@ -152,7 +161,7 @@ def DrawVerticalLine() :
     return
 
 def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1) :
-    from ROOT import TLegend,TH1,gStyle
+    from ROOT import TLegend,TH1,gStyle,TGraph
     #
     # if a previous version exists from this function, delete it
     #
@@ -172,7 +181,7 @@ def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1) :
     #
     for i in can.GetListOfPrimitives() :
         drawopt = i.GetDrawOption()
-        if issubclass(type(i),TH1) :
+        if issubclass(type(i),TH1) or issubclass(type(i),TGraph) :
             leg.AddEntry(i,i.GetTitle(),'f') # plef
 
     # recipe for making roughly square boxes
@@ -246,7 +255,9 @@ def FormatCanvas(can
         i.GetYaxis().SetLabelOffset(YLabelOffset)
         i.GetYaxis().SetLabelFont  (YLabelFont  )
         i.GetYaxis().SetNdivisions (YNDiv[0],YNDiv[1],YNDiv[2])
-        
+
+        if not hasattr(i,'GetZaxis') :
+            continue
         i.GetZaxis().SetTitleSize  (ZTitleSize  )
         i.GetZaxis().SetTitleOffset(ZTitleOffset)
         i.GetZaxis().SetTitleFont  (ZTitleFont  )
@@ -360,11 +371,11 @@ def GetTopPad(can) :
 def GetBotPad(can) :
     return can.GetPrimitive('pad_bot')
 
-def AddHistogramTop(can,hist) :
-    AddHistogram(can.GetPrimitive('pad_top'),hist)
+def AddHistogramTop(can,hist,drawopt='pE1') :
+    AddHistogram(can.GetPrimitive('pad_top'),hist,drawopt)
 
-def AddHistogramBot(can,hist) :
-    AddHistogram(can.GetPrimitive('pad_bot'),hist)
+def AddHistogramBot(can,hist,drawopt='pE1') :
+    AddHistogram(can.GetPrimitive('pad_bot'),hist,drawopt)
 
 def AddRatio(can,hist,ref_hist,divide='') : # "" for uncorrelated, "B" for binomial
     ratioplot = hist.Clone()

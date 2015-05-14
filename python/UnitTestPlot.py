@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ROOT import TH1F,TRandom3,TCanvas,gDirectory
+from ROOT import TH1F,TRandom3,TCanvas,gDirectory,TGraph
 from PlotUtils import PlotObject
 from PlotFunctions import *
 from array import array
@@ -12,6 +12,14 @@ def main() :
                  +list(a/4. for a in range(-3*4,3*4))
                  +list(a/2. for a in range(3*2,6*2)))+[6]
     c = TH1F('c','c',len(cbins)-1,array('d',cbins))
+    d = TGraph(5,array('d',[-5.5,-4.5,-3.5,-2.5,-2.0,0,3.5,4.5])
+               ,array('d',[10000,20000,30000,25000,10000,20000,22000,24000,25000,26000]))
+    d.SetNameTitle('mygraph','Legend text for graph')
+    d.SetLineWidth(2)
+
+    a.SetTitle('Legend text for a')
+    b.SetTitle('Legend text for b')
+    c.SetTitle('Legend text for c')
 
     rand = TRandom3(1)
 
@@ -33,7 +41,7 @@ def main() :
     plot_utils_can.DrawLuminosity()
     plot_utils_can.DrawAtlasPreliminary(internal=True)
     plot_utils_can.SetAxisLabels('x axis','y axis')
-    plot_utils_can.RecreateLegend(.8,.8,.9,.9)
+    plot_utils_can.RecreateLegend(.6,.83,1.,.93)
     plot_utils_can.SavePDF()
 
     #
@@ -48,7 +56,7 @@ def main() :
     DrawLuminosity(plot_functions_can)
     DrawAtlasInternal(plot_functions_can,preliminary=True)
     SetAxisLabels(plot_functions_can,'x axis','y axis')
-    MakeLegend(plot_functions_can,.8,.75,.9,.85)
+    MakeLegend(plot_functions_can,.6,.83,1.,.93)
     plot_functions_can.SetLogy()
     plot_functions_can.Print(plot_functions_can.GetName()+'.pdf')
 
@@ -59,11 +67,12 @@ def main() :
                                            ,500,600,.35)
     AddHistogramTop(plot_functions_can_ratio,a)
     AddRatio(plot_functions_can_ratio,b,a)
+    AddHistogramTop(plot_functions_can_ratio,d,drawopt='pl')
     SetColors(plot_functions_can_ratio)
     FormatCanvas(plot_functions_can_ratio,YTitleOffset=2.3)
     SetAxisLabels(plot_functions_can_ratio,'x axis','y axis','ratio b/a')
     SetLeftMargin(plot_functions_can_ratio,0.18)
-    MakeLegend(GetTopPad(plot_functions_can_ratio),.8,.75,.9,.85)
+    MakeLegend(GetTopPad(plot_functions_can_ratio),0.6,0.77,1,0.94)
     DrawAtlasInternal(GetTopPad(plot_functions_can_ratio))
     DrawLuminosity(GetTopPad(plot_functions_can_ratio))
     SetYaxisRange(GetBotPad(plot_functions_can_ratio),0,2)
