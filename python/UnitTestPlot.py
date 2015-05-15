@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-from ROOT import TH1F,TRandom3,TCanvas,gDirectory,TGraph
+from ROOT import TH1F,TRandom3,TCanvas,gDirectory,TGraph,gROOT
 from PlotUtils import PlotObject
 from PlotFunctions import *
 from TAxisFunctions import *
 from array import array
+
+gROOT.SetBatch(True)
 
 def main() :
     a = TH1F('a','a',48,-6,6)
@@ -75,9 +77,10 @@ def main() :
     FormatCanvas(plot_functions_can_ratio,YTitleOffset=2.3)
     SetAxisLabels(plot_functions_can_ratio,'x axis','y axis','ratio b/a')
     SetLeftMargin(plot_functions_can_ratio,0.18)
-    MakeLegend(GetTopPad(plot_functions_can_ratio),0.55,0.77,1,0.94)
-    DrawAtlasInternal(GetTopPad(plot_functions_can_ratio))
-    DrawLuminosity(GetTopPad(plot_functions_can_ratio))
+
+    MakeLegend(GetTopPad(plot_functions_can_ratio),0.55,0.74,1,0.93)
+    DrawAtlasInternal(GetTopPad(plot_functions_can_ratio),y=.88)
+    DrawLuminosity(GetTopPad(plot_functions_can_ratio),y=.82)
     AutoFixAxes(GetTopPad(plot_functions_can_ratio))
     SetYaxisRange(GetBotPad(plot_functions_can_ratio),0,2)
     plot_functions_can_ratio.Print(plot_functions_can_ratio.GetName()+'.pdf')
