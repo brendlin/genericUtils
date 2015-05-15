@@ -3,6 +3,7 @@
 from ROOT import TH1F,TRandom3,TCanvas,gDirectory,TGraph
 from PlotUtils import PlotObject
 from PlotFunctions import *
+from TAxisFunctions import *
 from array import array
 
 def main() :
@@ -58,6 +59,7 @@ def main() :
     SetAxisLabels(plot_functions_can,'x axis','y axis')
     MakeLegend(plot_functions_can,.6,.83,1.,.93)
     plot_functions_can.SetLogy()
+    AutoFixAxes(plot_functions_can)
     plot_functions_can.Print(plot_functions_can.GetName()+'.pdf')
 
     #
@@ -65,19 +67,21 @@ def main() :
     #
     plot_functions_can_ratio = RatioCanvas('plot_functions_can_ratio','plot_functions_can_ratio'
                                            ,500,600,.35)
+    AddHistogramTop(plot_functions_can_ratio,d,drawopt='pl')
     AddHistogramTop(plot_functions_can_ratio,a)
     AddRatio(plot_functions_can_ratio,b,a)
-    AddHistogramTop(plot_functions_can_ratio,d,drawopt='pl')
+
     SetColors(plot_functions_can_ratio)
     FormatCanvas(plot_functions_can_ratio,YTitleOffset=2.3)
     SetAxisLabels(plot_functions_can_ratio,'x axis','y axis','ratio b/a')
     SetLeftMargin(plot_functions_can_ratio,0.18)
-    MakeLegend(GetTopPad(plot_functions_can_ratio),0.6,0.77,1,0.94)
+    MakeLegend(GetTopPad(plot_functions_can_ratio),0.55,0.77,1,0.94)
     DrawAtlasInternal(GetTopPad(plot_functions_can_ratio))
     DrawLuminosity(GetTopPad(plot_functions_can_ratio))
+    AutoFixAxes(GetTopPad(plot_functions_can_ratio))
     SetYaxisRange(GetBotPad(plot_functions_can_ratio),0,2)
     plot_functions_can_ratio.Print(plot_functions_can_ratio.GetName()+'.pdf')
-
+    
     print '##'
     print '## The PlotFunctions TObject collector saved the follwing objects'
     print '## from going out of scope:'

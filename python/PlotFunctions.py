@@ -53,7 +53,6 @@ def AddHistogram(can,hist,drawopt='pE1') :
     tobject_collector.append(tmp)
     tmp.SetMarkerSize(1)
     tmp.SetMarkerStyle(20)
-    print tmp.GetName()
     tmp.SetName('%s_%s'%(can.GetName(),hist.GetName()))
     can.cd()
     tmp.Draw(drawopt)
@@ -104,7 +103,6 @@ def SetColors(can,these_colors=[]) :
                 original_name = i.GetName().replace('pad_top_','')
                 j = can.GetPrimitive('pad_bot').GetPrimitive('pad_bot_%s_ratio'%(original_name))
                 if j :
-                    print j.GetName()
                     j.SetLineColor(these_colors[color_count])
                     j.SetMarkerColor(these_colors[color_count])
                     j.SetFillColor(0)
@@ -125,8 +123,8 @@ def DrawAtlasInternal(can,x=.2,y=.9,angle=0,align='',size=18,preliminary=False) 
     if angle : t.SetTextAngle(angle)
     status = 'Internal'
     if preliminary : status = 'Preliminary'
-    t.DrawLatex(x,y,'ATLAS #font[42]{%s}'%(status)) # for some reason 42 is appropriate, not 43
-    t.SetTextSize(size)
+    text = 'ATLAS #font[42]{%s}'%(status)
+    tobject_collector.append(t.DrawLatex(x,y,text)) # for some reason 42 is appropriate, not 43
     can.Modified()
     can.Update()
     return
@@ -137,27 +135,22 @@ def DrawLuminosity(can,x=.2,y=.84,angle=0,align='',size=18,lumi=20.3,sqrts=8,two
     t = TLatex()
     t.SetNDC()
     t.SetTextSize(size)
-    if can == 'Top' :
-        t.SetTextSize(0.05)
     t.SetTextFont(43)
     if align == 'R': t.SetTextAlign(31)
     if angle : t.SetTextAngle(angle)
     if two_lines :
-        t.DrawLatex(x,y,'#sqrt{s} = %d TeV'%(sqrts))
-        t.DrawLatex(x,y-0.06,'#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(lumi))
+        text = '#sqrt{s} = %d TeV'%(sqrts)
+        tobject_collector.append(t.DrawLatex(x,y,text))
+        text = '#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(lumi)
+        tobject_collector.append(t.DrawLatex(x,y-0.06,text))
     else :
-        t.DrawLatex(x,y,'#sqrt{s} = %d TeV, #lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(sqrts,lumi))
+        text = '#sqrt{s} = %d TeV, #lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(sqrts,lumi)
+        tobject_collector.append(t.DrawLatex(x,y,text))
     can.Modified()
     can.Update()
     return
 
 def DrawText() :
-    return
-
-def DrawHorizontalLine() :
-    return
-
-def DrawVerticalLine() :
     return
 
 def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1) :
