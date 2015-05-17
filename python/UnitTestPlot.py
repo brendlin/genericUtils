@@ -6,7 +6,7 @@ from PlotFunctions import *
 from TAxisFunctions import *
 from array import array
 
-gROOT.SetBatch(True)
+#gROOT.SetBatch(True)
 
 def main() :
     a = TH1F('a','a',48,-6,6)
@@ -25,6 +25,10 @@ def main() :
     c.SetTitle('Legend text for c')
 
     rand = TRandom3(1)
+
+    a.Sumw2()
+    b.Sumw2()
+    c.Sumw2()
 
     for i in range(100000) :
         a.Fill(rand.Gaus(0,1))
@@ -54,12 +58,13 @@ def main() :
     plot_functions_can = TCanvas('plot_functions_can','plot_functions_can',500,500)
     AddHistogram(plot_functions_can,b)
     AddHistogram(plot_functions_can,c)
-    FormatCanvas(plot_functions_can)
+    FormatCanvasAxes(plot_functions_can)
     SetColors(plot_functions_can)
-    DrawLuminosity(plot_functions_can)
-    DrawAtlasInternal(plot_functions_can,preliminary=True)
+    DrawText(plot_functions_can,[GetAtlasInternalText(status='Preliminary')
+                                 ,GetSqrtsText(8)+', '+GetLuminosityText()
+                                 ],.095,.83,.5,.93,totalentries=2)
     SetAxisLabels(plot_functions_can,'x axis','y axis')
-    MakeLegend(plot_functions_can,.6,.83,1.,.93)
+    MakeLegend(plot_functions_can,.62,.83,1.,.93)
     plot_functions_can.SetLogy()
     AutoFixAxes(plot_functions_can)
     plot_functions_can.Print(plot_functions_can.GetName()+'.pdf')
@@ -72,17 +77,19 @@ def main() :
     AddHistogramTop(plot_functions_can_ratio,d,drawopt='pl')
     AddHistogramTop(plot_functions_can_ratio,a)
     AddRatio(plot_functions_can_ratio,b,a)
+    #GetTopPad(plot_functions_can_ratio).SetLogy()
 
     SetColors(plot_functions_can_ratio)
-    FormatCanvas(plot_functions_can_ratio,YTitleOffset=2.3)
+    FormatCanvasAxes(plot_functions_can_ratio,YTitleOffset=2.3)
     SetAxisLabels(plot_functions_can_ratio,'x axis','y axis','ratio b/a')
     SetLeftMargin(plot_functions_can_ratio,0.18)
 
-    MakeLegend(GetTopPad(plot_functions_can_ratio),0.55,0.74,1,0.93)
-    DrawAtlasInternal(GetTopPad(plot_functions_can_ratio),y=.88)
-    DrawLuminosity(GetTopPad(plot_functions_can_ratio),y=.82)
+    MakeLegend(GetTopPad(plot_functions_can_ratio),0.55,0.74,1,0.93,totalentries=3)
+    DrawText(GetTopPad(plot_functions_can_ratio),[GetAtlasInternalText()
+                                                  ,GetLuminosityText()
+                                                  ],0.15,0.74,0.5,0.93,totalentries=3)
     AutoFixAxes(GetTopPad(plot_functions_can_ratio))
-    SetYaxisRange(GetBotPad(plot_functions_can_ratio),0,2)
+    SetYaxisRanges(GetBotPad(plot_functions_can_ratio),0.5,1.5)
     plot_functions_can_ratio.Print(plot_functions_can_ratio.GetName()+'.pdf')
     
     print '##'
