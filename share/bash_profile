@@ -3,6 +3,10 @@
 # If not running interactively, don't do anything
 [ ! -t 0 ] && return
 
+todo () {
+    python ~/Documents/todo/todo.py $1
+}
+
 myhost () { 
     hostname|awk -F. '{print $1}' 
 }
@@ -72,6 +76,7 @@ case $HOSTNAME in
     (*)
     echo xrun2setupdq2 not implemented!
     ;;
+esac
 }
 xrun2setup () {
 case $HOSTNAME in
@@ -83,6 +88,7 @@ case $HOSTNAME in
     (*)
     echo xrun2setup not implemented!
     ;;
+esac
 }
 run2setupdq2 () {
 case $HOSTNAME in
@@ -97,12 +103,22 @@ case $HOSTNAME in
     (*)
     echo run2setupdq2 not implemented!
     ;;
+esac
 }
 run2setup () {
+case $HOSTNAME in
+    (*.hep.upenn.edu)
     cd $HOME/testarea/Run2Susy
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalROOTSetup.sh --rootVersion 5.34.22-x86_64-slc6-gcc48-opt
     source RootCore/scripts/setup.sh
-    export me=`pwd`    
+    export me=`pwd`
+    ;;
+    (*)
+    cd $brendlin/Run2Susy
+    source RootCore/scripts/setup.sh
+    export me=`pwd`
+    cd -
+esac
 }
 susysetup () {
 case $HOSTNAME in
@@ -117,7 +133,7 @@ case $HOSTNAME in
     ;;
     (*)
     #(Macintosh.local | macintosh.* | pb-d-*)
-    cd $brendlin/SusyElectroweak
+    cd $brendlin/Run2Susy
     source RootCore/scripts/setup.sh
     export me=`pwd`
     cd -
@@ -209,34 +225,37 @@ case $HOSTNAME in
     ;;
     #(Macintosh.local | macintosh.* | pb-d-*)
     (*)
-    source /Developer/CMT/v1r20p20090520/mgr/setup.sh
-    cd /Users/kurtbrendlinger/root
+    #source /Developer/CMT/v1r20p20090520/mgr/setup.sh
+    cd ~/root
     . bin/thisroot.sh;
     cd -;
-    echo Setting up ROOT v6-00-02... done.
+    echo Setting up ROOT branch v5-34-25... done.
     # MacPorts Installer addition on 2010-11-10_at_17:10:09: adding an appropriate PATH variable for use with MacPorts.
     export PATH=/opt/local/bin:/opt/local/sbin:$PATH
     # Finished adapting your PATH environment variable for use with MacPorts.
-    . /sw/bin/init.sh
+    #. /sw/bin/init.sh
     #echo Setting up Fink... done.
     #echo adding myscripts
     export PATH=$PATH:/bin/myscripts
     # adding to python path
-    export brendlin=/Users/kurtbrendlinger/Documents/pennHighEnergy
+    export brendlin=~/Documents/pennHighEnergy
     export genericUtils=$brendlin/genericUtils/
     export PYTHONPATH=$PYTHONPATH:$egammaframe/python:$genericUtils/python
     # aliases
-    export ppc=/Users/kurtbrendlinger/Documents/pennHighEnergy/talks/130708_PPC_HiggsTalk/proceedings/aipproc_8s
+    export ppc=~/Documents/pennHighEnergy/talks/130708_PPC_HiggsTalk/proceedings/aipproc_8s
     alias 'textedit=/Applications/TextEdit.app/Contents/MacOS/TextEdit'
-    alias 'lxplus=caffeinate -i ssh -Y brendlin@lxplus0190.cern.ch'
     alias 'lxplusrand=caffeinate -i ssh -Y brendlin@lxplus.cern.ch'
     # slc6
     alias 'lxplus0028=caffeinate -i ssh -Y brendlin@lxplus0028.cern.ch'
-    alias 'lxplus0049=caffeinate -i ssh -Y brendlin@lxplus0049.cern.ch'
-    alias 'lxplus0190=caffeinate -i ssh -Y brendlin@lxplus0190.cern.ch'
+    #alias 'lxplus0049=caffeinate -i ssh -Y brendlin@lxplus0049.cern.ch' # removed from service
+    alias 'lxplus0190d=caffeinate -i ssh -Y brendlin@lxplus0190.cern.ch'
     alias 'lxplus0569=caffeinate -i ssh -Y brendlin@lxplus0569.cern.ch'
+    alias 'lxplus0229=caffeinate -i ssh -Y brendlin@lxplus0229.cern.ch'
+    alias 'lxplus0038=caffeinate -i ssh -Y brendlin@lxplus0038.cern.ch'
     alias 'lxplusscreen=caffeinate -i ssh -Y brendlin@lxplus419.cern.ch'
     alias 'tier3screen=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
+
+    alias 'lxplus=lxplus0190d'
 
     alias 'higgs=caffeinate -i ssh -Y kurb@higgs.hep.upenn.edu'
     alias 'dionysus=caffeinate -i ssh -Y kurb@dionysus.hep.upenn.edu'
@@ -246,6 +265,7 @@ case $HOSTNAME in
     alias 'atlasgw=caffeinate -i ssh -Y brendlin@atlasgw.cern.ch'
     alias 'atlidali=caffeinate -i ssh -Y atlidali@lxplus415.cern.ch'
     alias 'tier3=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
+    alias 'tier6=caffeinate -i ssh -Y kurb@at3f00.hep.upenn.edu'
     alias 'cdpenn=cd Documents/PennHighEnergy/'
     alias 'whoareyou=echo No more questions.'
     alias 'usa=ssh -D 8080 kurb@at3i00.hep.upenn.edu'
@@ -253,11 +273,11 @@ case $HOSTNAME in
     alias 'usatwo=ssh -D 8080 kurb@nereus.hep.upenn.edu'
     alias 'taneycat=caffeinate -i ssh -Y taneycat@69.242.1.96'
     alias 'torrent=ssh -L 9091:localhost:9091 taneycat@69.242.1.96'
+    alias 'fixaudio=sudo killall coreaudiod'
     #
-    export alignment=/Users/kurtbrendlinger/Documents/pennHighEnergy/alignment/
-    export egamma=/Users/kurtbrendlinger/Documents/pennHighEnergy/egamma/
-    #export workflow=/Users/kurtbrendlinger/Documents/pennHighEnergy/workflow/
-    export workflow=/Users/kurtbrendlinger/Documents/pennHighEnergy/workflow_14_01/
+    export alignment=~/Documents/pennHighEnergy/alignment/
+    export egamma=~/Documents/pennHighEnergy/egamma/
+    export workflow=~/Documents/pennHighEnergy/workflow/150518_w20/
     export ecore=/home/kurb/testarea/17.7.0/egammaCore/
     export eframe=/home/kurb/testarea/17.7.0/egammaFrame/
     export utilities=$brendlin/genericUtils/
