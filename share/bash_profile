@@ -48,6 +48,10 @@ alias 'keepmealive=xterm -name "$USER" -e sh ~brendlin/public/eauxvives.sh &'
 alias 'launchTMVA=root -l $ROOTSYS/tmva/test/TMVAGui.C'
 alias 'kpbook=pbook -c "sync()" && pbook -c "show()" | grep -e JobsetID -e failed -e running -e activated -e merging -e lastUpdate >& /tmp/kpbook.txt && grep -B 2 failed /tmp/kpbook.txt'
 
+killpy () {
+    ps -u $USER | grep python | grep -v "grep python" | awk '{print $1}' | xargs kill -9
+}
+
 gitit () {
     eval "$(ssh-agent -s)"
     ssh-add ~/.ssh/id_rsa_github
@@ -55,6 +59,44 @@ gitit () {
 cern () {
     kinit brendlin@CERN.CH ;
     aklog
+}
+xrun2setupdq2 () {
+case $HOSTNAME in
+    (*.hep.upenn.edu)  
+    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalDQ2ClientSetup.sh --dq2ClientVersion ${dq2ClientVersionVal} --quiet
+    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalPandaClientSetup.sh --pandaClientVersion ${pandaClientVersionVal} currentJedi --noAthenaCheck
+    cd $HOME/testarea/XRun2Susy
+    source $ATLAS_LOCAL_RCSETUP_PATH/rcSetup.sh
+    export me=`pwd`    
+    ;;
+    (*)
+    echo xrun2setupdq2 not implemented!
+    ;;
+}
+xrun2setup () {
+case $HOSTNAME in
+    (*.hep.upenn.edu)  
+    cd $HOME/testarea/XRun2Susy
+    source $ATLAS_LOCAL_RCSETUP_PATH/rcSetup.sh
+    export me=`pwd`    
+    ;;
+    (*)
+    echo xrun2setup not implemented!
+    ;;
+}
+run2setupdq2 () {
+case $HOSTNAME in
+    (*.hep.upenn.edu)  
+    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalDQ2ClientSetup.sh --dq2ClientVersion ${dq2ClientVersionVal} --quiet
+    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalPandaClientSetup.sh --pandaClientVersion ${pandaClientVersionVal} currentJedi --noAthenaCheck
+    cd $HOME/testarea/Run2Susy
+    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalROOTSetup.sh --rootVersion 5.34.22-x86_64-slc6-gcc48-opt
+    source RootCore/scripts/setup.sh
+    export me=`pwd`    
+    ;;
+    (*)
+    echo run2setupdq2 not implemented!
+    ;;
 }
 run2setup () {
     cd $HOME/testarea/Run2Susy
