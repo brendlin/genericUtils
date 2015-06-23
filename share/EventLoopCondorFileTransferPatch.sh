@@ -35,6 +35,29 @@ sed -i "s/$theline/$theline1\\
       \/\/ SRM File\\
       std::string orig_name = m_sample->files\[file\];\\
       std::string new_name = m_sample->files\[file\];\\
+      \\
+      \/\/ For local files\\
+      std::size_t foundlocal = new_name.find(\"file:\/\/\");\\
+      if (foundlocal != std::string::npos) {\\
+        orig_name.replace(orig_name.begin()+foundlocal,orig_name.begin()+foundlocal+7,\"\");\\
+        new_name.replace(new_name.begin()+foundlocal,new_name.begin()+foundlocal+7,\"\");\\
+      }\\
+      \\
+      \/\/ For files stored on srm managed via a softlink from disk\\
+      char buf_filelink\[1024\];\\
+      std::size_t linkbufpos = ::readlink(orig_name.c_str(), buf_filelink, sizeof(buf_filelink)-1);\\
+      if(linkbufpos != std::string::npos){\\
+        buf_filelink\[linkbufpos\] = \'\\\0\';\\
+        orig_name = std::string(buf_filelink);\\
+        \\
+        std::size_t replaceStr = orig_name.find(\"\/xrootd\/srm\/\");\\
+        if(replaceStr != std::string::npos){\\
+          orig_name.replace(orig_name.begin()+replaceStr, orig_name.begin()+replaceStr+12, \"\");\\
+          orig_name = \"root:\/\/hn.at3f\/\/srm\/\" + orig_name;\\
+        }\\
+        new_name = orig_name;\\
+      }\\
+      \\
       std::string vetodir = m_job->location+\"\/veto\";\\
       std::string transfer_done_file = \"tempdir\/filetransfercomplete\";\\
       std::size_t found = new_name.find(\"root:\/\/hn.at3f\/\/srm\/\");\\
@@ -73,8 +96,16 @@ sed -i "s/$theline/$theline1\\
       while(true){\\
         ntries ++;\\
         if (ntries>30){std::cout << \"Transfer failed 30 times. Exiting.\" << std::endl; break; }\\
-        \/\/command.Form(\"xrdcp %s %s \&\& touch %s\",orig_name.c_str(),new_name_loc.c_str(),transfer_done_file.c_str());\\
-        command.Form(\"xrdcp %s %s\",orig_name.c_str(),new_name_loc.c_str());\\
+        \\
+        if(foundlocal != std::string::npos \&\& linkbufpos == std::string::npos){\\
+          \/\/ i.e. local file that is not just a link\\
+          command.Form(\"cp %s %s\",orig_name.c_str(),new_name_loc.c_str());\\
+        }\\
+        else{\\
+          \/\/command.Form(\"xrdcp %s %s \&\& touch %s\",orig_name.c_str(),new_name_loc.c_str(),transfer_done_file.c_str());\\
+          command.Form(\"xrdcp %s %s\",orig_name.c_str(),new_name_loc.c_str());\\
+        }\\
+        \\
         std::cout << \"Transfer begin for \" << new_name << std::endl;\\
         std::cout << command << std::endl;\\
         FILE* pipe = popen(command.Data(), \"r\"); sleep(5);\\
