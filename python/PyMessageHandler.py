@@ -104,6 +104,26 @@ class PyMessageHandler():
             self.warout.write(out_str)
             self.log_string += out_str
         
+    def ABORT(self, msg, errNo=0):
+        """Messages to send to the stdout then exit the program
+
+        Sends messages to the stdout. The errNo is just an int that
+        gets sent to the sys.exit command.
+
+        \param self
+        \param msg Message to be sent
+        \param errNo integer to send to sys.exit
+        """
+        out_str = ''
+        out_str += self.getClassAndLineno(inspect.stack()[1][0])
+        out_str += "***[ABORT]:....."
+        out_str += msg
+        out_str += '\n'
+        self.output.write(out_str)
+        self.log_string += out_str
+        exit(errNo)
+
+
     def DEBUG(self, msg, mlevel):
         """Messages to send to the stdout
 

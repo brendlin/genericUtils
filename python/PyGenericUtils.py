@@ -101,13 +101,15 @@ def GetInHMS(seconds):
 #------------------------------------------------------------------
 def getFile(filename,fatal=True) :
     filename = filename.replace('/xrootd/srm/', 'root://hn.at3f//srm/')
-
+    print "Opening file", filename
     if ('eosatlas' in filename) or ('castoratlas' in filename) :
         tfile = TXNetFile(filename,'READ')
     else :
         #print 'not an eos file'
+        print "Trying to open file"
         tfile = TFile(filename,'READ')
     if tfile.IsZombie() and fatal :
+        print "File is a zombie."
         print 'Fatal. Exiting.'
         import sys
         sys.exit()
