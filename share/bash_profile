@@ -51,6 +51,9 @@ alias 'sdfg=root -l *.root'
 alias 'keepmealive=xterm -name "$USER" -e sh ~brendlin/public/eauxvives.sh &'
 alias 'launchTMVA=root -l $ROOTSYS/tmva/test/TMVAGui.C'
 alias 'kpbook=pbook -c "sync()" && pbook -c "show()" | grep -e JobsetID -e failed -e running -e activated -e merging -e lastUpdate >& /tmp/kpbook.txt && grep -B 2 failed /tmp/kpbook.txt'
+alias "rchaddrm=for i in \$(ls | grep '\-0.root'); do hadd -f \${i/-0.root/.root} \${i/-0.root/-\*.root} && rm \${i/-0.root/-\*.root}; done"
+alias "rchadd=for i in \$(ls | grep '\-0.root'); do hadd -f \${i/-0.root/.root} \${i/-0.root/-\*.root}; done"
+
 
 killpy () {
     ps -u $USER | grep python | grep -v "grep python" | awk '{print $1}' | xargs kill -9
@@ -64,62 +67,38 @@ cern () {
     kinit brendlin@CERN.CH ;
     aklog
 }
-xrun2setupdq2 () {
-case $HOSTNAME in
-    (*.hep.upenn.edu)  
+
+setupdq2() {
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalDQ2ClientSetup.sh --dq2ClientVersion ${dq2ClientVersionVal} --quiet
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalPandaClientSetup.sh --pandaClientVersion ${pandaClientVersionVal} currentJedi --noAthenaCheck
-    cd $HOME/testarea/XRun2Susy
+}
+
+run2setup5 () {
+case $HOSTNAME in
+    (*.hep.upenn.edu)  
+    cd $HOME/testarea/XRun2Susy_ST0531
     source $ATLAS_LOCAL_RCSETUP_PATH/rcSetup.sh
     export me=`pwd`    
     ;;
     (*)
-    echo xrun2setupdq2 not implemented!
+    echo run2setup5 not implemented!
     ;;
 esac
 }
-xrun2setup () {
-case $HOSTNAME in
-    (*.hep.upenn.edu)  
-    cd $HOME/testarea/XRun2Susy
-    source $ATLAS_LOCAL_RCSETUP_PATH/rcSetup.sh
-    export me=`pwd`    
-    ;;
-    (*)
-    echo xrun2setup not implemented!
-    ;;
-esac
-}
-run2setupdq2 () {
-case $HOSTNAME in
-    (*.hep.upenn.edu)  
-    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalDQ2ClientSetup.sh --dq2ClientVersion ${dq2ClientVersionVal} --quiet
-    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalPandaClientSetup.sh --pandaClientVersion ${pandaClientVersionVal} currentJedi --noAthenaCheck
-    cd $HOME/testarea/Run2Susy
-    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalROOTSetup.sh --rootVersion 5.34.22-x86_64-slc6-gcc48-opt
-    source RootCore/scripts/setup.sh
-    export me=`pwd`    
-    ;;
-    (*)
-    echo run2setupdq2 not implemented!
-    ;;
-esac
-}
+
 run2setup () {
 case $HOSTNAME in
-    (*.hep.upenn.edu)
-    cd $HOME/testarea/Run2Susy
-    source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalROOTSetup.sh --rootVersion 5.34.22-x86_64-slc6-gcc48-opt
-    source RootCore/scripts/setup.sh
-    export me=`pwd`
+    (*.hep.upenn.edu)  
+    cd $HOME/testarea/XRun2Susy_ST0610
+    source $ATLAS_LOCAL_RCSETUP_PATH/rcSetup.sh
+    export me=`pwd`    
     ;;
     (*)
-    cd $brendlin/Run2Susy
-    source RootCore/scripts/setup.sh
-    export me=`pwd`
-    cd -
+    echo run2setup not implemented!
+    ;;
 esac
 }
+
 susysetup () {
 case $HOSTNAME in
     (*.hep.upenn.edu)  
