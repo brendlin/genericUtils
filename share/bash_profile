@@ -56,7 +56,9 @@ alias "rchadd=for i in \$(ls | grep '\-0.root'); do hadd -f \${i/-0.root/.root} 
 
 
 killpy () {
-    ps -u $USER | grep python | grep -v "grep python" | awk '{print $1}' | xargs kill -9
+    thiswindow=$(tty | sed -e "s:/dev/::")
+    echo $thiswindow
+    ps | grep $thiswindow | grep python | grep -v "grep python" | awk '{print $1}' | xargs kill -9
 }
 
 gitit () {
@@ -256,7 +258,7 @@ case $HOSTNAME in
     #
     export alignment=~/Documents/pennHighEnergy/alignment/
     export egamma=~/Documents/pennHighEnergy/egamma/
-    export workflow=~/Documents/pennHighEnergy/workflow/150518_w20/
+    export workflow=~/Documents/pennHighEnergy/workflow/150629_w26/
     export ecore=/home/kurb/testarea/17.7.0/egammaCore/
     export eframe=/home/kurb/testarea/17.7.0/egammaFrame/
     export utilities=$brendlin/genericUtils/
