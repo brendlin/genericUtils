@@ -3,14 +3,28 @@ import os
 
 def main(options,args) :
 
+    #
+    # For each user, two files will be created:
+    #  - summary_USER.txt : a summary of the unique container names on the SRM, and their total size
+    #  - USER_deletion_script.txt : a list of all the deletion commands needed to clean up the SRM
+
     for user in options.users.split(',') :
         cmd = 'rucio list-rules --account %s | grep UPENN_LOCALGROUPDISK'%(user)
         print cmd
         output = os.popen(cmd).readlines()
 
+        #
+        # For each user, make a deletion script that he can use to delete replicas.
+        # The user can uncomment any lines (all lines are commented by default) and run 
+        # the file like a script to delete replicas.
+        #
         print 'Making filename',"%s_deletion_script.txt"%(user)
         user_file = open("%s_deletion_script.txt"%(user),"w")
         
+        #
+        # In the system, datasets have a trailing number (e.g. .023848792). We'll keep track of those
+        # plus unique container names as well.
+        #
         user_dsets = []
         user_dset_nonumber = []
         for i in output :
@@ -29,6 +43,8 @@ def main(options,args) :
 
         #
         # sort the full name by tag
+        # most people submit batches of jobs with a trailing identifier, e.g. *.version1
+        # so we want to try to sort the datasets according to this identifier.
         #       
         for i in range(len(user_dsets)) :
             tmp = user_dsets[i].split('.')
@@ -45,7 +61,8 @@ def main(options,args) :
         print 'file closed.'
 
         #
-        # Sort the other list (user_dset_nonumber)
+        # Sort the other list (user_dset_nonumber) - the list of unique containers,
+        # in the same way as above.
         #
         for i in range(len(user_dset_nonumber)) :
             user_dset_nonumber[i] = user_dset_nonumber[i][::-1]
@@ -54,7 +71,9 @@ def main(options,args) :
             user_dset_nonumber[i] = user_dset_nonumber[i][::-1]
 
         #
-        # get the size of a particular tag
+        # get the size of a particular tag. This involves looping over the
+        # unique containers on the SRM and running dq2-ls -fpHL, which spits out
+        # the "total size" at the end. Unfortunately it is extremely slow.
         #
         user_summary = open("summary_%s.txt"%(user),"w")
 
@@ -63,7 +82,10 @@ def main(options,args) :
             if options.tag in i :
                 user_summary.write('%s\n'%(i))
                 cmd = 'dq2-ls -fpHL UPENN_LOCALGROUPDISK %s | grep total | grep size'%(i)
-                output += os.popen(cmd).readlines()
+                tmp = os.popen(cmd).readlines()
+                if not i.replace('\n','') :
+                    user_summary.write('cannot find %s\n'%(i))
+                output += tmp
                 n += 1
             # if n > 2 : break
 
