@@ -30,7 +30,10 @@ sed -i "s/$theline/$theline1\\
       gethostname(hostname, 1023);\\
       std::cout << \"Hostname is \" << hostname << std::endl;\\
       gSystem->MakeDirectory(\"tempdir\");\\
-      gSystem->MakeDirectory((m_job->location+\"\/veto\").c_str());\\
+      std::string vetodir = m_sample->meta.castString(\"vetodir\");\\
+      std::cout << \"the metadata had for veto directory: \" << vetodir << std::endl;\\
+      if (vetodir.empty()) vetodir = m_job->location+\"\/veto\";\\
+      gSystem->MakeDirectory(vetodir.c_str());\\
       gSystem->Exec(\"ls\");\\
       \/\/ SRM File\\
       std::string orig_name = m_sample->files\[file\];\\
@@ -58,7 +61,6 @@ sed -i "s/$theline/$theline1\\
         new_name = orig_name;\\
       }\\
       \\
-      std::string vetodir = m_job->location+\"\/veto\";\\
       std::string transfer_done_file = \"tempdir\/filetransfercomplete\";\\
       std::size_t found = new_name.find(\"root:\/\/hn.at3f\/\/srm\/\");\\
       if (found != std::string::npos) {\\
