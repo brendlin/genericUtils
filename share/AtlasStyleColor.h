@@ -9,16 +9,6 @@
 using namespace std;
 
 
-void SetAtlasStyle ()
-{
-  cout << "# AtlasStyleColor.h SetAtlasStyle" << endl;
-  
-  static TStyle* atlasStyle = 0;
-  if ( atlasStyle==0 ) atlasStyle = AtlasStyle();
-  gROOT->SetStyle("ATLAS");
-  //gROOT->ForceStyle();
-}
-
 TStyle* AtlasStyle() 
 {
   
@@ -93,5 +83,15 @@ TStyle* AtlasStyle()
 
   return atlasStyle;
 
+}
+
+void SetAtlasStyle ()
+{
+  cout << "# AtlasStyleColor.h SetAtlasStyle" << endl;
+  
+  static TStyle* atlasStyle = 0;
+  if ( atlasStyle==0 ) atlasStyle = AtlasStyle();
+  gROOT->SetStyle("ATLAS");
+  //gROOT->ForceStyle();
 }
 
