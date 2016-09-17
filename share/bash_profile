@@ -24,6 +24,7 @@ getps1 () {
 case $HOSTNAME in 
     (*.hep.upenn.edu)     echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
     (lxplus*)                  echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
+    (*.desy.de)           echo '['${USER}'.'`myhost`][`pwdtail`]`isdq2``isScreen` ;;
     #(Macintosh.local | macintosh.* | pb-d-*) 
     (*) echo '['${USER:0:4}']['`pwdtail`]`isScreen` ;;
 esac
@@ -169,6 +170,7 @@ esac
 
 
 case $HOSTNAME in
+
     (*.hep.upenn.edu)
     echo setting up atlas
     export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
@@ -189,7 +191,7 @@ case $HOSTNAME in
     (lxplus*)
     # EOS mounting
     source /afs/cern.ch/project/eos/installation/pro/etc/setup.sh
-    # PyAMI                                                                                                                                                                                                          
+    # PyAMI
     source /afs/cern.ch/atlas/software/tools/pyAMI/setup.sh
     #
     export mydir=/afs/cern.ch/work/b/brendlin/
@@ -204,6 +206,15 @@ case $HOSTNAME in
     alias 'bjosb=bjobs -w'
     alias 'bq=bqueues -u '$USER
     ;;
+
+    (*.desy.de)
+    echo setting up atlas
+    export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+    alias 'setupATLAS=source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh'
+    # setupATLAS below:
+    source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh    
+    ;;
+
     #(Macintosh.local | macintosh.* | pb-d-*)
     (*)
     #source /Developer/CMT/v1r20p20090520/mgr/setup.sh
