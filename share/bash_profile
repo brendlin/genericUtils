@@ -40,6 +40,7 @@ stty -ixon
 # Python
 export PYTHONSTARTUP=~/.pystartup
 
+export SVN_EDITOR=vim
 export EMAIL_RECIPIENT=kurt.brendlinger@gmail.com
 export RUCIO_ACCOUNT=brendlin
 export nickname=brendlin
@@ -60,6 +61,12 @@ killpy () {
     thiswindow=$(tty | sed -e "s:/dev/::")
     echo $thiswindow
     ps | grep $thiswindow | grep python | grep -v "grep python" | awk '{print $1}' | xargs kill -9
+}
+
+killsh () {
+    thiswindow=$(tty | sed -e "s:/dev/::")
+    echo $thiswindow
+    ps | grep $thiswindow | grep ssh | grep -v "grep ssh" | awk '{print $1}' | xargs kill -9
 }
 
 gitit () {
@@ -258,6 +265,8 @@ case $HOSTNAME in
     alias 'atlidali=caffeinate -i ssh -Y atlidali@lxplus415.cern.ch'
     alias 'tier3=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
     alias 'tier6=caffeinate -i ssh -Y kurb@at3f00.hep.upenn.edu'
+    alias 'desy=caffeinate -i ssh -Y brendlik@bastion.desy.de'
+    alias 'dnaf=caffeinate -i ssh -Y brendlik@nafhh-atlas01.desy.de'
     alias 'cdpenn=cd Documents/PennHighEnergy/'
     alias 'whoareyou=echo No more questions.'
     alias 'usa=ssh -D 8080 kurb@at3i00.hep.upenn.edu'
@@ -287,4 +296,5 @@ esac
 
 alias 'sgrep=echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; grep -n -i -R --exclude=*~ --exclude=*686* --exclude=*.svn* --exclude=*.makesav --exclude=*.make --exclude=*.o --exclude=*.a --exclude=*.so --exclude=*nstallAre* --exclude=*_Dict.cxx'
 
+alias sdu='du -sk * | sort -nr | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done'
 
