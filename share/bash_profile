@@ -139,10 +139,10 @@ susysetup () {
 
 hsgsetup () {
     case $HOSTNAME in
-
+        
         (*.hep.upenn.edu)
-        if [ $# -eq 0 ] then
-	    cd $HOME/testarea/hsg2_4
+        if [ $# -eq 0 ]; then
+	    cd $HOME/testarea/hsg2_4;
         else
             echo 'Setting up HSG2 code here'
         fi
