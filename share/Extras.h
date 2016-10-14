@@ -1,8 +1,13 @@
 #include "TH1.h"
+#include "TH2.h"
 #include "TCanvas.h"
 #include "TColor.h"
+#include "TStyle.h"
 #include <string>
 #include <stdlib.h>
+#include <iostream>
+#include <sstream>
+#include "TBrowser.h"
 
 void ListExtras(void){
   std::cout << "# Extras.C: " << "Plot options:"             << std::endl;
@@ -14,6 +19,9 @@ void ListExtras(void){
   std::cout << "# Extras.C: " << "    h = hist(\"h\",c)" << std::endl;
   std::cout << "# Extras.C: " << "    i = integral(TH1F* h,double binedge1, double binedge2)" << std::endl;
   std::cout << "# Extras.C: " << "    h = SF(TH2F* h,TH2F* err,int bin)" << std::endl;
+  std::cout << "# rootlogon.C: " << "gStyle->SetPaintTextFormat(\"4.3f \")" << std::endl;
+  std::cout << "# rootlogon.C: " << "To turn off title: gStyle->SetOptTitle(0);" << std::endl;
+  std::cout << "# rootlogon.C: " << "For Z axis: gStyle->SetPadRightMargin(0.16);" << std::endl;
 }
 
 TH1F* SF(TH2* h,TH2* err,int bin){
@@ -139,4 +147,12 @@ void set_plot_style_gray()
   TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
   gStyle->SetNumberContours(NCont);
   std::cout << "# Extras.C: Setting plot style to ?" << std::endl;
+}
+
+TBrowser* b()
+{
+  //TRootBrowser* BROWSER = new TRootBrowser(0,"b",1265,750);
+  //TBrowser* BROWSER = new TBrowser();
+  TBrowser* BROWSER = new TBrowser(0,"b",1265,750);
+  return BROWSER;
 }
