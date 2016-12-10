@@ -249,6 +249,15 @@ case $HOSTNAME in
     . bin/thisroot.sh;
     cd -;
     echo Setting up ROOT branch v5-34-25... done.
+    # add boost libraries to library paths
+    # not needed so far # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/Users/brendlin/boost_1_61_0/stage/lib
+    # not needed so far # export LIBPATH=$LIBPATH:/Users/brendlin/boost_1_61_0/stage/lib
+    export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/Users/brendlin/boost_1_61_0/stage/lib
+    # AnalysisBase asks for these:
+    export BOOSTLIBDIR=/Users/brendlin/boost_1_61_0/stage/lib
+    export BOOSTINCDIR=/Users/brendlin/boost_1_61_0/stage/
+    # Included because of "use quotes instead of angles" issue - see https://root.cern.ch/phpBB3/viewtopic.php?t=20306
+    export CPLUS_INCLUDE_PATH=""
     # MacPorts Installer addition on 2010-11-10_at_17:10:09: adding an appropriate PATH variable for use with MacPorts.
     export PATH=/opt/local/bin:/opt/local/sbin:$PATH
     # Finished adapting your PATH environment variable for use with MacPorts.
@@ -279,6 +288,7 @@ case $HOSTNAME in
     alias 'higgs=caffeinate -i ssh -Y kurb@higgs.hep.upenn.edu'
     alias 'dionysus=caffeinate -i ssh -Y kurb@dionysus.hep.upenn.edu'
     export pennscp=kurb@at3i00.hep.upenn.edu
+    export desyscp=brendlik@naf-atlas.desy.de
     export lxscp=brendlin@lxplus0190.cern.ch
 
     alias 'atlasgw=caffeinate -i ssh -Y brendlin@atlasgw.cern.ch'
@@ -287,6 +297,7 @@ case $HOSTNAME in
     alias 'tier6=caffeinate -i ssh -Y kurb@at3f00.hep.upenn.edu'
     alias 'desy=caffeinate -i ssh -Y brendlik@bastion.desy.de'
     alias 'dnaf=caffeinate -i ssh -Y brendlik@nafhh-atlas01.desy.de'
+    alias 'dnafrand=caffeinate -i ssh -Y brendlik@naf-atlas.desy.de'
     alias 'cdpenn=cd Documents/PennHighEnergy/'
     alias 'whoareyou=echo No more questions.'
     alias 'usa=ssh -D 8080 kurb@at3i00.hep.upenn.edu'
@@ -317,4 +328,4 @@ esac
 alias 'sgrep=echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~; grep -n -i -R --exclude=*~ --exclude=*686* --exclude=*.svn* --exclude=*.makesav --exclude=*.make --exclude=*.o --exclude=*.a --exclude=*.so --exclude=*nstallAre* --exclude=*_Dict.cxx'
 
 alias sdu='du -sk * | sort -nr | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done'
-
+alias sfindroot='find . -name "*\.root" -ls | sort -nk 7 | while read a b c d e f size fname; do for unit in b k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done'
