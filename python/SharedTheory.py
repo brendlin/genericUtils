@@ -94,24 +94,46 @@ def NameConvert(the_hist) :
     the_hist.SetName(the_str)
     return
 
-def QuadratureUpDown(asymlist,hists=[]) : # These are TGraphAsymmErrors
+def AsymmErrsToPlusMinusSigma(asymm,up,dn) :
+    for i in range(asymm.GetN()) :
+        up.SetBinContent(i+1,asymm.GetY()[i]+asymm.GetEYhigh()[i])
+        dn.SetBinContent(i+1,asymm.GetY()[i]-asymm.GetEYlow()[i])
+    return
+
+def QuadratureUpDown(asymlist,hists=[],doFlatUnc=False,FlatUp=0.0,FlatDown=0.0) : # These are TGraphAsymmErrors
     total_unc_up_sq = []
     total_unc_dn_sq = []
     for i in range(asymlist[0].GetN()) :
         total_unc_up_sq.append(0)
         total_unc_dn_sq.append(0)
+    #
+    # asym err hists
+    #
     for i in range(asymlist[0].GetN()) :
         for j in range(len(asymlist)) :
             E_up = asymlist[j].GetEYhigh()[i]
             E_dn = asymlist[j].GetEYlow()[i]
             total_unc_up_sq[i] += math.pow(E_up,2)
             total_unc_dn_sq[i] += math.pow(E_dn,2)
+    #
+    # hists
+    #
     for i in range(len(total_unc_up_sq)) :
         for j in range(len(hists)) :
             E_up = hists[j].GetBinError(i+1)
             E_dn = hists[j].GetBinError(i+1)
             total_unc_up_sq[i] += math.pow(E_up,2)
             total_unc_dn_sq[i] += math.pow(E_dn,2)
+    #
+    # flat uncertainty
+    #
+    if doFlatUnc :
+        for i in range(len(total_unc_up_sq)) :
+            total_unc_up_sq[i] += math.pow(FlatUp*asymlist[0].GetY()[i],2)
+            total_unc_dn_sq[i] += math.pow(FlatDown*asymlist[0].GetY()[i],2)            
+    #
+    # sqrt
+    #
     for i in range(len(total_unc_up_sq)) :
         total_unc_up_sq[i] = math.sqrt(total_unc_up_sq[i])
         total_unc_dn_sq[i] = math.sqrt(total_unc_dn_sq[i])
@@ -134,8 +156,8 @@ def QuadratureUpDown(asymlist,hists=[]) : # These are TGraphAsymmErrors
     return result
 
 
-def eigenvectorQuadrature(thedict,thebase,nominal,Type='MSTW',eigens=[]) :
-    # CLs are 90%; convert to 1sigma by 1/1.64485
+def eigenvectorQuadrature(thedict,thebase,nominal,Type='MSTW_68cl',eigens=[]) :
+    # SOME CLs are 90%; convert to 1sigma by 1/1.64485
     #
     # Takes the nominal and finds the error from the eigenvectors
     #
@@ -150,17 +172,23 @@ def eigenvectorQuadrature(thedict,thebase,nominal,Type='MSTW',eigens=[]) :
         diff_dn_squared.SetBinContent(i+1,0)
     #
     neigens = 20
-    if Type == 'CT10' :
+    if Type == 'CT10_90cl' :
         neigens = 26
     for ev in range(neigens) :
         for i in range(nominal.GetNbinsX()) :
             nom       = nominal.GetBinContent(i+1)
-            if Type == 'CT10' and (10800+2*ev+1 not in eigens or 10800+2*ev+2 not in eigens) :
+            if Type == 'CT10_90cl' and (10800+2*ev+1 not in eigens or 10800+2*ev+2 not in eigens) :
                 continue
-            if Type == 'MSTW' :
+#             if Type == 'MSTW_90cl' :
+#                 cl_scale  = float(1.64485)
+#                 upeigen   = thedict[thebase.replace('P1','P1%02d'%(2*ev+1))].GetBinContent(i+1)
+#                 dneigen   = thedict[thebase.replace('P1','P1%02d'%(2*ev+2))].GetBinContent(i+1)
+            elif Type == 'MSTW_68cl' :
+                cl_scale  = float(1.)
                 upeigen   = thedict[thebase.replace('P1','P1%02d'%(2*ev+1))].GetBinContent(i+1)
                 dneigen   = thedict[thebase.replace('P1','P1%02d'%(2*ev+2))].GetBinContent(i+1)
-            elif Type == 'CT10' :
+            elif Type == 'CT10_90cl' :
+                cl_scale  = float(1.64485)
                 upeigen   = thedict[thebase+' %s'%(10800+2*ev+1)].GetBinContent(i+1)
                 dneigen   = thedict[thebase+' %s'%(10800+2*ev+2)].GetBinContent(i+1)                
             else :
@@ -173,8 +201,8 @@ def eigenvectorQuadrature(thedict,thebase,nominal,Type='MSTW',eigens=[]) :
     xup = array('d',list(nominal.GetBinWidth  (a+1)/2.  for a in range(nominal.GetNbinsX())))
     xdn = array('d',list(nominal.GetBinWidth  (a+1)/2.  for a in range(nominal.GetNbinsX())))
     y   = array('d',list(nominal.GetBinContent(a+1)     for a in range(nominal.GetNbinsX())))
-    yup = array('d',list(math.sqrt(diff_up_squared.GetBinContent(a+1))/1.64485 for a in range(nominal.GetNbinsX())))
-    ydn = array('d',list(math.sqrt(diff_dn_squared.GetBinContent(a+1))/1.64485 for a in range(nominal.GetNbinsX())))
+    yup = array('d',list(math.sqrt(diff_up_squared.GetBinContent(a+1))/cl_scale for a in range(nominal.GetNbinsX())))
+    ydn = array('d',list(math.sqrt(diff_dn_squared.GetBinContent(a+1))/cl_scale for a in range(nominal.GetNbinsX())))
     result = TGraphAsymmErrors(nbins,x,y,xdn,xup,ydn,yup)
     return result
 
@@ -183,17 +211,25 @@ def rebinme(hfine,hcoarse) :
         total = 0
         error = 0
         error2 = 0
+        ##### invinverror = 0
+        ##### inverror2 = 0
         den = float(hcoarse.GetBinWidth(i+1))
         for j in range(hfine.GetNbinsX()) :
-            num = hfine.GetBinWidth(j+1)
             #print 'bin edges: ',hfine.GetBinLowEdge(j+1),hfine.GetBinLowEdge(j+2),'?'
             #print 'against:',hcoarse.GetBinLowEdge(i+1),hcoarse.GetBinLowEdge(i+2)
-            if hfine.GetBinLowEdge(j+2)<=hcoarse.GetBinLowEdge(i+2)+0.00001 :
-                if hfine.GetBinLowEdge(j+1)>=hcoarse.GetBinLowEdge(i+1)-0.00001 :
-                    #print 'bin edges: ',hfine.GetBinLowEdge(j+1),hfine.GetBinLowEdge(j+2),'are a go'
-                    total  += num*hfine.GetBinContent(j+1)/den
-                    error2 += (num*hfine.GetBinError(j+1)/den)**2
+            if not (hfine.GetBinLowEdge(j+2)<=hcoarse.GetBinLowEdge(i+2)+0.00001) : continue
+            if not (hfine.GetBinLowEdge(j+1)>=hcoarse.GetBinLowEdge(i+1)-0.00001) : continue
+            #print 'bin edges: ',hfine.GetBinLowEdge(j+1),hfine.GetBinLowEdge(j+2),'are a go'
+            num = float(hfine.GetBinWidth(j+1))
+            total     +=      num*hfine.GetBinContent(j+1)/den
+            error2    +=     (num*hfine.GetBinError(j+1)/den)**2
+            #error2    +=     (num/den)*(hfine.GetBinError(j+1))**2
+            #error2    +=     (den/num)*(hfine.GetBinError(j+1))**2
+            #error2    +=     (den*hfine.GetBinError(j+1)/num)**2
+            #error2    +=     (hfine.GetBinError(j+1))**2
+            ##### inverror2 += 1./((num*hfine.GetBinError(j+1)/den)**2)
         error = math.sqrt(error2)
+        #### invinverror = 1./math.sqrt(inverror2)
         hcoarse.SetBinContent(i+1,total)
         hcoarse.SetBinError(i+1,error)
 
