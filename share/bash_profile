@@ -212,14 +212,22 @@ case $HOSTNAME in
 
     (lxplus*)
     # EOS mounting
+    echo mounting eos.
     source /afs/cern.ch/project/eos/installation/pro/etc/setup.sh
+    echo eosmount eos # this mounts eos to ~/eos so you can use it like a regular file system.
+    echo eos is NOT mounted.
     # PyAMI
     source /afs/cern.ch/atlas/software/tools/pyAMI/setup.sh
     export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
     alias 'setupATLAS=source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh'
     # setupATLAS below:
+    echo Setting up ATLAS...
     source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
+    echo ATLAS is set up.
     alias r=localSetupROOT
+    #
+    # this is for that crappy ansys thing.
+    . /afs/cern.ch/project/parc/env/parc_apps.sh
     #
     export mydir=/afs/cern.ch/work/b/brendlin/
     export brendlin=/afs/cern.ch/user/b/brendlin/
