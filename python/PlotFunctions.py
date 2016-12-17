@@ -66,6 +66,10 @@ def FullFormatCanvasDefault(can,lumi=20.3,sqrts=8,additionaltext='',preliminary=
 ##
 def ConvertToDifferential(hist) :
     hist.Scale(1,'width')
+    if ('[GeV]' in hist.GetXaxis().GetTitle()) :
+        hist.GetYaxis().SetTitle('%s/GeV'%(hist.GetYaxis().GetTitle()))
+    else :
+        hist.GetYaxis().SetTitle('%s/(bin width)'%(hist.GetYaxis().GetTitle()))
     return
 
 ##
@@ -88,17 +92,21 @@ def AddHistogram(can,hist,drawopt='pE1') :
     plot_exists = list(issubclass(type(a),TH1) for a in can.GetListOfPrimitives())
     plot_exists += list(issubclass(type(a),TGraph) for a in can.GetListOfPrimitives())
 
+    if not is_graph :
+        tmp.SetDirectory(0)
+
     if (not is_graph) and (True in plot_exists) :
         drawopt += 'sames'
     if is_graph and not (True in plot_exists) :
         drawopt += 'a'
 
     tobject_collector.append(tmp)
-    tmp.SetMarkerSize(1)
     tmp.SetMarkerStyle(20)
     tmp.SetName('%s_%s'%(can.GetName(),hist.GetName()))
     can.cd()
     tmp.Draw(drawopt)
+    can.Modified()
+    can.Update()
     return
 
 ##
@@ -111,14 +119,55 @@ def SetAxisLabels(can,xlabel,ylabel,yratiolabel='ratio') :
     for i in can.GetListOfPrimitives() :
         if hasattr(i,'GetXaxis') :
             i.GetXaxis().SetTitle(xlabel)
-            i.GetYaxis().SetTitle(ylabel)
+            differential = ''
+            if '/GeV' in i.GetYaxis().GetTitle() :
+                differential = '/GeV'
+            elif '/(bin width)' in i.GetYaxis().GetTitle() and 'GeV' in i.GetXaxis().GetTitle() :
+                differential = '/GeV'
+            elif '/(bin width)' in i.GetYaxis().GetTitle() :
+                differential = '/(bin width)'
+            i.GetYaxis().SetTitle(ylabel+differential)
             break
     can.Modified()
     can.Update()
     return
 
-def SetMarkerStyles(marker_styles=[],marker_sizes=[]) :
+
+def SetMarkerStyles(can,these_styles=[],these_sizes=[]) :
+    if not these_styles :
+        these_styles = [20 for i in xrange(30)]
+                        
+    if not these_sizes :
+        these_sizes = [1 for i in xrange(30)]
+
+    the_primitives = can.GetListOfPrimitives()
+    if can.GetPrimitive('pad_top') :
+        the_primitives = can.GetPrimitive('pad_top').GetListOfPrimitives()
+
+    style_count = 0
+    for i in the_primitives :
+        if hasattr(i,'SetMarkerColor') :
+            i.SetMarkerStyle(these_styles[style_count])
+            i.SetMarkerSize(these_sizes[style_count])
+            #
+            # Check if there is a bottom pad, with ratios...
+            #
+            if can.GetPrimitive('pad_bot') :
+                original_name = i.GetName().replace('pad_top_','')
+                j = can.GetPrimitive('pad_bot').GetPrimitive('pad_bot_%s_ratio'%(original_name))
+                if j :
+                    j.SetMarkerStyle(these_styles[style_count])
+                    j.SetMarkerSize(these_sizes[style_count])
+                    can.GetPrimitive('pad_bot').Modified()
+                    can.GetPrimitive('pad_bot').Update()
+            style_count += 1
+        if style_count >= len(these_styles) :
+            break
+
+    can.Modified()
+    can.Update()
     return
+
 
 def SetFillStyles(marker_styles=[],marker_sizes=[]) :
     return
@@ -129,7 +178,7 @@ def SetFillStyles(marker_styles=[],marker_sizes=[]) :
 ## If you give this function a RatioCanvas, it will make histograms and their corresponding 
 ## ratio histograms the same color.
 ##
-def SetColors(can,these_colors=[]) :
+def SetColors(can,these_colors=[],fill=False) :
     if not these_colors :
         from ROOT import kBlack,kRed,kBlue,kAzure,kGreen,kMagenta,kCyan,kOrange,kGray,kYellow
         these_colors = [kBlack+0,kRed+1,kAzure-2,kGreen+1,kMagenta+1,kCyan+1,kOrange+1
@@ -145,12 +194,19 @@ def SetColors(can,these_colors=[]) :
     if can.GetPrimitive('pad_top') :
         the_primitives = can.GetPrimitive('pad_top').GetListOfPrimitives()
 
+    if can.GetPrimitive('stack') :
+        the_stack = list(reversed(list(can.GetPrimitive('stack').GetHists())))
+        the_primitives = the_stack+list(the_primitives)
+
     color_count = 0
     for i in the_primitives :
         if hasattr(i,'SetLineColor') and hasattr(i,'SetMarkerColor') :
             i.SetLineColor(these_colors[color_count])
             i.SetMarkerColor(these_colors[color_count])
             i.SetFillColor(0)
+            if fill :
+                i.SetFillColor(these_colors[color_count])
+                i.SetLineColor(1)
             #
             # Check if there is a bottom pad, with ratios...
             #
@@ -171,12 +227,19 @@ def SetColors(can,these_colors=[]) :
     can.Update()
     return
 
+
+
+
 ##
 ## Draw luminosity on your plot. Give it the lumi and sqrts.
 ## The x and y coordinates are the fractional distances, with the origin at the bottom left.
 ##
 def GetLuminosityText(lumi=20.3) :
-    return '#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f fb^{-1}'%(lumi)
+    unit = 'fb'
+    if lumi < 1 :
+        unit = 'pb'
+        lumi = lumi * 1000.
+    return '#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f %s^{-1}'%(lumi,unit)
 
 def GetSqrtsText(sqrts=13) :
     return '#sqrt{s} = %d TeV'%(sqrts)
@@ -217,6 +280,14 @@ def DrawText(can,text='text',x1=.2,y1=.84,x2=.5,y2=.9,angle=0,align='',textsize=
     can.Update()
     return
 
+def CanvasEmpty(can) :
+    from ROOT import TH1,TGraph
+    is_th1 = list(issubclass(type(i),TH1) for i in can.GetListOfPrimitives())
+    is_tgr = list(issubclass(type(i),TGraph) for i in can.GetListOfPrimitives())
+    if not (True in is_th1+is_tgr) :
+        return True
+    return False
+
 ##
 ## The MakeLegend function looks for any TH1 or TGraph you added to your canvas, and puts them
 ## in a legend in the order that you added them to a canvas.
@@ -224,14 +295,12 @@ def DrawText(can,text='text',x1=.2,y1=.84,x2=.5,y2=.9,angle=0,align='',textsize=
 ## of your TH1 or TGraph *before* you add it to the canvas.*
 ## The x and y coordinates are the fractional distances, with the origin at the bottom left.
 ##
-def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0) :
+def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0,option='f',skip=[]) :
     from ROOT import TLegend,TH1,gStyle,TGraph
     if can.GetPrimitive('pad_top') :
-        MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries)
+        MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,skip=skip)
         return
-    is_th1 = list(issubclass(type(i),TH1) for i in can.GetListOfPrimitives())
-    is_tgr = list(issubclass(type(i),TGraph) for i in can.GetListOfPrimitives())
-    if not (True in is_th1+is_tgr) :
+    if CanvasEmpty(can) :
         print 'Error: trying to make legend from canvas with 0 plots. Will do nothing.'
         return
     #
@@ -254,12 +323,22 @@ def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0
     the_primitives = can.GetListOfPrimitives()
     if can.GetPrimitive('pad_top') :
         the_primitives = can.GetPrimitive('pad_top').GetListOfPrimitives()
+    if can.GetPrimitive('stack') :
+        the_stack = list(reversed(list(can.GetPrimitive('stack').GetHists())))
+        the_primitives = the_stack+list(the_primitives)
+
+    if type(option) == type('') :
+        option = [option]*100
 
     total = 0
     for i in the_primitives :
+        if 'stack' in i.GetTitle() : continue
+        if 'remove' in i.GetTitle() : continue
         drawopt = i.GetDrawOption()
         if issubclass(type(i),TH1) or issubclass(type(i),TGraph) :
-            leg.AddEntry(i,i.GetTitle(),'f') # plef
+            if i.GetTitle() in skip :
+                continue
+            leg.AddEntry(i,i.GetTitle(),option[total]) # plef
             total += 1
 
     #
@@ -371,8 +450,10 @@ def FormatCanvasAxes(can
 ## Setup general style.
 ##
 def SetupStyle() :
-    from ROOT import gROOT,TStyle
-    mystyle = TStyle("mystyle","mystyle")
+    import ROOT
+    from array import array
+
+    mystyle = ROOT.TStyle("mystyle","mystyle")
     mystyle.SetStatColor(0)
     mystyle.SetTitleColor(0)
     mystyle.SetCanvasColor(0)
@@ -387,11 +468,14 @@ def SetupStyle() :
     mystyle.SetTitleFillColor(0)
     mystyle.SetTitleBorderSize(0)
     mystyle.SetHistLineWidth(2)
-    mystyle.SetLineWidth(2)
+    #mystyle.SetLineWidth(2) # no
     mystyle.SetFrameFillColor(0)
     mystyle.SetOptTitle(0)
     mystyle.SetPaintTextFormat('4.1f ')
     mystyle.SetEndErrorSize(3)
+
+    mystyle.SetPadTickX(1)
+    mystyle.SetPadTickY(1)
 
     mystyle.SetPadTopMargin(0.05)
     mystyle.SetPadRightMargin(0.05)
@@ -418,8 +502,29 @@ def SetupStyle() :
     # y axis
     mystyle.SetTitleOffset(1.75 ,'y')
     mystyle.SetLabelOffset(0.002,'y')
+
+    # Gradient colors
+    ncont = 255
+    # cern default
+#     stops = array('d',[0.00, 0.50, 1.00])
+#     red   = array('d',[0.00, 0.50, 1.00])
+#     green = array('d',[0.00, 1.00, 0.00])
+#     blue  = array('d',[1.00, 0.50, 0.00])
+    # http://ultrahigh.org/2007/08/making-pretty-root-color-palettes/
+    stops = array('d',[0.00, 0.34, 0.61, 0.84, 1.00])
+    red   = array('d',[0.00, 0.00, 0.87, 1.00, 0.51])
+    green = array('d',[0.00, 0.81, 1.00, 0.20, 0.00])
+    blue  = array('d',[0.51, 1.00, 0.12, 0.00, 0.00])
+    # Higgs
+#     stops = array('d',[0.00,1.00])
+#     red   = array('d',[1.00,0.20])
+#     green = array('d',[1.00,0.20])
+#     blue  = array('d',[1.00,0.80])
     
-    gROOT.SetStyle("mystyle")
+    ROOT.TColor.CreateGradientColorTable(len(stops),stops,red,green,blue,ncont)
+    mystyle.SetNumberContours(ncont)
+
+    ROOT.gROOT.SetStyle("mystyle")
 
     return
 
@@ -448,7 +553,7 @@ def RatioCanvas(canvas_name,canvas_title,canw=500,canh=600,ratio_size_as_fractio
 
     c.cd()
     bot = TPad("pad_bot", "This is the bottom pad",0.0,0.0,1.0,ratio_size_as_fraction)
-    bot.SetBottomMargin(0.09/float(bot.GetHNDC()))
+    bot.SetBottomMargin(0.11/float(bot.GetHNDC()))
     bot.SetTopMargin   (0.02/float(bot.GetHNDC()))
     bot.SetRightMargin (0.05)
     bot.SetLeftMargin  (0.16)
@@ -467,6 +572,19 @@ def SetLeftMargin(can,margin) :
     if can.GetPrimitive('pad_bot') :
         SetLeftMargin(can.GetPrimitive('pad_bot'),margin)
     can.SetLeftMargin(margin)
+    can.Modified()
+    can.Update()
+    return
+
+##
+## Set the right margin - useful for the RatioCanvas in particular (since it will handle sub-pads)
+##
+def SetRightMargin(can,margin) :
+    if can.GetPrimitive('pad_top') :
+        SetRightMargin(can.GetPrimitive('pad_top'),margin)
+    if can.GetPrimitive('pad_bot') :
+        SetRightMargin(can.GetPrimitive('pad_bot'),margin)
+    can.SetRightMargin(margin)
     can.Modified()
     can.Update()
     return
@@ -510,4 +628,41 @@ def AddRatio(can,hist,ref_hist,divide='') :
     ratioplot.Divide(hist,ref_hist,1.,1.,divide)
     AddHistogram(can.GetPrimitive('pad_top'),hist)
     AddHistogram(can.GetPrimitive('pad_bot'),ratioplot)
+    return
+
+##
+## Stack plot functionality
+##
+def Stack(can,reverse=False) :
+    if can.GetPrimitive('pad_top') :
+        return Stack(can.GetPrimitive('pad_top'),reverse=reverse)
+    
+    from ROOT import TH1,THStack
+    stack = THStack('stack','stack')
+    xaxislabel,yaxislabel = '',''
+    binlabels = []
+    if reverse :
+        the_primitives = reversed(can.GetListOfPrimitives())
+    else :
+        the_primitives = can.GetListOfPrimitives()
+    for i in the_primitives :
+        if issubclass(type(i),TH1) :
+            stack.Add(i)
+            if not xaxislabel : xaxislabel = i.GetXaxis().GetTitle()
+            if not yaxislabel : yaxislabel = i.GetYaxis().GetTitle()
+            if not binlabels and i.GetXaxis().GetBinLabel(1) :
+                for j in range(i.GetNbinsX()) :
+                    binlabels.append(i.GetXaxis().GetBinLabel(j+1))
+    can.Clear()
+    tobject_collector.append(stack)
+    can.cd()
+    stack.Draw('hist')
+    stack.GetXaxis().SetTitle(xaxislabel)
+    stack.GetYaxis().SetTitle(yaxislabel)
+    if binlabels :
+        for i in range(stack.GetXaxis().GetNbins()) :
+            stack.GetXaxis().SetBinLabel(i+1,binlabels[i])
+    can.Modified()
+    can.Update()
+    can.RedrawAxis()
     return

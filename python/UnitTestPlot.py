@@ -99,5 +99,7 @@ def main() :
     for i in tobject_collector :
         print ' -',i,i.GetName()
 
+    raw_input('Press enter to exit')
+
 if __name__ == '__main__':
     main()
