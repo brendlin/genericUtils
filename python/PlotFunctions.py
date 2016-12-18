@@ -106,7 +106,7 @@ def AddHistogram(can,hist,drawopt='pE1') :
     can.cd()
     tmp.Draw(drawopt)
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 ##
@@ -129,7 +129,7 @@ def SetAxisLabels(can,xlabel,ylabel,yratiolabel='ratio') :
             i.GetYaxis().SetTitle(ylabel+differential)
             break
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 
@@ -159,13 +159,13 @@ def SetMarkerStyles(can,these_styles=[],these_sizes=[]) :
                     j.SetMarkerStyle(these_styles[style_count])
                     j.SetMarkerSize(these_sizes[style_count])
                     can.GetPrimitive('pad_bot').Modified()
-                    can.GetPrimitive('pad_bot').Update()
+                    #can.GetPrimitive('pad_bot').Update()
             style_count += 1
         if style_count >= len(these_styles) :
             break
 
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 
@@ -218,13 +218,13 @@ def SetColors(can,these_colors=[],fill=False) :
                     j.SetMarkerColor(these_colors[color_count])
                     j.SetFillColor(0)
                     can.GetPrimitive('pad_bot').Modified()
-                    can.GetPrimitive('pad_bot').Update()
+                    #can.GetPrimitive('pad_bot').Update()
             color_count += 1
         if color_count >= len(these_colors) :
             break
 
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 
@@ -277,7 +277,7 @@ def DrawText(can,text='text',x1=.2,y1=.84,x2=.5,y2=.9,angle=0,align='',textsize=
         total += 1
     leg.Draw()
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 def CanvasEmpty(can) :
@@ -359,7 +359,7 @@ def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0
         can.GetPrimitive('pad_top').cd()
     leg.Draw()
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 ##
@@ -443,7 +443,7 @@ def FormatCanvasAxes(can
         break
 
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 ##
@@ -573,7 +573,7 @@ def SetLeftMargin(can,margin) :
         SetLeftMargin(can.GetPrimitive('pad_bot'),margin)
     can.SetLeftMargin(margin)
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 ##
@@ -586,7 +586,7 @@ def SetRightMargin(can,margin) :
         SetRightMargin(can.GetPrimitive('pad_bot'),margin)
     can.SetRightMargin(margin)
     can.Modified()
-    can.Update()
+    #can.Update()
     return
 
 ##
@@ -663,6 +663,6 @@ def Stack(can,reverse=False) :
         for i in range(stack.GetXaxis().GetNbins()) :
             stack.GetXaxis().SetBinLabel(i+1,binlabels[i])
     can.Modified()
-    can.Update()
+    #can.Update()
     can.RedrawAxis()
     return

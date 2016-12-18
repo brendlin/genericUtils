@@ -28,7 +28,7 @@ def main(options,args) :
     #options.fb,lumi_scale_factor = helpers.GetTTreeLumiScaleFactor(files_b+files_s,options.fb)
 
     dweight = ''
-    weight = 'TotalWeightNoSF'
+    weight = ''
     if hasattr(options.usermodule,'weight') :
         weight = options.usermodule.weight
     if ''.join(options.cuts) :
@@ -65,12 +65,12 @@ def main(options,args) :
 
         cans.append(anaplot.DrawHistos(v,v,xlabel,bkg_hists,sig_hists,data_hist,dostack=options.stack,log=options.log,ratio=options.ratio,fb=options.fb))
 
+    anaplot.UpdateCanvases(options,cans)
+
     if not options.batch :
         raw_input('Press enter to exit')
 
-    if options.save :
-        for can in cans :
-            can.Print(can.GetName()+'.pdf')
+    anaplot.doSaving(options,cans)
 
     print 'done.'
     return

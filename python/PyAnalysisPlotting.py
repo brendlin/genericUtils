@@ -42,11 +42,11 @@ def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dos
     #
     # Clean up name
     #
-    canname = name.replace('[','_').replace(']','').replace('_index','')
-    canname = canname.replace('[','_').replace(']','_').replace('(','_').replace(')','_').replace('/','_over_')
-    canname = canname.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_').replace('&&','and')
+    canname = name.replace('[','_').replace(']','').replace('_index','').replace('.','_')
+    canname = canname.replace('[','_').replace(']','_').replace('(','_').replace(')','_')
+    canname = canname.replace('/','_over_').replace('&&','and')
+    canname = canname.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
     canname = canname.lstrip('_').rstrip('_')
-
     #
     # stack, before adding SUSY histograms
     #
@@ -59,7 +59,7 @@ def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dos
 
     if bkg_hists :
         totb = bkg_hists[0].Clone()
-        totb.SetNameTitle('SM_%s'%(variable),'remove me')
+        totb.SetNameTitle('SM_%s'%(canname),'remove me')
         totb.SetLineColor(1)
         totb.SetLineWidth(1)
         totb.SetMarkerSize(0)
@@ -306,6 +306,7 @@ class TreePlottingOptParser :
 
         self.p.add_option('--config',type='string',default='',dest='config',help='Input configuration file (python module)')
         self.p.add_option('--treename',type='string',default='physics',dest='treename',help='Treename (physics, CollectionTree)')
+        self.p.add_option('--outdir',type='string',default='',dest='outdir',help='output directory')
 
     def parse_args(self) :
         import sys,os
@@ -321,6 +322,9 @@ class TreePlottingOptParser :
             ROOT.gROOT.SetBatch(False)
 
         self.options.stack = not self.options.nostack
+
+        if not self.options.outdir :
+            self.options.outdir = os.getcwd()
         
         if self.options.susy and not '.root' in self.options.susy :
             dir = self.options.susy
@@ -367,9 +371,11 @@ class TreePlottingOptParser :
                 if len(self.options.histformat[v]) < 4 :
                     self.options.histformat[v].append(v)
                 continue
-            label = ROOT.PSL.GetXaxisLabel(vtmp)
-            n,xdn,xup = ROOT.PSL.GetVariableHistArgs(vtmp)
-            self.options.histformat[v] = [n,xdn,xup,label]
+            else :
+                self.options.histformat[v] = [100,0,1,v]
+            #label = ROOT.PSL.GetXaxisLabel(vtmp)
+            #n,xdn,xup = ROOT.PSL.GetVariableHistArgs(vtmp)
+            #self.options.histformat[v] = [n,xdn,xup,label]
 
         # scripts will be looking for a python list of cuts
         if type(self.options.cuts) == type('') :
@@ -588,3 +594,39 @@ def GetPassEventSigHistos(variable,key,filenames,normalize=False,rebin=[]) :
 
     return hists
 
+
+#-------------------------------------------------------------------------
+#
+# Save plots (argument is a list of canvases)
+#
+def doSaving(options,cans) :
+    import os
+    directory = os.getcwd()
+    if not options.save :
+        return 
+    for can in cans :
+        while True :
+            name = directory + '/' + can.GetName()+'.pdf'
+            try :
+                open(name, 'a').close()
+                can.Print(name)
+                can.Print(name.replace('.pdf','.C'))
+                break
+            except IOError :
+                directory = raw_input('Cannot write to this directory. Specify a different one:')
+                directory = directory.replace('~',os.getenv('HOME'))
+    return
+
+#-------------------------------------------------------------------------
+#
+# Update plots (argument is a list of canvases)
+#
+def UpdateCanvases(options,cans) :
+    if not options.batch :
+        for can in cans :
+            can.Update()
+            if can.GetPrimitive('pad_bot') :
+                can.GetPrimitive('pad_bot').Update()
+            if can.GetPrimitive('pad_top') :
+                can.GetPrimitive('pad_top').Update()                
+    return

@@ -50,6 +50,9 @@ export RUCIO_ACCOUNT=brendlin
 export nickname=brendlin
 export pennsvn=svn+ssh://brendlin@svn.cern.ch/reps/penn/
 export svnatlasoff=svn+ssh://brendlin@svn.cern.ch/reps/atlasoff/
+export genericUtils=$HOME/genericUtils
+export PYTHONPATH=$PYTHONPATH:$genericUtils/python #add generic python utilities to path
+export PATH=$PATH:$genericUtils/macros # add plot script to python path
 
 alias 'nemacs=emacs -nw'
 alias 'asdf=%emacs'
@@ -210,6 +213,8 @@ case $HOSTNAME in
     alias duls='du -sk * | sort -nr | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done'
     ;;
 
+
+
     (lxplus*)
     # EOS mounting
     echo mounting eos.
@@ -224,6 +229,8 @@ case $HOSTNAME in
     echo Setting up ATLAS...
     source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
     echo ATLAS is set up.
+    source ${ATLAS_LOCAL_ROOT_BASE}/utilities/oldAliasSetup.sh root
+    echo ROOT is set up.
     alias r=localSetupROOT
     #
     # this is for that crappy ansys thing.
@@ -242,6 +249,8 @@ case $HOSTNAME in
     alias 'bq=bqueues -u '$USER
     ;;
 
+
+
     (*.desy.de)
     echo setting up atlas
     export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
@@ -250,8 +259,10 @@ case $HOSTNAME in
     source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh    
     ;;
     
+
+
     #(Macintosh.local | macintosh.* | pb-d-*)
-    (*)
+    (*) # everything else (local machine, etc)
     #source /Developer/CMT/v1r20p20090520/mgr/setup.sh
     cd ~/root
     . bin/thisroot.sh;
@@ -275,8 +286,6 @@ case $HOSTNAME in
     export PATH=$PATH:/bin/myscripts
     # adding to python path
     export brendlin=~/Documents/pennHighEnergy
-    export genericUtils=$brendlin/genericUtils/
-    export PYTHONPATH=$PYTHONPATH:$egammaframe/python:$genericUtils/python
     # aliases
     export ppc=~/Documents/pennHighEnergy/talks/130708_PPC_HiggsTalk/proceedings/aipproc_8s
     alias 'textedit=/Applications/TextEdit.app/Contents/MacOS/TextEdit'
