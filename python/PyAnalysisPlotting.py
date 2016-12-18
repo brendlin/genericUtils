@@ -602,7 +602,7 @@ def GetPassEventSigHistos(variable,key,filenames,normalize=False,rebin=[]) :
 # Save plots (argument is a list of canvases)
 #
 def doSaving(options,cans) :
-    import os
+    import os,sys
     directory = os.getcwd()
     if not options.save :
         return 
@@ -613,10 +613,16 @@ def doSaving(options,cans) :
                 open(name, 'a').close()
                 can.Print(name)
                 can.Print(name.replace('.pdf','.C'))
+                # some weird quirk in can.Print(blah.C) requires us to remove "__1" suffixes
+                sed_mac_quirk = ''
+                if 'darwin' in sys.platform :
+                    sed_mac_quirk = '\'\''
+                os.system('sed -i %s \'s/\_\_[0-9]*//g\' %s'%(sed_mac_quirk,name.replace('.pdf','.C')))
                 break
             except IOError :
                 directory = raw_input('Cannot write to this directory. Specify a different one:')
                 directory = directory.replace('~',os.getenv('HOME'))
+                os.makedirs(directory)
     return
 
 #-------------------------------------------------------------------------
