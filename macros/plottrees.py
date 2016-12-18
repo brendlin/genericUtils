@@ -21,21 +21,17 @@ def main(options,args) :
 
     #anaplot.LoadRootCore()
     
-    files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs,treename=options.treename)
-    files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.susy,treename=options.treename)
-    file_d ,tree_d ,key_d  = anaplot.GetTreesFromFiles(options.data,treename=options.treename)
+    files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename)
+    files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename)
+    file_d ,tree_d ,key_d  = anaplot.GetTreesFromFiles(options.data  ,treename=options.treename)
 
     #options.fb,lumi_scale_factor = helpers.GetTTreeLumiScaleFactor(files_b+files_s,options.fb)
 
-    dweight = ''
-    weight = ''
-    if hasattr(options.usermodule,'weight') :
-        weight = options.usermodule.weight
+    dweight = '' # weight value (and cuts) applied to data
+    weight = options.weight
     if ''.join(options.cuts) :
         weight = weight+'*(%s)'%(' && '.join(options.cuts))
         dweight = '('+' && '.join(options.cuts)+')'
-    if hasattr(options.usermodule,'dataweight') :
-        dweight += '*(%s)'%(options.usermodule.dataweight)        
 
     cans = []
 
@@ -55,7 +51,7 @@ def main(options,args) :
         if options.bkgs :
             bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight ,n,low,high,normalize=options.normalize,rebin=rebin,scale=1.)
             anaplot.PrepareBkgHistosForStack(bkg_hists)
-        if options.susy :
+        if options.signal :
             sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight ,n,low,high,normalize=options.normalize,rebin=rebin,scale=1.)
         if options.data :
             data_hist = anaplot.GetVariableHistsFromTrees(tree_d ,key_d ,v,dweight,n,low,high,normalize=options.normalize,rebin=rebin,scale=1.)[0]

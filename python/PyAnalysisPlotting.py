@@ -293,7 +293,7 @@ class TreePlottingOptParser :
         self.p = OptionParser()
         self.p.add_option('--batch',action='store_true',default=False,dest='batch',help='run in batch mode')
         self.p.add_option('--bkgs',type='string',default='',dest='bkgs',help='input files for bkg (csv)')
-        self.p.add_option('--susy',type='string',default='',dest='susy',help='input files for susy (csv)')
+        self.p.add_option('--signal',type='string',default='',dest='signal',help='input files for signal (csv)')
         self.p.add_option('--data',type='string',default='',dest='data',help='input file for data (csv)')
         self.p.add_option('-v','--variables',type='string',default='',dest='variables',help='Variables (see Variables.cxx for names)')
         self.p.add_option('-l','--log',action='store_true',default=False,dest='log',help='log')
@@ -306,6 +306,7 @@ class TreePlottingOptParser :
 
         self.p.add_option('--config',type='string',default='',dest='config',help='Input configuration file (python module)')
         self.p.add_option('--treename',type='string',default='physics',dest='treename',help='Treename (physics, CollectionTree)')
+        self.p.add_option('--weight',type='string',default='',dest='weight',help='Monte Carlo weight')
         self.p.add_option('--outdir',type='string',default='',dest='outdir',help='output directory')
 
     def parse_args(self) :
@@ -326,12 +327,12 @@ class TreePlottingOptParser :
         if not self.options.outdir :
             self.options.outdir = os.getcwd()
         
-        if self.options.susy and not '.root' in self.options.susy :
-            dir = self.options.susy
-            self.options.susy = ','.join('%s/%s'%(dir,a) for a in os.listdir(self.options.susy))
+        if self.options.signal and not '.root' in self.options.signal :
+            dir = self.options.signal
+            self.options.signal = ','.join('%s/%s'%(dir,a) for a in os.listdir(self.options.signal))
 
-        if (not self.options.bkgs) and (not self.options.susy) and (not self.options.data) :
-            print 'No --bkgs, --susy, or --data specified. Exiting.'
+        if (not self.options.bkgs) and (not self.options.signal) and (not self.options.data) :
+            print 'No --bkgs, --signal, or --data specified. Exiting.'
             sys.exit()
 
         self.options.bkgs = self.options.bkgs.split(',')
@@ -345,6 +346,8 @@ class TreePlottingOptParser :
 
         # to get your current directory viewable by the code:
         sys.path.append(os.getcwd())
+
+        # Read in options from config file:
         self.options.histformat = dict()
         self.options.usermodule = None
         if self.options.config :
@@ -358,9 +361,8 @@ class TreePlottingOptParser :
                 self.options.variables = ','.join(usermodule.variables)
             if hasattr(usermodule,'histformat') :
                 self.options.histformat = usermodule.histformat
-
-        if self.options.variables.lower() == 'all' :
-            self.options.variables = ','.join(ROOT.PSL.GetAllVariableStrings())
+            if hasattr(usermodule,'weight') :
+                self.options.weight = usermodule.weight
 
         for v in self.options.variables.split(',') :
             if v == '' : continue
@@ -389,7 +391,7 @@ class PassEventPlottingOptParser :
         from optparse import OptionParser
         self.p = OptionParser()
         self.p.add_option('-f','--file',type='string',default='',dest='file',help='input file')
-        self.p.add_option('-s','--susy',type='string',default='',dest='susy',help='input files for susy (csv)')
+        self.p.add_option('-s','--signal',type='string',default='',dest='signal',help='input files for signal (csv)')
         self.p.add_option('-k','--key' ,type='string',default='',dest='key'  ,help='PassEvent name (key)')
         self.p.add_option('-v','--variables',type='string',default='',dest='variables',help='Variables (see Variables.cxx for names)')
         self.p.add_option('-p','--processes',type='string',default='',dest='processes',help='Processes (see Sample.cxx for names)')
@@ -409,11 +411,11 @@ class PassEventPlottingOptParser :
         #LoadRootCore()
         
         self.options,self.args = self.p.parse_args()
-        print self.options.susy
-        if self.options.susy and not '.root' in self.options.susy :
-            dir = self.options.susy
-            self.options.susy = ','.join('%s/%s'%(dir,a) for a in os.listdir(self.options.susy))
-        print self.options.susy
+        print self.options.signal
+        if self.options.signal and not '.root' in self.options.signal :
+            dir = self.options.signal
+            self.options.signal = ','.join('%s/%s'%(dir,a) for a in os.listdir(self.options.signal))
+        print self.options.signal
 
         self.options.stack = not self.options.nostack
 
@@ -531,7 +533,7 @@ def GetPassEventBkgHistos(variable,key,processes,filename,normalize=False,rebin=
 
 #-------------------------------------------------------------------------
 #
-# This takes a list of susy files
+# This takes a list of signal files
 #
 def GetPassEventSigHistos(variable,key,filenames,normalize=False,rebin=[]) :
     import ROOT
@@ -539,7 +541,7 @@ def GetPassEventSigHistos(variable,key,filenames,normalize=False,rebin=[]) :
     from array import array
 
     #
-    # Loop over SUSY files
+    # Loop over signal files
     #
     hists = []
     nsignal = 0
@@ -552,18 +554,18 @@ def GetPassEventSigHistos(variable,key,filenames,normalize=False,rebin=[]) :
             sys.exit()
 
         #
-        # get SUSY title
+        # get signal title
         #
-        mass_map = GetMassesMap()
-        #print mass_map
-        title = 'susy'
-        for i in file.GetListOfKeys() :
-            try :
-                ii = int(i.GetName())
-            except ValueError :
-                continue
-            if ii in mass_map.keys() :
-                title = '%s,%s'%(mass_map[ii]['mc1'],mass_map[ii]['mn1'])
+#         mass_map = GetMassesMap()
+#         #print mass_map
+#         title = 'susy'
+#         for i in file.GetListOfKeys() :
+#             try :
+#                 ii = int(i.GetName())
+#             except ValueError :
+#                 continue
+#             if ii in mass_map.keys() :
+#                 title = '%s,%s'%(mass_map[ii]['mc1'],mass_map[ii]['mn1'])
 
         #
         # Get SUSY histogram
