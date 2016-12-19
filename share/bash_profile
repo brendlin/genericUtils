@@ -24,6 +24,23 @@ isScreen () {
     [ $TERM = "screen" ] && echo "[S]"
 }
 
+workflow () {
+    xworkdir=$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)
+    #echo $xworkdir
+    if [ "$mydir" = "" ]; then
+        echo Warning - mydir environment variable not set.
+        exit 1;
+    fi
+    export workflow=$mydir/rsync/$xworkdir
+    if [ ! -d "$workflow" ]; then
+        echo "$workflow" does not exist. making it.
+        mkdir $workflow
+    else
+        echo "$workflow" exists.
+    fi
+    cd $workflow
+}
+
 getps1 (){
     case $HOSTNAME in 
         (*.hep.upenn.edu) echo '['${USER}'.'`myhost`']['`pwdtail`']'`isdq2``isScreen` ;;
@@ -62,6 +79,7 @@ alias 'launchTMVA=root -l $ROOTSYS/tmva/test/TMVAGui.C'
 alias 'kpbook=pbook -c "sync()" && pbook -c "show()" | grep -e JobsetID -e failed -e running -e activated -e merging -e lastUpdate >& /tmp/kpbook.txt && grep -B 2 failed /tmp/kpbook.txt'
 alias "rchaddrm=for i in \$(ls | grep '\-0.root'); do hadd -f \${i/-0.root/.root} \${i/-0.root/-\*.root} && rm \${i/-0.root/-\*.root}; done"
 alias "rchadd=for i in \$(ls | grep '\-0.root'); do hadd -f \${i/-0.root/.root} \${i/-0.root/-\*.root}; done"
+alias 'voms=voms-proxy-init -voms atlas:/atlas/de --valid 96:00'
 
 killpy () {
     thiswindow=$(tty | sed -e "s:/dev/::")
@@ -257,6 +275,11 @@ case $HOSTNAME in
     alias 'setupATLAS=source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh'
     # setupATLAS below:
     source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh    
+    export DQ2_LOCAL_SITE_ID=DESY-HH_SCRATCHDISK
+    export mydir=/nfs/dust/atlas/user/brendlik
+    # set up BIRD system
+    echo 'setting up bird (SGE)'
+    source /usr/sge/default/common/settings.sh
     ;;
     
 
@@ -286,6 +309,7 @@ case $HOSTNAME in
     export PATH=$PATH:/bin/myscripts
     # adding to python path
     export brendlin=~/Documents/pennHighEnergy
+    export mydir=~/Documents/desyHEP/rsync
     # aliases
     export ppc=~/Documents/pennHighEnergy/talks/130708_PPC_HiggsTalk/proceedings/aipproc_8s
     alias 'textedit=/Applications/TextEdit.app/Contents/MacOS/TextEdit'
@@ -326,7 +350,6 @@ case $HOSTNAME in
     #
     export alignment=~/Documents/pennHighEnergy/alignment/
     export egamma=~/Documents/pennHighEnergy/egamma/
-    export workflow=~/Documents/pennHighEnergy/workflow/150629_w26/
     export ecore=/home/kurb/testarea/17.7.0/egammaCore/
     export eframe=/home/kurb/testarea/17.7.0/egammaFrame/
     export utilities=$brendlin/genericUtils/
