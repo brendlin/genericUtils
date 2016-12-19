@@ -25,11 +25,10 @@ isScreen () {
 }
 
 workflow () {
-    if [ "$mydir" = "" ]; then
-        echo Warning - mydir environment variable not set.
+    if [ "$mydir" = "" ] || [ "$workflow" = "" ] ; then
+        echo Warning - mydir or workflow environment variable not set.
         exit 1;
     fi
-    export workflow=$mydir/rsync/$monday
     if [ ! -d "$workflow" ]; then
         echo "$workflow" does not exist. making it.
         mkdir $workflow
@@ -263,7 +262,7 @@ case $HOSTNAME in
     alias 'bjbos=bjobs -w'
     alias 'bjosb=bjobs -w'
     alias 'bq=bqueues -u '$USER
-    export monday="$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
+    export workflow="$mydir/rsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
     ;;
 
 
@@ -279,7 +278,7 @@ case $HOSTNAME in
     # set up BIRD system
     echo 'setting up bird (SGE)'
     source /usr/sge/default/common/settings.sh
-    export monday="$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
+    export workflow="$mydir/rsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
     ;;
     
 
@@ -363,7 +362,7 @@ case $HOSTNAME in
     #
     export scpbrendlin=brendlin@lxplus.cern.ch:/
     export scpatlidali=atlidali@lxplus.cern.ch:/
-    export monday="$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
+    export workflow="$mydir/rsync/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
     ;;
 esac 
 
