@@ -19,16 +19,12 @@ def main(options,args) :
     for i in options.histformat.keys() :
         print '\'%s\':'%(i),options.histformat[i]
 
-    #anaplot.LoadRootCore()
-    
     files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename)
     files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename)
     file_d ,tree_d ,key_d  = anaplot.GetTreesFromFiles(options.data  ,treename=options.treename)
 
     scales_b = anaplot.GetScales(files_b,trees_b,keys_b,options)
     scales_s = anaplot.GetScales(files_s,trees_s,keys_s,options)
-
-    #options.fb,lumi_scale_factor = helpers.GetTTreeLumiScaleFactor(files_b+files_s,options.fb)
 
     dweight = '' # weight value (and cuts) applied to data
     weight = options.weight
