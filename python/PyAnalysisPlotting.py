@@ -9,9 +9,10 @@
 #     return
 
 #-------------------------------------------------------------------------
-def PrepareBkgHistosForStack(bkg_hists) :
+def PrepareBkgHistosForStack(bkg_hists,colors=None) :
     from PyHelpers import GetHWWColors
-    colors_dict = GetHWWColors()
+    if not colors :
+        colors = GetHWWColors()
     label_dict = {
         'eeg1':'Z#rightarrow ee#gamma',
         'eeg2':'Z#rightarrow ee#gamma',
@@ -20,10 +21,10 @@ def PrepareBkgHistosForStack(bkg_hists) :
         }
     for i in bkg_hists :
         i.SetLineColor(1)
-        i.SetMarkerColor(colors_dict.get(i.GetTitle(),1))
+        i.SetMarkerColor(colors.get(i.GetTitle(),1))
         if i.GetMarkerColor() == 0 :
             i.SetMarkerColor(1)
-        i.SetFillColor(colors_dict.get(i.GetTitle(),1))
+        i.SetFillColor(colors.get(i.GetTitle(),1))
         i.SetLineWidth(1)
         i.SetTitle(label_dict.get(i.GetTitle(),i.GetTitle()))
     return
@@ -119,57 +120,43 @@ def GetTreesFromFiles(filelist_csv,treename='physics') :
     #LoadRootCore()
 
     cutflow_hists = []
-    files = []
+    files = dict()
     trees = dict()
     keys = []
     for f in filelist_csv.split(',') :
         if not f : continue
         cutflow_hists.append([])
         name = f.replace('.root','').replace('/','_').replace('-','_').replace('.','_')
-        is_samplename = False # (f.replace('.root','') in list(ROOT.PSL.GetAllSampleStrings()))
-        #
-        # For backgrounds, try to chain together sub-files (if the filename does not exist)
-        #
-        if is_samplename and (not os.path.isfile(f)) :
-            files.append([])
-            f_expanded = ROOT.PSL.ConvertSampleToSampleVec(f.replace('.root',''))
-            trees[name] = ROOT.TChain(treename)
-            if not trees[name] :
-                print 'Error! Tree \"%s\" does not exist! Exiting.'%(treename)
-                import sys; sys.exit()
-            subsamples = []
-            for ff in f_expanded :
-                if os.path.isfile(ff+'.root') :
-                    files[-1].append(ROOT.TFile(ff+'.root'))
-                    if files[-1][-1].IsZombie() :
-                        print 'exiting'
-                        import sys; sys.exit()
-                    trees[name].Add(ff+'.root')
-                    subsamples.append(ff)
-                else :
-                    print 'Warning: sub-sample %s of %s is missing.'%(ff,f.replace('.root',''))
-            if trees[name].GetEntries() :
-                print 'The sample %s will be composed of %s.'%(name,','.join(subsamples))
-                keys.append(name)
-            continue
-
         #
         # regular files
         # 
-        files.append(ROOT.TFile(f))
-        if files[-1].IsZombie() :
+        files[name] = ROOT.TFile(f)
+        if files[name].IsZombie() :
             print 'exiting'
             import sys
             sys.exit()
         keys.append(name)
-        trees[name] = files[-1].Get(treename)
+        trees[name] = files[name].Get(treename)
         if not trees[name] :
             print 'Error! Tree \"%s\" does not exist! Exiting.'%(treename)
             import sys; sys.exit()
     return files,trees,keys
 
 #-------------------------------------------------------------------------
-def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=False,rebin=[],scale=0) :
+def GetScales(files,trees,keys,options) :
+
+    weights = dict()
+    #
+    # get weight from file, like sumw or something
+    #
+    for k in keys :
+        if options.weightscale :
+            weights[k] = options.weightscale(files[k]) * options.fb
+
+    return weights
+    
+#-------------------------------------------------------------------------
+def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=False,rebin=[],scales=0) :
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
@@ -184,8 +171,9 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=Fa
     hists = []
     for k in keys :
         name = '%s_%s'%(variable,k)
-        name = name.replace('[','_').replace(']','_').replace('(','_').replace(')','_').replace('/','_over_')
-        name = name.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_').replace('&&','and')
+        name = name.replace('[','_').replace(']','_').replace('(','_').replace(')','_')
+        name = name.replace('/','_over_').replace('&&','and')
+        name = name.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
         name = name.replace('.','_')
         name = name.lstrip('_')
         print name
@@ -198,8 +186,10 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=Fa
         arg1,arg2,arg3 = '%s>>%s(%s,%s,%s)'%(variable,name,n,low,high),weight,'egoff'
         #arg1,arg2,arg3 = '%s>>%s'%(variable,name),weight,'egoff'
         print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
+        tmp = ROOT.gErrorIgnoreLevel
         ROOT.gErrorIgnoreLevel = ROOT.kFatal
         trees[k].Draw(arg1,arg2,arg3)
+        ROOT.gErrorIgnoreLevel = tmp
 
         # if Draw did not work, then exit.
         if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
@@ -211,10 +201,12 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=Fa
             tmp = ROOT.gDirectory.Get(name)
             name = name.replace('_unrebinned','')
             tmp.Rebin(len(rebin)-1,name,array('d',rebin))
-                
+
         hists.append(ROOT.gDirectory.Get(name))
         if rebin and type(rebin) == type(1) :
             hists[-1].Rebin(rebin)
+
+        #RebinSmoothlyFallingFunction(hists[-1])
 
         hists[-1].SetTitle(k)
         #ROOT.PSL.SetBinLabels(variable.split('[')[0],hists[-1])
@@ -222,8 +214,8 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=Fa
         # print the yield and error after cuts (includes overflow)
         print '%2.2f %s %2.2f'%(hists[-1].Integral(0,hists[-1].GetNbinsX()+1),pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))
 
-        if scale and (scale != 1) :
-            hists[-1].Scale(scale)
+        if scales and (scales[k] != 1) :
+            hists[-1].Scale(scales[k])
         if normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
         if rebin :
@@ -257,8 +249,10 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,n1,low1,hi
 #             name = name+'_unrebinned'
         arg1,arg2,arg3 = '%s:%s>>%s(%s,%s,%s,%s,%s,%s)'%(variable2,variable1,name,n1,low1,high1,n2,low2,high2),weight,'egoff'
         print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
+        tmp = ROOT.gErrorIgnoreLevel
         ROOT.gErrorIgnoreLevel = ROOT.kFatal
         trees[k].Draw(arg1,arg2,arg3)
+        ROOT.gErrorIgnoreLevel = tmp
 
 #         if rebin and type(rebin) == type([]) :
 #             tmp = ROOT.gDirectory.Get(name)
@@ -270,15 +264,15 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,n1,low1,hi
 #             hists[-1].Rebin(rebin)
 
         hists[-1].SetTitle(k)
-        #ROOT.PSL.SetBinLabels(variable1.split('[')[0],variable2.split('[')[0],hists[-1])
-        pm = u"\u00B1"
-        # print the yield and error after cuts (includes overflow)
-        print '%2.2f %s %2.2f'%(hists[-1].Integral(0,hists[-1].GetNbinsX()+1,0,hists[-1].GetNbinsY()+1),pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))
-
         hists[-1].SetMinimum(-0.00001)
 
         if scale and (scale != 1) :
             hists[-1].Scale(scale)
+
+        # print the yield and error after cuts (includes overflow)
+        pm = u"\u00B1"
+        print '%2.2f %s %2.2f'%(hists[-1].Integral(0,hists[-1].GetNbinsX()+1,0,hists[-1].GetNbinsY()+1),pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))        
+
         if normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
 #         if rebin :
@@ -353,16 +347,26 @@ class TreePlottingOptParser :
         if self.options.config :
             usermodule = importlib.import_module(self.options.config.replace('.py',''))
             self.options.usermodule = usermodule
+
+            for x in ['histformat','weight','weightscale','treename','fb','colors'] :
+                if hasattr(usermodule,x) :
+                    setattr(self.options,x,getattr(usermodule,x))
+
             if hasattr(usermodule,'cuts') :
                 self.options.cuts = usermodule.cuts
                 for i,c in enumerate(self.options.cuts) :
                     self.options.cuts[i] = '('+c+')'
+
             if hasattr(usermodule,'variables') :
                 self.options.variables = ','.join(usermodule.variables)
-            if hasattr(usermodule,'histformat') :
-                self.options.histformat = usermodule.histformat
-            if hasattr(usermodule,'weight') :
-                self.options.weight = usermodule.weight
+
+            if self.options.fb <= 0 :
+                self.options.fb = 1.
+
+            if hasattr(usermodule,'blindcut') :
+                self.options.blindcut = usermodule.blindcut
+            else :
+                self.options.blindcut = []
 
         for v in self.options.variables.split(',') :
             if v == '' : continue
@@ -638,3 +642,32 @@ def UpdateCanvases(options,cans) :
             if can.GetPrimitive('pad_top') :
                 can.GetPrimitive('pad_top').Update()                
     return
+
+#-------------------------------------------------------------------------
+def RebinSmoothlyFallingFunction(hist) :
+    #
+    # This function defines a new binning such that the error is not more than 10% in any bin.
+    #
+    import math
+    therange = []
+    therange.append(hist.GetBinLowEdge(1))
+    binj = 1
+    weight = 0
+    err2 = 0
+    while binj < hist.GetNbinsX() :
+        weight += hist.GetBinContent(binj)
+        print weight
+        err2 += hist.GetBinError(binj)**2
+        if weight > 0 and math.sqrt(err2)/weight < 0.10 :
+            'error is',math.sqrt(err2)/weight
+            therange.append(hist.GetBinLowEdge(binj+1))
+            weight = 0
+            err2 = 0
+        binj += 1
+    therange.append(hist.GetBinLowEdge(hist.GetNbinsX()+1))
+
+    print therange
+    # import sys
+    # sys.exit()
+    return
+

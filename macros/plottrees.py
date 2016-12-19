@@ -25,13 +25,16 @@ def main(options,args) :
     files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename)
     file_d ,tree_d ,key_d  = anaplot.GetTreesFromFiles(options.data  ,treename=options.treename)
 
+    scales_b = anaplot.GetScales(files_b,trees_b,keys_b,options)
+    scales_s = anaplot.GetScales(files_s,trees_s,keys_s,options)
+
     #options.fb,lumi_scale_factor = helpers.GetTTreeLumiScaleFactor(files_b+files_s,options.fb)
 
     dweight = '' # weight value (and cuts) applied to data
     weight = options.weight
     if ''.join(options.cuts) :
         weight = weight+'*(%s)'%(' && '.join(options.cuts))
-        dweight = '('+' && '.join(options.cuts)+')'
+        dweight = '('+' && '.join(options.cuts+options.blindcut)+')'
 
     cans = []
 
@@ -48,16 +51,18 @@ def main(options,args) :
         if hasattr(options.usermodule,'rebin') and v in options.usermodule.rebin.keys() :
             rebin = options.usermodule.rebin[v]
 
-        if options.bkgs :
-            bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight ,n,low,high,normalize=options.normalize,rebin=rebin,scale=1.)
-            anaplot.PrepareBkgHistosForStack(bkg_hists)
-        if options.signal :
-            sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight ,n,low,high,normalize=options.normalize,rebin=rebin,scale=1.)
         if options.data :
-            data_hist = anaplot.GetVariableHistsFromTrees(tree_d ,key_d ,v,dweight,n,low,high,normalize=options.normalize,rebin=rebin,scale=1.)[0]
+            data_hist = anaplot.GetVariableHistsFromTrees(tree_d ,key_d ,v,dweight,n,low,high,normalize=options.normalize,rebin=rebin)[0]
             data_hist.SetLineWidth(2)
             data_hist.SetLineColor(1)
             data_hist.SetMarkerColor(1)
+        if options.bkgs :
+            bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight ,n,low,high,normalize=options.normalize,rebin=rebin,scales=scales_b)
+            anaplot.PrepareBkgHistosForStack(bkg_hists,colors=options.colors)
+        if options.signal :
+            sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight ,n,low,high,normalize=options.normalize,rebin=rebin,scales=scales_s)
+            sig_hists[-1].SetLineColor(2)
+            sig_hists[-1].SetMarkerColor(2)
 
         cans.append(anaplot.DrawHistos(v,v,xlabel,bkg_hists,sig_hists,data_hist,dostack=options.stack,log=options.log,ratio=options.ratio,fb=options.fb))
 
