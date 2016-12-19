@@ -309,7 +309,7 @@ case $HOSTNAME in
     export PATH=$PATH:/bin/myscripts
     # adding to python path
     export brendlin=~/Documents/pennHighEnergy
-    export mydir=~/Documents/desyHEP/rsync
+    export mydir=~/Documents/desyHEP
     # aliases
     export ppc=~/Documents/pennHighEnergy/talks/130708_PPC_HiggsTalk/proceedings/aipproc_8s
     alias 'textedit=/Applications/TextEdit.app/Contents/MacOS/TextEdit'
@@ -323,6 +323,7 @@ case $HOSTNAME in
     alias 'lxplus0038=caffeinate -i ssh -Y brendlin@lxplus0038.cern.ch'
     alias 'lxplusscreen=caffeinate -i ssh -Y brendlin@lxplus419.cern.ch'
     alias 'tier3screen=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
+    alias 'dsync=rsync -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/rsync ~/Documents/desyHEP'
 
     alias 'lxplus=lxplus0190d'
 
