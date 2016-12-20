@@ -1,24 +1,11 @@
-#-------------------------------------------------------------------------
-# def LoadRootCore() :
-#     import ROOT
-#     if 'RootCore' not in ROOT.gSystem.GetLibraries() :
-#         print 'Loading c++...'
-#         ROOT.gROOT.ProcessLine (".x $ROOTCOREDIR/scripts/load_packages.C")
-#         # Some weird bug where functions are not accessible until a class is called
-#         ROOT.PSL.EDM
-#     return
 
 #-------------------------------------------------------------------------
-def PrepareBkgHistosForStack(bkg_hists,colors=None) :
+def PrepareBkgHistosForStack(bkg_hists,colors=None,labels=None) :
     from PyHelpers import GetHWWColors
     if not colors :
         colors = GetHWWColors()
-    label_dict = {
-        'eeg1':'Z#rightarrow ee#gamma',
-        'eeg2':'Z#rightarrow ee#gamma',
-        'eeg3':'Z#rightarrow ee#gamma',
-        'eeg4':'Z#rightarrow ee#gamma',
-        }
+    if not labels :
+        labels = dict()
     for i in bkg_hists :
         i.SetLineColor(1)
         i.SetMarkerColor(colors.get(i.GetTitle(),1))
@@ -26,7 +13,7 @@ def PrepareBkgHistosForStack(bkg_hists,colors=None) :
             i.SetMarkerColor(1)
         i.SetFillColor(colors.get(i.GetTitle(),1))
         i.SetLineWidth(1)
-        i.SetTitle(label_dict.get(i.GetTitle(),i.GetTitle()))
+        i.SetTitle(labels.get(i.GetTitle(),i.GetTitle()))
     return
 
 #-------------------------------------------------------------------------
@@ -176,7 +163,6 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=Fa
         name = name.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
         name = name.replace('.','_')
         name = name.lstrip('_')
-        print name
 
         while ROOT.gDirectory.Get(name) :
             #print 'changing name'
@@ -209,13 +195,14 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=Fa
         #RebinSmoothlyFallingFunction(hists[-1])
 
         hists[-1].SetTitle(k)
-        #ROOT.PSL.SetBinLabels(variable.split('[')[0],hists[-1])
-        pm = u"\u00B1"
-        # print the yield and error after cuts (includes overflow)
-        print '%2.2f %s %2.2f'%(hists[-1].Integral(0,hists[-1].GetNbinsX()+1),pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))
-
         if scales and (scales[k] != 1) :
             hists[-1].Scale(scales[k])
+
+        # print the yield and error after cuts (includes overflow)
+        pm = u"\u00B1"
+        print '%s: %2.2f %s %2.2f'%(name,hists[-1].Integral(0,hists[-1].GetNbinsX()+1)
+                                    ,pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))        
+
         if normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
         if rebin :
@@ -245,8 +232,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,n1,low1,hi
         while ROOT.gDirectory.Get(name) :
             #print 'changing name'
             name = name+'x'
-#         if rebin1 and type(rebin) == type([]) :
-#             name = name+'_unrebinned'
+
         arg1,arg2,arg3 = '%s:%s>>%s(%s,%s,%s,%s,%s,%s)'%(variable2,variable1,name,n1,low1,high1,n2,low2,high2),weight,'egoff'
         print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
         tmp = ROOT.gErrorIgnoreLevel
@@ -254,14 +240,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,n1,low1,hi
         trees[k].Draw(arg1,arg2,arg3)
         ROOT.gErrorIgnoreLevel = tmp
 
-#         if rebin and type(rebin) == type([]) :
-#             tmp = ROOT.gDirectory.Get(name)
-#             name = name.replace('_unrebinned','')
-#             tmp.Rebin(len(rebin)-1,name,array('d',rebin))
-                
         hists.append(ROOT.gDirectory.Get(name))
-#         if rebin and type(rebin) == type(1) :
-#             hists[-1].Rebin(rebin)
 
         hists[-1].SetTitle(k)
         hists[-1].SetMinimum(-0.00001)
@@ -271,12 +250,12 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,n1,low1,hi
 
         # print the yield and error after cuts (includes overflow)
         pm = u"\u00B1"
-        print '%2.2f %s %2.2f'%(hists[-1].Integral(0,hists[-1].GetNbinsX()+1,0,hists[-1].GetNbinsY()+1),pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))        
+        print '%s: %2.2f %s %2.2f'%(name,hists[-1].Integral(0,hists[-1].GetNbinsX()+1
+                                                            ,0,hists[-1].GetNbinsY()+1)
+                                    ,pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))        
 
         if normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
-#         if rebin :
-#             plotfunc.ConvertToDifferential(hists[-1])
 
     return hists
 
@@ -348,9 +327,22 @@ class TreePlottingOptParser :
             usermodule = importlib.import_module(self.options.config.replace('.py',''))
             self.options.usermodule = usermodule
 
-            for x in ['histformat','weight','weightscale','treename','fb','colors'] :
+            def defaultweightscale(tfile) :
+                return 1
+
+            for x in ['histformat','weight','weightscale','blindcut'
+                      ,'treename','fb','colors','labels','mergesamples'] :
                 if hasattr(usermodule,x) :
                     setattr(self.options,x,getattr(usermodule,x))
+                elif x in ['blindcut','weightscale','mergesamples','colors','labels'] :
+                    # some defaults are not set in the option parser
+                    defaults = {'blindcut':[],
+                                'weightscale':defaultweightscale,
+                                'mergesamples':None,
+                                'colors':dict(),
+                                'labels':dict(),
+                                }
+                    setattr(self.options,x,defaults.get(x,None))
 
             if hasattr(usermodule,'cuts') :
                 self.options.cuts = usermodule.cuts
@@ -362,11 +354,6 @@ class TreePlottingOptParser :
 
             if self.options.fb <= 0 :
                 self.options.fb = 1.
-
-            if hasattr(usermodule,'blindcut') :
-                self.options.blindcut = usermodule.blindcut
-            else :
-                self.options.blindcut = []
 
         for v in self.options.variables.split(',') :
             if v == '' : continue
@@ -388,218 +375,6 @@ class TreePlottingOptParser :
             self.options.cuts = [self.options.cuts]
 
         return self.options,self.args
-
-#-------------------------------------------------------------------------
-class PassEventPlottingOptParser :
-    def __init__(self) :
-        from optparse import OptionParser
-        self.p = OptionParser()
-        self.p.add_option('-f','--file',type='string',default='',dest='file',help='input file')
-        self.p.add_option('-s','--signal',type='string',default='',dest='signal',help='input files for signal (csv)')
-        self.p.add_option('-k','--key' ,type='string',default='',dest='key'  ,help='PassEvent name (key)')
-        self.p.add_option('-v','--variables',type='string',default='',dest='variables',help='Variables (see Variables.cxx for names)')
-        self.p.add_option('-p','--processes',type='string',default='',dest='processes',help='Processes (see Sample.cxx for names)')
-        self.p.add_option('-l','--log',action='store_true',default=False,dest='log',help='log')
-        self.p.add_option('--nostack',action='store_true',default=False,dest='nostack',help='do not stack')
-        self.p.add_option('--normalize',action='store_true',default=False,dest='normalize',help='normalize')
-        self.p.add_option('--ratio',action='store_true',default=False,dest='ratio',help='Plot as a ratio')
-        # config understands histformat, variables
-        self.p.add_option('--config',type='string',default='',dest='config',help='Input configuration file (python module)')
-        self.p.add_option('--fb',type='float',default=10,dest='fb',help='int luminosity (fb)')
-        self.p.add_option('--save',action='store_true',default=False,dest='save',help='save cans to pdf')
-
-    def parse_args(self) :
-        import sys,os
-        import importlib
-        import ROOT
-        #LoadRootCore()
-        
-        self.options,self.args = self.p.parse_args()
-        print self.options.signal
-        if self.options.signal and not '.root' in self.options.signal :
-            dir = self.options.signal
-            self.options.signal = ','.join('%s/%s'%(dir,a) for a in os.listdir(self.options.signal))
-        print self.options.signal
-
-        self.options.stack = not self.options.nostack
-
-        sys.path.append(os.getcwd())
-        self.options.histformat = dict()
-        self.options.usermodule = None
-        if self.options.config :
-            usermodule = importlib.import_module(self.options.config.replace('.py',''))
-            self.options.usermodule = usermodule
-            if hasattr(usermodule,'variables') :
-                self.options.variables = ','.join(usermodule.variables)
-            if hasattr(usermodule,'histformat') :
-                self.options.histformat = usermodule.histformat
-
-        for v in self.options.variables.split(',') :
-            if v == '' : continue
-            vtmp = v
-            if '[' in vtmp :
-                vtmp = vtmp.split('[')[0]
-            if v in self.options.histformat.keys() :
-                if len(self.options.histformat[v]) < 4 :
-                    self.options.histformat[v].append(ROOT.PSL.GetXaxisLabel(vtmp))
-                continue
-            label = ROOT.PSL.GetXaxisLabel(vtmp)
-            n,xdn,xup = ROOT.PSL.GetVariableHistArgs(vtmp)
-            self.options.histformat[v] = [n,xdn,xup,label]
-
-        return self.options,self.args
-    
-#-------------------------------------------------------------------------
-#
-# This takes a single file, which is the hadded result of all PassEvent sub-jobs.
-#
-def GetPassEventBkgHistos(variable,key,processes,filename,normalize=False,rebin=[],n=0,low=None,high=None,globalError=0) :
-    import ROOT
-    import PyHelpers as pyhelpers
-    import PlotFunctions as plotfunc
-    from array import array
-    import math
-
-    hists = []
-    
-    the_file = ROOT.TFile(filename)
-    if the_file.IsZombie() :
-        print 'exiting'
-        import sys
-        sys.exit()
-
-    #
-    # Loop over processes
-    #
-    print '## %s, %s'%(key,variable)
-    for s in processes.split(',') :
-        if not s : continue
-        variable_label = variable
-        if '[' in variable :
-            variable_label = variable.split('[')[0]
-            variable = variable.replace('[','_').rstrip(']')
-        name = 'PassEvent_%s/PassEvent_%s_%s_%s'%(key,key,s,variable)
-        h = pyhelpers.GetRootObj(the_file,name,fatal=False)
-        if not h :
-            print 'WARNING: %s does not exist'%(name)
-            continue
-
-        print variable_label
-        ROOT.PSL.SetBinLabels(variable_label,h)
-
-        #
-        # Rebinning stuff
-        #
-        if n > 0 and (low != None) and (high != None) :
-            desired_width = (high-low)/float(n)
-            axis = h.GetXaxis()
-            nbinsx = h.GetNbinsX()
-            current_width = (axis.GetBinLowEdge(nbinsx+1)-axis.GetBinLowEdge(1))/float(nbinsx)
-            rebin_factor = desired_width/current_width
-            if math.fabs(rebin_factor - round(rebin_factor,0)) > 0.00001 :
-                print 'desired bin width:',n,low,high,desired_width
-                print 'current bin width:',nbinsx,axis.GetBinLowEdge(1),axis.GetBinLowEdge(nbinsx+1),current_width
-                print 'difference:',math.fabs(rebin_factor - int(rebin_factor))
-                print 'not consistent. Exiting.'
-                import sys
-                sys.exit()
-            h.Rebin(int(round(rebin_factor,0)))
-
-        #
-        # More rebinning stuff
-        #
-        if rebin :
-            if type(rebin) == type([]) :
-                name = h.GetName()+'_rebinned'
-                h.Rebin(len(rebin)-1,name,array('d',rebin))
-                h = ROOT.gDirectory.Get(name)
-            else :
-                h.Rebin(rebin)
-
-        # print out the event yield and error
-        pm = u"\u00B1"
-        print '%s: %2.2f %s %2.2f'%(s,h.Integral(0,h.GetNbinsX()+1),pm,math.sqrt(sum(list(h.GetSumw2()))))
-
-        if normalize :
-            h.Scale(1/float(h.Integral()))
-        # if rebin and type(rebin) == type([]) :
-        #     plotfunc.ConvertToDifferential(h)
-
-        h.SetTitle(s)
-        h.SetLineWidth(2)
-        h.SetLineColor(1)
-        h.SetDirectory(0)
-        hists.append(h)
-
-    the_file.Close()
-    return hists
-
-
-#-------------------------------------------------------------------------
-#
-# This takes a list of signal files
-#
-def GetPassEventSigHistos(variable,key,filenames,normalize=False,rebin=[]) :
-    import ROOT
-    import PyHelpers as pyhelpers    
-    from array import array
-
-    #
-    # Loop over signal files
-    #
-    hists = []
-    nsignal = 0
-    files = []
-    for f in filenames.split(',') :
-        file = ROOT.TFile(f)
-        if file.IsZombie() :
-            print 'exiting'
-            import sys
-            sys.exit()
-
-        #
-        # get signal title
-        #
-#         mass_map = GetMassesMap()
-#         #print mass_map
-#         title = 'susy'
-#         for i in file.GetListOfKeys() :
-#             try :
-#                 ii = int(i.GetName())
-#             except ValueError :
-#                 continue
-#             if ii in mass_map.keys() :
-#                 title = '%s,%s'%(mass_map[ii]['mc1'],mass_map[ii]['mn1'])
-
-        #
-        # Get SUSY histogram
-        #
-        name = 'PassEvent_%s/PassEvent_%s_%s_%s'%(options.key,options.key,'susy',variable)
-        h = GetRootObj(file,name,fatal=False)
-        if not h :
-            print 'WARNING: %s does not exist'%(name)
-            continue
-        else :
-            ROOT.PSL.SetBinLabels(variable,h)
-            if rebin :
-                if type(rebin) == type([]) :
-                    name = h.GetName()+'_rebinned'
-                    h.Rebin(len(rebin)-1,name,array('d',rebin))
-                    h = ROOT.gDirectory.Get(name)
-                else :
-                    h.Rebin(rebin)
-            h.SetTitle(title)
-            h.SetLineWidth(2)
-            h.SetMarkerColor(signal_colors[nsignal])
-            h.SetLineColor(signal_colors[nsignal])
-            nsignal += 1
-            h.SetDirectory(0)
-            hists.append(h)
-
-        file.Close()
-
-    return hists
-
 
 #-------------------------------------------------------------------------
 #
@@ -642,6 +417,44 @@ def UpdateCanvases(options,cans) :
             if can.GetPrimitive('pad_top') :
                 can.GetPrimitive('pad_top').Update()                
     return
+
+#-------------------------------------------------------------------------
+def MergeSamples(bkg_hists,options) :
+    #
+    # Yeah so this adds the samples together that you specify, in a resonable
+    # order close to the one you specify in the command line "bkgs"
+    #
+    import math
+
+    if not options.mergesamples :
+        return bkg_hists
+    bkg_hists_new = []
+    bkg_hists_index = dict()
+    for i in bkg_hists :
+        added = False
+        for j in options.mergesamples.keys() :
+            if i.GetTitle() not in options.mergesamples[j] :
+                continue
+            if j in bkg_hists_index.keys() :
+                #print 'adding to existing histo'
+                bkg_hists_new[bkg_hists_index[j]].Add(i)
+                added = True
+            else :
+                #print 'starting a new histo'
+                bkg_hists_index[j] = len(bkg_hists_new)
+                bkg_hists_new.append(i)
+                bkg_hists_new[-1].SetTitle(j)
+                added = True
+        if not added :
+            bkg_hists_new.append(i)
+
+    for i in bkg_hists_index.keys() :
+        pm = u"\u00B1"
+        tmphist = bkg_hists_new[bkg_hists_index[i]]
+        print '%s: %2.2f %s %2.2f'%(i,tmphist.Integral(0,tmphist.GetNbinsX()+1)
+                                    ,pm,math.sqrt(sum(list(tmphist.GetSumw2()))))
+
+    return bkg_hists_new
 
 #-------------------------------------------------------------------------
 def RebinSmoothlyFallingFunction(hist) :
