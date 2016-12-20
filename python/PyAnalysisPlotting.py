@@ -401,7 +401,8 @@ def doSaving(options,cans) :
             except IOError :
                 directory = raw_input('Cannot write to this directory. Specify a different one:')
                 directory = directory.replace('~',os.getenv('HOME'))
-                os.makedirs(directory)
+                if not os.path.exists(directory) :
+                    os.makedirs(directory)
     return
 
 #-------------------------------------------------------------------------
