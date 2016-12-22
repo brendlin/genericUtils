@@ -36,7 +36,7 @@ def main(options,args) :
 
     # get the histograms from the files
     for v in options.variables.split(',') :
-        n,low,high = options.histformat[v][:3]
+        limits = options.histformat[v][:3] # the histogram n,low,high
         xlabel = options.histformat[v][3]
 
         bkg_hists = []
@@ -48,16 +48,16 @@ def main(options,args) :
             rebin = options.usermodule.rebin[v]
 
         if options.data :
-            data_hist = anaplot.GetVariableHistsFromTrees(tree_d ,key_d ,v,dweight,n,low,high,normalize=options.normalize,rebin=rebin)[0]
+            data_hist = anaplot.GetVariableHistsFromTrees(tree_d ,key_d ,v,dweight,limits,normalize=options.normalize,rebin=rebin)[0]
             data_hist.SetLineWidth(2)
             data_hist.SetLineColor(1)
             data_hist.SetMarkerColor(1)
         if options.bkgs :
-            bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight ,n,low,high,normalize=options.normalize,rebin=rebin,scales=scales_b)
+            bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight ,limits,normalize=options.normalize,rebin=rebin,scales=scales_b)
             bkg_hists = anaplot.MergeSamples(bkg_hists,options)
             anaplot.PrepareBkgHistosForStack(bkg_hists,colors=options.colors,labels=options.labels)
         if options.signal :
-            sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight ,n,low,high,normalize=options.normalize,rebin=rebin,scales=scales_s)
+            sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight ,limits,normalize=options.normalize,rebin=rebin,scales=scales_s)
             sig_hists[-1].SetLineColor(2)
             sig_hists[-1].SetMarkerColor(2)
 

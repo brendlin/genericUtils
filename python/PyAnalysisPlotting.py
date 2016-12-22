@@ -143,18 +143,15 @@ def GetScales(files,trees,keys,options) :
     return weights
     
 #-------------------------------------------------------------------------
-def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=False,rebin=[],scales=0) :
+def GetVariableHistsFromTrees(trees,keys,variable,weight,limits,normalize=False,rebin=[],scales=0) :
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
     import math
 
-    def formatfloat(a) :
-        a = str(a).rstrip('0') if '.' in str(a) else a
-        return a
+    n,low,high = limits
+    print 'n,low,high',n,low,high
 
-    n,low,high = formatfloat(n),formatfloat(low),formatfloat(high)
-        
     hists = []
     for k in keys :
         name = '%s_%s'%(variable,k)
@@ -169,7 +166,10 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=Fa
             name = name+'x'
         if rebin and type(rebin) == type([]) :
             name = name+'_unrebinned'
-        arg1,arg2,arg3 = '%s>>%s(%s,%s,%s)'%(variable,name,n,low,high),weight,'egoff'
+        bins = '(%s,%s,%s)'%(n,low,high)
+        if (n <= 0) :
+            bins = ''
+        arg1,arg2,arg3 = '%s>>%s%s'%(variable,name,bins),weight,'egoff'
         #arg1,arg2,arg3 = '%s>>%s'%(variable,name),weight,'egoff'
         print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
         tmp = ROOT.gErrorIgnoreLevel
@@ -191,6 +191,12 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,n,low,high,normalize=Fa
         hists.append(ROOT.gDirectory.Get(name))
         if rebin and type(rebin) == type(1) :
             hists[-1].Rebin(rebin)
+
+        if (n <= 0) :
+            print 'Changing limits to match those from the first plot.'
+            limits[0] = hists[-1].GetNbinsX()
+            limits[1] = hists[-1].GetBinLowEdge(1)
+            limits[2] = hists[-1].GetBinLowEdge(limits[0]+1)
 
         #RebinSmoothlyFallingFunction(hists[-1])
 
@@ -264,24 +270,36 @@ class TreePlottingOptParser :
     def __init__(self) :
         from optparse import OptionParser
         self.p = OptionParser()
-        self.p.add_option('--batch',action='store_true',default=False,dest='batch',help='run in batch mode')
+        # file steering
         self.p.add_option('--bkgs',type='string',default='',dest='bkgs',help='input files for bkg (csv)')
         self.p.add_option('--signal',type='string',default='',dest='signal',help='input files for signal (csv)')
         self.p.add_option('--data',type='string',default='',dest='data',help='input file for data (csv)')
+        
+        # can also be specified in the config file
+        self.p.add_option('--fb',type='float',default=1,dest='fb',help='int luminosity (fb)')
+        self.p.add_option('--treename',type='string',default='physics',dest='treename',help='Treename (physics, CollectionTree)')
         self.p.add_option('-v','--variables',type='string',default='',dest='variables',help='Variables (see Variables.cxx for names)')
-        self.p.add_option('-l','--log',action='store_true',default=False,dest='log',help='log')
+        self.p.add_option('-c','--cuts',type='string',default='',dest='cuts',help='cut string')
+        self.p.add_option('--weight',type='string',default='',dest='weight',help='Monte Carlo event weight')
+        self.p.add_option('--weightscale',type='string',default='',dest='weight',help='Function for non-event weight (xs, feff, etc)')
+
+        # point to config file
+        self.p.add_option('--config',type='string',default='',dest='config',help='Input configuration file (python module)')
+
+        # histogram limits - only really useful if you are plotting a single variable
+        self.p.add_option('--limits',type='string',default='-1,-1,-1',dest='limits',help='Limits (only useful for single plot')
+
+        # plot manipulation
+        self.p.add_option('--ratio',action='store_true',default=False,dest='ratio',help='Plot as a ratio')
         self.p.add_option('--nostack',action='store_true',default=False,dest='nostack',help='do not stack')
         self.p.add_option('--normalize',action='store_true',default=False,dest='normalize',help='normalize')
+
+        # other options
+        self.p.add_option('--batch',action='store_true',default=False,dest='batch',help='run in batch mode')
         self.p.add_option('--save',action='store_true',default=False,dest='save',help='save cans to pdf')
-        self.p.add_option('--ratio',action='store_true',default=False,dest='ratio',help='Plot as a ratio')
-        self.p.add_option('-c','--cuts',type='string',default='',dest='cuts',help='cut string')
-        self.p.add_option('--fb',type='float',default=-1,dest='fb',help='int luminosity (fb)')
-
-        self.p.add_option('--config',type='string',default='',dest='config',help='Input configuration file (python module)')
-        self.p.add_option('--treename',type='string',default='physics',dest='treename',help='Treename (physics, CollectionTree)')
-        self.p.add_option('--weight',type='string',default='',dest='weight',help='Monte Carlo weight')
         self.p.add_option('--outdir',type='string',default='',dest='outdir',help='output directory')
-
+        self.p.add_option('-l','--log',action='store_true',default=False,dest='log',help='log')
+        
     def parse_args(self) :
         import sys,os
         import ROOT
@@ -308,6 +326,10 @@ class TreePlottingOptParser :
             print 'No --bkgs, --signal, or --data specified. Exiting.'
             sys.exit()
 
+        if len(self.options.limits.split(',')) != 3 :
+            print 'Error! Please specify --limits using 3 numbers in the format nbins,lowedge,highedge'
+            sys.exit()
+
         self.options.bkgs = self.options.bkgs.split(',')
         for b in range(len(self.options.bkgs)) :
             if not self.options.bkgs[b] :
@@ -316,6 +338,9 @@ class TreePlottingOptParser :
                 self.options.bkgs[b] = self.options.bkgs[b]+'.root'
         self.options.bkgs = ','.join(self.options.bkgs)
         print self.options.bkgs
+
+        if '.root' not in self.options.data :
+            self.options.data = self.options.data + '.root'
 
         # to get your current directory viewable by the code:
         sys.path.append(os.getcwd())
@@ -327,22 +352,10 @@ class TreePlottingOptParser :
             usermodule = importlib.import_module(self.options.config.replace('.py',''))
             self.options.usermodule = usermodule
 
-            def defaultweightscale(tfile) :
-                return 1
-
             for x in ['histformat','weight','weightscale','blindcut'
                       ,'treename','fb','colors','labels','mergesamples'] :
                 if hasattr(usermodule,x) :
                     setattr(self.options,x,getattr(usermodule,x))
-                elif x in ['blindcut','weightscale','mergesamples','colors','labels'] :
-                    # some defaults are not set in the option parser
-                    defaults = {'blindcut':[],
-                                'weightscale':defaultweightscale,
-                                'mergesamples':None,
-                                'colors':dict(),
-                                'labels':dict(),
-                                }
-                    setattr(self.options,x,defaults.get(x,None))
 
             if hasattr(usermodule,'cuts') :
                 self.options.cuts = usermodule.cuts
@@ -352,8 +365,22 @@ class TreePlottingOptParser :
             if hasattr(usermodule,'variables') :
                 self.options.variables = ','.join(usermodule.variables)
 
-            if self.options.fb <= 0 :
-                self.options.fb = 1.
+        if self.options.fb <= 0 :
+            self.options.fb = 1.
+
+        
+        def defaultweightscale(tfile) :
+            return 1
+
+        for x in ['blindcut','weightscale','mergesamples','colors','labels'] :
+            # some defaults are not set in the option parser
+            defaults = {'blindcut':[],
+                        'weightscale':defaultweightscale,
+                        'mergesamples':None,
+                        'colors':dict(),
+                        'labels':dict(),
+                        }
+            setattr(self.options,x,defaults.get(x,None))
 
         for v in self.options.variables.split(',') :
             if v == '' : continue
@@ -365,10 +392,8 @@ class TreePlottingOptParser :
                     self.options.histformat[v].append(v)
                 continue
             else :
-                self.options.histformat[v] = [100,0,1,v]
-            #label = ROOT.PSL.GetXaxisLabel(vtmp)
-            #n,xdn,xup = ROOT.PSL.GetVariableHistArgs(vtmp)
-            #self.options.histformat[v] = [n,xdn,xup,label]
+                n,low,high = self.options.limits.split(',')
+                self.options.histformat[v] = [n,low,high,v]
 
         # scripts will be looking for a python list of cuts
         if type(self.options.cuts) == type('') :
