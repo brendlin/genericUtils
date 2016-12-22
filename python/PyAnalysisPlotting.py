@@ -150,7 +150,6 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,limits,normalize=False,
     import math
 
     n,low,high = limits
-    print 'n,low,high',n,low,high
 
     hists = []
     for k in keys :
@@ -281,7 +280,7 @@ class TreePlottingOptParser :
         self.p.add_option('-v','--variables',type='string',default='',dest='variables',help='Variables (see Variables.cxx for names)')
         self.p.add_option('-c','--cuts',type='string',default='',dest='cuts',help='cut string')
         self.p.add_option('--weight',type='string',default='',dest='weight',help='Monte Carlo event weight')
-        self.p.add_option('--weightscale',type='string',default='',dest='weight',help='Function for non-event weight (xs, feff, etc)')
+        self.p.add_option('--weightscale',type='string',default='',dest='weightscale',help='(built-in) function for non-event weight (xs, feff, etc)')
 
         # point to config file
         self.p.add_option('--config',type='string',default='',dest='config',help='Input configuration file (python module)')
@@ -330,6 +329,7 @@ class TreePlottingOptParser :
             print 'Error! Please specify --limits using 3 numbers in the format nbins,lowedge,highedge'
             sys.exit()
 
+        # add .root to each background name.
         self.options.bkgs = self.options.bkgs.split(',')
         for b in range(len(self.options.bkgs)) :
             if not self.options.bkgs[b] :
@@ -337,17 +337,43 @@ class TreePlottingOptParser :
             if '.root' not in self.options.bkgs[b] :
                 self.options.bkgs[b] = self.options.bkgs[b]+'.root'
         self.options.bkgs = ','.join(self.options.bkgs)
-        print self.options.bkgs
 
         if '.root' not in self.options.data :
             self.options.data = self.options.data + '.root'
 
+
+
+
+        # some defaults are not set in the option parser
+        for x in ['blindcut','mergesamples','colors','labels','histformat','usermodule'] :
+            defaults = {'blindcut':[],
+                        'mergesamples':None,
+                        'colors':dict(),
+                        'labels':dict(),
+                        'histformat':dict(),
+                        'usermodule':None,
+                        }
+            setattr(self.options,x,defaults.get(x,None))
+
+
+
+        # if you indicate 'HZY' then the function weightscaleHZY() will be used.
+        if self.options.weightscale :
+            print 'INFO: Using weightscale function weightscale%s(tree)'%(self.options.weightscale)
+            self.options.weightscale = eval('weightscale%s'%(self.options.weightscale))
+        else :
+            def defaultweightscale(tfile) :
+                return 1
+            self.options.weightscale = defaultweightscale
+
+        if self.options.fb <= 0 :
+            self.options.fb = 1.
+
+
+
         # to get your current directory viewable by the code:
         sys.path.append(os.getcwd())
-
         # Read in options from config file:
-        self.options.histformat = dict()
-        self.options.usermodule = None
         if self.options.config :
             usermodule = importlib.import_module(self.options.config.replace('.py',''))
             self.options.usermodule = usermodule
@@ -365,35 +391,19 @@ class TreePlottingOptParser :
             if hasattr(usermodule,'variables') :
                 self.options.variables = ','.join(usermodule.variables)
 
-        if self.options.fb <= 0 :
-            self.options.fb = 1.
 
         
-        def defaultweightscale(tfile) :
-            return 1
-
-        for x in ['blindcut','weightscale','mergesamples','colors','labels'] :
-            # some defaults are not set in the option parser
-            defaults = {'blindcut':[],
-                        'weightscale':defaultweightscale,
-                        'mergesamples':None,
-                        'colors':dict(),
-                        'labels':dict(),
-                        }
-            setattr(self.options,x,defaults.get(x,None))
-
+        # Prepare stuff related to the variables.
         for v in self.options.variables.split(',') :
             if v == '' : continue
-            vtmp = v
-            if '[' in vtmp :
-                vtmp = vtmp.split('[')[0]
             if v in self.options.histformat.keys() :
                 if len(self.options.histformat[v]) < 4 :
                     self.options.histformat[v].append(v)
                 continue
             else :
                 n,low,high = self.options.limits.split(',')
-                self.options.histformat[v] = [n,low,high,v]
+                self.options.histformat[v] = [int(n),float(low),float(high),v]
+
 
         # scripts will be looking for a python list of cuts
         if type(self.options.cuts) == type('') :
@@ -495,7 +505,7 @@ def RebinSmoothlyFallingFunction(hist) :
     err2 = 0
     while binj < hist.GetNbinsX() :
         weight += hist.GetBinContent(binj)
-        print weight
+        #print weight
         err2 += hist.GetBinError(binj)**2
         if weight > 0 and math.sqrt(err2)/weight < 0.10 :
             'error is',math.sqrt(err2)/weight
@@ -510,3 +520,26 @@ def RebinSmoothlyFallingFunction(hist) :
     # sys.exit()
     return
 
+#-------------------------------------------------------------------------
+def weightscaleHZY(tfile) :
+    import re
+    for i in tfile.GetListOfKeys() :
+        name = i.GetName()
+        if not re.match('cutflow_[0-9]*_w',name) :
+            continue
+        if re.match('cutflow_[0-9]*_w2',name) :
+            continue
+        j = i.ReadObj()
+        #print j.GetName()
+        xAOD = j.GetBinContent(1) # hopefully unskimmed MC sumw
+        DxAOD = j.GetBinContent(2) # hopefully unskimmed MC sumw
+        Ntuple_DxAOD = j.GetBinContent(3) # hopefully unskimmed MC sumw
+
+    sumweight = 0
+    if (DxAOD>0.001 and xAOD>0.001) :
+        sumweight = xAOD/float(DxAOD) * Ntuple_DxAOD;
+    else :
+        sumweight = Ntuple_DxAOD;
+
+    #print 'scaling by one over ',sumweight
+    return 1.0/sumweight

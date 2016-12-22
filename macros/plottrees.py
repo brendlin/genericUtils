@@ -16,9 +16,6 @@ def main(options,args) :
 
     plotfunc.SetupStyle()
 
-    for i in options.histformat.keys() :
-        print '\'%s\':'%(i),options.histformat[i]
-
     files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename)
     files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename)
     file_d ,tree_d ,key_d  = anaplot.GetTreesFromFiles(options.data  ,treename=options.treename)
