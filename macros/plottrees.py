@@ -18,7 +18,7 @@ def main(options,args) :
 
     files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename)
     files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename)
-    file_d ,tree_d ,key_d  = anaplot.GetTreesFromFiles(options.data  ,treename=options.treename)
+    file_d ,tree_d ,key_d  = anaplot.GetChainFromFiles(options.data  ,treename=options.treename)
 
     scales_b = anaplot.GetScales(files_b,trees_b,keys_b,options)
     scales_s = anaplot.GetScales(files_s,trees_s,keys_s,options)

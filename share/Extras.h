@@ -79,6 +79,14 @@ double integral(TH1F* h,double f,double l){
   return h->Integral(h->FindBin(f+0.00000001),h->FindBin(l+0.00000001));
 }
 
+void dump(TFile* f,const char* name) {
+  TTree* t = (TTree*)f->Get(name);
+  for (auto i : *(t->GetListOfBranches()) ) {
+    std::cout << i->GetName() << std::endl;
+  }
+  return;
+}
+
 void set_plot_style()
 {
   const Int_t NRGBs = 5;

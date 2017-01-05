@@ -120,15 +120,12 @@ def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dos
 #-------------------------------------------------------------------------
 def GetTreesFromFiles(filelist_csv,treename='physics') :
     import ROOT,os
-    #LoadRootCore()
 
-    cutflow_hists = []
     files = dict()
     trees = dict()
     keys = []
     for f in filelist_csv.split(',') :
         if not f : continue
-        cutflow_hists.append([])
         name = f.replace('.root','').replace('/','_').replace('-','_').replace('.','_')
         #
         # regular files
@@ -143,6 +140,33 @@ def GetTreesFromFiles(filelist_csv,treename='physics') :
         if not trees[name] :
             print 'Error! Tree \"%s\" does not exist! Exiting.'%(treename)
             import sys; sys.exit()
+    return files,trees,keys
+
+#-------------------------------------------------------------------------
+def GetChainFromFiles(filelist_csv,treename='physics',chainname='data') :
+    
+    import ROOT,os
+
+    files = dict()
+    trees = dict()
+    keys = [chainname]
+
+    trees[chainname] = ROOT.TChain(treename)
+
+    for f in filelist_csv.split(',') :
+        if not f : continue
+        name = f.replace('.root','').replace('/','_').replace('-','_').replace('.','_')
+
+        files[name] = ROOT.TFile(f)
+
+        if files[name].IsZombie() :
+            print 'exiting'
+            import sys
+            sys.exit()
+
+        trees[chainname].Add(f)
+
+    print keys[0],'will be composed of',','.join(k for k in files.keys())
     return files,trees,keys
 
 #-------------------------------------------------------------------------
@@ -347,6 +371,16 @@ class TreePlottingOptParser :
             if '.root' not in self.options.bkgs[b] :
                 self.options.bkgs[b] = self.options.bkgs[b]+'.root'
         self.options.bkgs = ','.join(self.options.bkgs)
+
+        if self.options.data == 'all' :
+            dirlist = os.listdir('.')
+            datalist = []
+            for i in dirlist :
+                if (not '.root' in i) or (not 'data' in i) :
+                    continue
+                datalist.append(i)
+            self.options.data = ','.join(datalist)
+            print self.options.data
 
         if '.root' not in self.options.data :
             self.options.data = self.options.data + '.root'

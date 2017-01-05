@@ -9,6 +9,8 @@
  '(current-language-environment "English"))
 (custom-set-faces)
 
+(setq-default indent-tabs-mode nil)
+
 ; Set indentation correctly in c files
 ; void sth()
 ; {
