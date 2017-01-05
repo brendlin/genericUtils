@@ -105,106 +105,6 @@ setupdq2() {
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalPandaClientSetup.sh --pandaClientVersion ${pandaClientVersionVal} currentJedi --noAthenaCheck
 }
 
-run2setup5 () {
-    case $HOSTNAME in
-        (*.hep.upenn.edu)  
-        cd $HOME/testarea/XRun2Susy_ST0531
-        source $ATLAS_LOCAL_RCSETUP_PATH/rcSetup.sh
-        export me=`pwd`    
-        ;;
-        (*)
-        echo run2setup5 not implemented!
-        ;;
-    esac
-}
-
-run2setup () {
-    case $HOSTNAME in
-        (*.hep.upenn.edu)  
-        cd $HOME/testarea/XRun2Susy_ST0610
-        source $ATLAS_LOCAL_RCSETUP_PATH/rcSetup.sh
-        export me=`pwd`    
-        ;;
-        (*)
-        echo run2setup not implemented!
-        ;;
-    esac
-}
-
-susysetup () {
-    case $HOSTNAME in
-
-        (*.hep.upenn.edu)  
-        cd $HOME/testarea/SusyElectroweak
-        source ASETUP
-        export me=`pwd`
-        ;;
-
-        (lxplus*)
-        source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
-        source ~/susy.sh
-        ;;
-
-        (*)
-        #(Macintosh.local | macintosh.* | pb-d-*)
-        cd $brendlin/Run2Susy
-        source RootCore/scripts/setup.sh
-        export me=`pwd`
-        cd -
-        ;;
-    esac
-}
-
-hsgsetup () {
-    case $HOSTNAME in
-        
-        (*.hep.upenn.edu)
-        if [ $# -eq 0 ]; then
-	    cd $HOME/testarea/hsg2_4;
-        else
-            echo 'Setting up HSG2 code here'
-        fi
-        export me=`pwd`
-        # setup atlas version (need it for the python version I think)
-        # BECAUSE THIS IS COMMENTED, "from argparse import ArgumentParser" will fail
-        export myVersion=17.7.0
-        asetup $myVersion,here
-        # do this AFTERWARD for RootCore compatibility
-        # localSetupROOT # uh apparently have to do this by hand
-        # setup sframe
-        cd Higgs4lDev/SFrame/SFrame;
-        source setup.sh;
-        cd -
-        # setup RootCore. Apparently order matters. Do this AFTER the asetup.
-        cd Higgs4lDev/SFrame/RootCore
-        source RootCore/scripts/setup.sh
-        cd -
-        ;;
-
-        (*)
-        echo 'No hsgsetup set up for '$HOSTNAME
-        ;;    
-    esac
-}
-
-egsetup () {
-    case $HOSTNAME in
-
-        (*.hep.upenn.edu)
-        source eg.sh
-        #cd $HOME/testarea/MyArbitraryTestDirectory
-        cd $HOME/testarea/CleanEgammaCoreDir
-        export me=`pwd`
-        export PYTHONPATH=$PYTHONPATH:$me/egammaCore/config
-        source RootCore/scripts/setup.sh
-        ;;
-        
-        (*)
-        echo 'No egsetup set up for '$HOSTNAME
-        ;;
-    esac
-}
-
 ##
 ## BASIC LOGIN
 ##
@@ -273,6 +173,7 @@ case $HOSTNAME in
     alias 'setupATLAS=source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh'
     # setupATLAS below:
     source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh    
+    source ${ATLAS_LOCAL_ROOT_BASE}/utilities/oldAliasSetup.sh root
     export DQ2_LOCAL_SITE_ID=DESY-HH_SCRATCHDISK
     export mydir=/nfs/dust/atlas/user/brendlik
     # set up BIRD system
