@@ -162,7 +162,7 @@ case $HOSTNAME in
     alias 'bjbos=bjobs -w'
     alias 'bjosb=bjobs -w'
     alias 'bq=bqueues -u '$USER
-    export workflow="$mydir/rsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
+    export workflow="$mydir/lsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
     ;;
 
 
@@ -179,7 +179,7 @@ case $HOSTNAME in
     # set up BIRD system
     echo 'setting up bird (SGE)'
     source /usr/sge/default/common/settings.sh
-    export workflow="$mydir/rsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
+    export workflow="$mydir/dsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
     ;;
     
 
@@ -223,7 +223,8 @@ case $HOSTNAME in
     alias 'lxplus0038=caffeinate -i ssh -Y brendlin@lxplus0038.cern.ch'
     alias 'lxplusscreen=caffeinate -i ssh -Y brendlin@lxplus419.cern.ch'
     alias 'tier3screen=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
-    alias 'dsync=rsync -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/rsync ~/Documents/desyHEP'
+    alias 'dsync=rsync -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/dsync ~/Documents/desyHEP'
+    alias 'lsync=rsync -r brendlin@lxplus.cern.ch:/afs/cern.ch/work/b/brendlin/lsync ~/Documents/desyHEP'
 
     alias 'lxplus=lxplus0190d'
 
@@ -263,7 +264,9 @@ case $HOSTNAME in
     #
     export scpbrendlin=brendlin@lxplus.cern.ch:/
     export scpatlidali=atlidali@lxplus.cern.ch:/
-    export workflow="$mydir/rsync/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
+    export workflow="$mydir/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
+    export lorkflow="$mydir/lsync/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
+    export dorkflow="$mydir/dsync/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
     ;;
 esac 
 
