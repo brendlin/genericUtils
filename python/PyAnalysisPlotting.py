@@ -1,19 +1,38 @@
 
 #-------------------------------------------------------------------------
 def PrepareBkgHistosForStack(bkg_hists,colors=None,labels=None) :
+    from PlotFunctions import KurtColorPalate
     from PyHelpers import GetHWWColors
     if not colors :
         colors = GetHWWColors()
+    used_colors = []
+    
     if not labels :
         labels = dict()
+
+    # Set colors according to your color dictionary, or the HWW color dictionary
     for i in bkg_hists :
         i.SetLineColor(1)
         i.SetMarkerColor(colors.get(i.GetTitle(),1))
-        if i.GetMarkerColor() == 0 :
-            i.SetMarkerColor(1)
         i.SetFillColor(colors.get(i.GetTitle(),1))
+        used_colors.append(i.GetFillColor())
         i.SetLineWidth(1)
         i.SetTitle(labels.get(i.GetTitle(),i.GetTitle()))
+
+    # Set the un-assigned colors to random stuff in this KurtPalate. Make sure the color is unused.
+    colors_for_unassigned_samples = KurtColorPalate()
+    index = 0
+    for i in bkg_hists :
+        if i.GetMarkerColor() == 1 :
+            while True :
+                if colors_for_unassigned_samples[index] in used_colors :
+                    index += 1
+                else :
+                    break
+            i.SetMarkerColor(colors_for_unassigned_samples[index])
+            i.SetFillColor(colors_for_unassigned_samples[index])
+            index += 1
+
     return
 
 #-------------------------------------------------------------------------
@@ -30,11 +49,8 @@ def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dos
     #
     # Clean up name
     #
-    canname = name.replace('[','_').replace(']','').replace('_index','').replace('.','_')
-    canname = canname.replace('[','_').replace(']','_').replace('(','_').replace(')','_')
-    canname = canname.replace('/','_over_').replace('&&','and')
-    canname = canname.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
-    canname = canname.lstrip('_').rstrip('_')
+    canname = CleanUpName(name)
+
     #
     # stack, before adding SUSY histograms
     #
@@ -153,13 +169,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,limits,normalize=False,
 
     hists = []
     for k in keys :
-        name = '%s_%s'%(variable,k)
-        name = name.replace('[','_').replace(']','_').replace('(','_').replace(')','_')
-        name = name.replace('/','_over_').replace('&&','and')
-        name = name.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
-        name = name.replace('.','_')
-        name = name.lstrip('_')
-
+        name = CleanUpName('%s_%s'%(variable,k))
         while ROOT.gDirectory.Get(name) :
             #print 'changing name'
             name = name+'x'
@@ -519,6 +529,15 @@ def RebinSmoothlyFallingFunction(hist) :
     # import sys
     # sys.exit()
     return
+
+#-------------------------------------------------------------------------
+def CleanUpName(name) :
+    tmp = name.replace('[','_').replace(']','').replace('_index','').replace('.','_')
+    tmp = tmp.replace('[','_').replace(']','_').replace('(','_').replace(')','_')
+    tmp = tmp.replace('/','_over_').replace('&&','and')
+    tmp = tmp.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
+    tmp = tmp.lstrip('_').rstrip('_')
+    return tmp
 
 #-------------------------------------------------------------------------
 def weightscaleHZY(tfile) :

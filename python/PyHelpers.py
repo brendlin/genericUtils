@@ -202,10 +202,6 @@ def GetHWWColors() :
                    ,'dijet':ROOT.kWhite
                    ,'dijetdd':ROOT.kGray
                    ,'higgs':2
-                   ,'eeg1':ROOT.kCyan-9
-                   ,'eeg2':ROOT.kCyan-7
-                   ,'eeg3':ROOT.kCyan-5
-                   ,'eeg4':ROOT.kCyan-3
                    }
     return colors_dict
 
