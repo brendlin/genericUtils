@@ -215,24 +215,17 @@ case $HOSTNAME in
     alias 'textedit=/Applications/TextEdit.app/Contents/MacOS/TextEdit'
     alias 'lxplusrand=caffeinate -i ssh -Y brendlin@lxplus.cern.ch'
     # slc6
-    alias 'lxplus0028=caffeinate -i ssh -Y brendlin@lxplus0028.cern.ch'
-    #alias 'lxplus0049=caffeinate -i ssh -Y brendlin@lxplus0049.cern.ch' # removed from service
-    alias 'lxplus0190d=caffeinate -i ssh -Y brendlin@lxplus0190.cern.ch'
-    alias 'lxplus0569=caffeinate -i ssh -Y brendlin@lxplus0569.cern.ch'
-    alias 'lxplus0229=caffeinate -i ssh -Y brendlin@lxplus0229.cern.ch'
-    alias 'lxplus0038=caffeinate -i ssh -Y brendlin@lxplus0038.cern.ch'
-    alias 'lxplusscreen=caffeinate -i ssh -Y brendlin@lxplus419.cern.ch'
+    # Pick the LAST lxplus machine in this list, and save the previous ones.:
+    # for i in {1..999}; do ping -c 1 lxplus$(printf "%03d" $i).cern.ch>/dev/null && echo lxplus$(printf "%03d" $i).cern.ch exists; done;
+    alias 'lxplus=caffeinate -i ssh -Y brendlin@lxplus136.cern.ch'
     alias 'tier3screen=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
     alias 'dsync=rsync -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/dsync ~/Documents/desyHEP'
     alias 'lsync=rsync -r brendlin@lxplus.cern.ch:/afs/cern.ch/work/b/brendlin/lsync ~/Documents/desyHEP'
-
-    alias 'lxplus=lxplus0190d'
 
     alias 'higgs=caffeinate -i ssh -Y kurb@higgs.hep.upenn.edu'
     alias 'dionysus=caffeinate -i ssh -Y kurb@dionysus.hep.upenn.edu'
     export pennscp=kurb@at3i00.hep.upenn.edu
     export desyscp=brendlik@naf-atlas.desy.de
-    export lxscp=brendlin@lxplus0190.cern.ch
 
     alias 'atlasgw=caffeinate -i ssh -Y brendlin@atlasgw.cern.ch'
     alias 'atlidali=caffeinate -i ssh -Y atlidali@lxplus415.cern.ch'
