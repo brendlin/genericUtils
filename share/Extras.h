@@ -79,9 +79,17 @@ double integral(TH1F* h,double f,double l){
   return h->Integral(h->FindBin(f+0.00000001),h->FindBin(l+0.00000001));
 }
 
-void dump(TFile* f,const char* name) {
-  TTree* t = (TTree*)f->Get(name);
+void dump(const char* grep="",const char* name="CollectionTree") {
+  // assuming you are in the directory with the tree.
+  TTree* t = (TTree*)gDirectory->Get(name);
+  if (!t) {
+    std::cout << "TTree name " << name << " is wrong!" << std::endl;
+    return;
+  }
+  TPRegexp matchTo(grep);
   for (auto i : *(t->GetListOfBranches()) ) {
+    TString asdf = i->GetName();
+    if (!asdf(matchTo)) continue;
     std::cout << i->GetName() << std::endl;
   }
   return;

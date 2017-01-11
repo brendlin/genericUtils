@@ -105,7 +105,7 @@ def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dos
     if fb > 0 :
         text_lines += [plotfunc.GetLuminosityText(fb)]
     text_lines += [plotfunc.GetAtlasInternalText()]
-    text_lines += ['ee#gamma channel']
+
     if ratio :
         plotfunc.DrawText(can,text_lines,0.2,0.65,0.5,0.90,totalentries=4)
         plotfunc.MakeLegend(can,0.53,0.65,0.92,0.90,totalentries=5,ncolumns=2,skip=['remove me'])
@@ -355,35 +355,10 @@ class TreePlottingOptParser :
             dir = self.options.signal
             self.options.signal = ','.join('%s/%s'%(dir,a) for a in os.listdir(self.options.signal))
 
-        if (not self.options.bkgs) and (not self.options.signal) and (not self.options.data) :
-            print 'No --bkgs, --signal, or --data specified. Exiting.'
-            sys.exit()
-
         if len(self.options.limits.split(',')) != 3 :
             print 'Error! Please specify --limits using 3 numbers in the format nbins,lowedge,highedge'
             sys.exit()
 
-        # add .root to each background name.
-        self.options.bkgs = self.options.bkgs.split(',')
-        for b in range(len(self.options.bkgs)) :
-            if not self.options.bkgs[b] :
-                continue
-            if '.root' not in self.options.bkgs[b] :
-                self.options.bkgs[b] = self.options.bkgs[b]+'.root'
-        self.options.bkgs = ','.join(self.options.bkgs)
-
-        if self.options.data == 'all' :
-            dirlist = os.listdir('.')
-            datalist = []
-            for i in dirlist :
-                if (not '.root' in i) or (not 'data' in i) :
-                    continue
-                datalist.append(i)
-            self.options.data = ','.join(datalist)
-            print self.options.data
-
-        if '.root' not in self.options.data :
-            self.options.data = self.options.data + '.root'
 
 
 
@@ -401,6 +376,7 @@ class TreePlottingOptParser :
 
 
 
+
         # if you indicate 'HZY' then the function weightscaleHZY() will be used.
         if self.options.weightscale :
             print 'INFO: Using weightscale function weightscale%s(tree)'%(self.options.weightscale)
@@ -415,6 +391,7 @@ class TreePlottingOptParser :
 
 
 
+
         # to get your current directory viewable by the code:
         sys.path.append(os.getcwd())
         # Read in options from config file:
@@ -423,7 +400,7 @@ class TreePlottingOptParser :
             self.options.usermodule = usermodule
 
             for x in ['histformat','weight','weightscale','blindcut'
-                      ,'treename','fb','colors','labels','mergesamples'] :
+                      ,'treename','fb','colors','labels','mergesamples','bkgs','data'] :
                 if hasattr(usermodule,x) :
                     setattr(self.options,x,getattr(usermodule,x))
 
@@ -436,7 +413,37 @@ class TreePlottingOptParser :
                 self.options.variables = ','.join(usermodule.variables)
 
 
+
         
+        # add .root to each background name.
+        self.options.bkgs = self.options.bkgs.split(',')
+        for b in range(len(self.options.bkgs)) :
+            if not self.options.bkgs[b] :
+                continue
+            if '.root' not in self.options.bkgs[b] :
+                self.options.bkgs[b] = self.options.bkgs[b]+'.root'
+        self.options.bkgs = ','.join(self.options.bkgs)
+
+        # add up multiple data files
+        if self.options.data == 'all' :
+            dirlist = os.listdir('.')
+            datalist = []
+            for i in dirlist :
+                if (not '.root' in i) or (not 'data' in i) :
+                    continue
+                datalist.append(i)
+            self.options.data = ','.join(datalist)
+
+        if '.root' not in self.options.data :
+            self.options.data = self.options.data + '.root'
+
+        if (not self.options.bkgs) and (not self.options.signal) and (not self.options.data) :
+            print 'No --bkgs, --signal, or --data specified. Exiting.'
+            sys.exit()
+
+
+
+
         # Prepare stuff related to the variables.
         for v in self.options.variables.split(',') :
             if v == '' : continue
