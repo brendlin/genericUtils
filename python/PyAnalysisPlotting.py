@@ -1,8 +1,12 @@
 
 #-------------------------------------------------------------------------
-def PrepareBkgHistosForStack(bkg_hists,colors=None,labels=None) :
+def PrepareBkgHistosForStack(bkg_hists,options) :
     from PlotFunctions import KurtColorPalate
     from PyHelpers import GetHWWColors
+
+    colors = getattr(options,'colors',None)
+    labels = getattr(options,'labels',None)
+
     if not colors :
         colors = GetHWWColors()
     used_colors = []
@@ -36,7 +40,7 @@ def PrepareBkgHistosForStack(bkg_hists,colors=None,labels=None) :
     return
 
 #-------------------------------------------------------------------------
-def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dostack=True,log=False,ratio=False,fb=10) :
+def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None) :
     #
     # bkg_hists is a list of background histograms (TH1)
     # sig_hists is a list of signal histograms (TH1)
@@ -49,17 +53,17 @@ def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dos
     #
     # Clean up name
     #
-    canname = CleanUpName(name)
+    canname = CleanUpName(variable)
 
     #
     # stack, before adding SUSY histograms
     #
-    if not ratio :
+    if not options.ratio :
         can = ROOT.TCanvas(canname,canname,500,500)
-        if log : can.SetLogy()
+        if options.log : can.SetLogy()
     else :
         can = plotfunc.RatioCanvas(canname,canname,500,500)
-        if log : can.GetPrimitive('pad_top').SetLogy()
+        if options.log : can.GetPrimitive('pad_top').SetLogy()
 
     if bkg_hists :
         totb = bkg_hists[0].Clone()
@@ -78,15 +82,15 @@ def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dos
 
     for index,i in enumerate(bkg_hists) :
         # if no data, but you specified you wanted a ratio, then do ratio of MC
-        if (not dostack) :
+        if (not options.stack) :
             i.SetLineWidth(2)
             i.SetLineColor(i.GetMarkerColor())
-        if (index > 0) and (not data_hist) and (not dostack) and (ratio) :
+        if (index > 0) and (not data_hist) and (not options.stack) and (options.ratio) :
             plotfunc.AddRatio(can,i,bkg_hists[0])
         else :
             plotfunc.AddHistogram(can,i)
 
-    if bkg_hists and dostack :
+    if bkg_hists and options.stack :
         plotfunc.Stack(can)
         plotfunc.AddHistogram(can,totberror,drawopt='E2')
         plotfunc.AddHistogram(can,totb,drawopt='hist')
@@ -95,25 +99,25 @@ def DrawHistos(name,variable,xlabel,bkg_hists=[],sig_hists=[],data_hist=None,dos
         plotfunc.AddHistogram(can,h)
 
     if data_hist :
-        if ratio :
+        if options.ratio :
             plotfunc.AddRatio(can,data_hist,totb)
         else :
             plotfunc.AddHistogram(can,data_hist)
 
     plotfunc.FormatCanvasAxes(can)
     text_lines = [plotfunc.GetSqrtsText(13)]
-    if fb > 0 :
-        text_lines += [plotfunc.GetLuminosityText(fb)]
+    if options.fb > 0 :
+        text_lines += [plotfunc.GetLuminosityText(options.fb)]
     text_lines += [plotfunc.GetAtlasInternalText()]
 
-    if ratio :
+    if options.ratio :
         plotfunc.DrawText(can,text_lines,0.2,0.65,0.5,0.90,totalentries=4)
         plotfunc.MakeLegend(can,0.53,0.65,0.92,0.90,totalentries=5,ncolumns=2,skip=['remove me'])
         taxisfunc.SetYaxisRanges(plotfunc.GetBotPad(can),0,2)
     else :
         plotfunc.DrawText(can,text_lines,0.2,0.75,0.5,0.94,totalentries=4)
         plotfunc.MakeLegend(can,0.53,0.75,0.94,0.94,totalentries=5,ncolumns=2,skip=['remove me'])
-    plotfunc.SetAxisLabels(can,xlabel,'entries')
+    plotfunc.SetAxisLabels(can,options.xlabel.get(variable),'entries')
     plotfunc.AutoFixAxes(can)
     return can
 
@@ -164,6 +168,11 @@ def GetChainFromFiles(filelist_csv,treename='physics',chainname='data') :
             import sys
             sys.exit()
 
+        if not files[name].Get(treename) :
+            print 'Error: No Tree named %s. Exiting.'%(treename)
+            import sys
+            sys.exit()
+
         trees[chainname].Add(f)
 
     print keys[0],'will be composed of',','.join(k for k in files.keys())
@@ -183,13 +192,14 @@ def GetScales(files,trees,keys,options) :
     return weights
     
 #-------------------------------------------------------------------------
-def GetVariableHistsFromTrees(trees,keys,variable,weight,limits,normalize=False,rebin=[],scales=0) :
+def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0) :
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
     import math
 
-    n,low,high = limits
+    n,low,high = options.limits.get(variable)
+    rebin = options.rebin.get(variable,[])
 
     hists = []
     for k in keys :
@@ -227,9 +237,11 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,limits,normalize=False,
 
         if (n <= 0) :
             print 'Changing limits to match those from the first plot.'
-            limits[0] = hists[-1].GetNbinsX()
-            limits[1] = hists[-1].GetBinLowEdge(1)
-            limits[2] = hists[-1].GetBinLowEdge(limits[0]+1)
+            options.limits[variable] = [0,0,0]
+            options.limits[variable][0] = hists[-1].GetNbinsX()
+            options.limits[variable][1] = hists[-1].GetBinLowEdge(1)
+            options.limits[variable][2] = hists[-1].GetBinLowEdge(options.limits[variable][0]+1)
+
 
         #RebinSmoothlyFallingFunction(hists[-1])
 
@@ -242,7 +254,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,limits,normalize=False,
         print '%s: %2.2f %s %2.2f'%(name,hists[-1].Integral(0,hists[-1].GetNbinsX()+1)
                                     ,pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))        
 
-        if normalize :
+        if options.normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
         if rebin :
             plotfunc.ConvertToDifferential(hists[-1])
@@ -406,23 +418,25 @@ class TreePlottingOptParser :
 
             if hasattr(usermodule,'cuts') :
                 self.options.cuts = usermodule.cuts
-                for i,c in enumerate(self.options.cuts) :
-                    self.options.cuts[i] = '('+c+')'
+                if len(self.options.cuts) > 1 :
+                    for i,c in enumerate(self.options.cuts) :
+                        self.options.cuts[i] = '('+c+')'
 
             if hasattr(usermodule,'variables') :
                 self.options.variables = ','.join(usermodule.variables)
 
 
-
+        def AddDotRoot(csv_list) :
+            tmp = csv_list.split(',')
+            for i in range(len(tmp)) :
+                if not tmp[i] :
+                    continue
+                if '.root' not in tmp[i] :
+                    tmp[i] = tmp[i]+'.root'
+            return ','.join(tmp)
         
         # add .root to each background name.
-        self.options.bkgs = self.options.bkgs.split(',')
-        for b in range(len(self.options.bkgs)) :
-            if not self.options.bkgs[b] :
-                continue
-            if '.root' not in self.options.bkgs[b] :
-                self.options.bkgs[b] = self.options.bkgs[b]+'.root'
-        self.options.bkgs = ','.join(self.options.bkgs)
+        self.options.bkgs = AddDotRoot(self.options.bkgs)
 
         # add up multiple data files
         if self.options.data == 'all' :
@@ -434,15 +448,19 @@ class TreePlottingOptParser :
                 datalist.append(i)
             self.options.data = ','.join(datalist)
 
-        if '.root' not in self.options.data :
-            self.options.data = self.options.data + '.root'
+        self.options.data = AddDotRoot(self.options.data)
 
         if (not self.options.bkgs) and (not self.options.signal) and (not self.options.data) :
             print 'No --bkgs, --signal, or --data specified. Exiting.'
             sys.exit()
 
 
+        self.options.xlabel = dict()
+        self.options.rebin = dict()
 
+        # turn limits into variable-specific values
+        tmp_limits = self.options.limits
+        self.options.limits = dict()
 
         # Prepare stuff related to the variables.
         for v in self.options.variables.split(',') :
@@ -450,11 +468,17 @@ class TreePlottingOptParser :
             if v in self.options.histformat.keys() :
                 if len(self.options.histformat[v]) < 4 :
                     self.options.histformat[v].append(v)
-                continue
             else :
-                n,low,high = self.options.limits.split(',')
+                n,low,high = tmp_limits.split(',')
                 self.options.histformat[v] = [int(n),float(low),float(high),v]
+            
+            # set limits and xlabel:
+            self.options.limits[v] = self.options.histformat[v][:3]
+            self.options.xlabel[v] = self.options.histformat[v][3]
 
+            if hasattr(self.options.usermodule,'rebin') and v in self.options.usermodule.rebin.keys() :
+                self.options.rebin[v] = self.options.usermodule.rebin[v]
+            
 
         # scripts will be looking for a python list of cuts
         if type(self.options.cuts) == type('') :
