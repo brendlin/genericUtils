@@ -24,6 +24,15 @@ isScreen () {
     [ $TERM = "screen" ] && echo "[S]"
 }
 
+copyln () {
+    for i in $(ls $1 | grep root) ; do 
+        if [ -L $1/$i ] ; then
+            echo ln -s $(readlink $1/$i) $i;
+            ln -s $(readlink $1/$i) $i;
+        fi
+    done
+}
+
 workflow () {
     if [ "$mydir" = "" ] || [ "$workflow" = "" ] ; then
         echo Warning - mydir or workflow environment variable not set.
@@ -180,6 +189,7 @@ case $HOSTNAME in
     # set up BIRD system
     echo 'setting up bird (SGE)'
     source /usr/sge/default/common/settings.sh
+    export mxaod=$mydir/mxaod
     export workflow="$mydir/dsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
     ;;
     
