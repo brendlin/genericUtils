@@ -9,8 +9,6 @@ import TAxisFunctions as taxisfunc
 import PyAnalysisPlotting as anaplot
 import PlotFunctions as plotfunc
 
-signal_colors = [ROOT.kRed,ROOT.kBlue,ROOT.kGreen,ROOT.kOrange,ROOT.kCyan]*5
-
 #-------------------------------------------------------------------------
 def main(options,args) :
 
@@ -37,8 +35,6 @@ def main(options,args) :
         sig_hists = []
         data_hist = None
 
-        rebin = []
-
         if options.data :
             data_hist = anaplot.GetVariableHistsFromTrees(tree_d,key_d,v,dweight,options)[0]
             data_hist.SetLineWidth(2)
@@ -50,6 +46,7 @@ def main(options,args) :
             anaplot.PrepareBkgHistosForStack(bkg_hists,options)
         if options.signal :
             sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight,options,scales=scales_s)
+            sig_hists = anaplot.MergeSamples(sig_hists,options)
             sig_hists[-1].SetLineColor(2)
             sig_hists[-1].SetMarkerColor(2)
 

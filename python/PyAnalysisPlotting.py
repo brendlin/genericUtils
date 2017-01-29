@@ -125,12 +125,36 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None) :
 def GetTreesFromFiles(filelist_csv,treename='physics') :
     import ROOT,os
 
+    tmperror = ROOT.gErrorIgnoreLevel        
+    ROOT.gErrorIgnoreLevel = ROOT.kFatal
+
     files = dict()
     trees = dict()
     keys = []
     for f in filelist_csv.split(',') :
         if not f : continue
         name = f.replace('.root','').replace('/','_').replace('-','_').replace('.','_')
+        #
+        # folder of files
+        #
+        if not os.path.isfile(f) :
+            files[name] = []
+            trees[name]= ROOT.TChain(treename)
+            for ff in os.listdir(f) :
+                tmpfilename = '%s/%s'%(f,ff)
+                if not os.path.isfile(tmpfilename) :
+                    continue
+                files[name].append(ROOT.TFile(tmpfilename))
+                if files[name][-1].IsZombie() :
+                    print 'exiting'
+                    import sys
+                    sys.exit()
+                #print 'adding',tmpfilename
+                trees[name].Add(tmpfilename)
+                
+            keys.append(name)
+            continue
+
         #
         # regular files
         # 
@@ -144,6 +168,8 @@ def GetTreesFromFiles(filelist_csv,treename='physics') :
         if not trees[name] :
             print 'Error! Tree \"%s\" does not exist! Exiting.'%(treename)
             import sys; sys.exit()
+
+    ROOT.gErrorIgnoreLevel = tmperror
     return files,trees,keys
 
 #-------------------------------------------------------------------------
@@ -192,7 +218,7 @@ def GetScales(files,trees,keys,options) :
     return weights
     
 #-------------------------------------------------------------------------
-def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0) :
+def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputname='') :
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
@@ -200,10 +226,12 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0) :
 
     n,low,high = options.limits.get(variable)
     rebin = options.rebin.get(variable,[])
+    if not inputname :
+        inputname = variable
 
     hists = []
     for k in keys :
-        name = CleanUpName('%s_%s'%(variable,k))
+        name = CleanUpName('%s_%s'%(inputname,k))
         while ROOT.gDirectory.Get(name) :
             #print 'changing name'
             name = name+'x'
@@ -412,7 +440,7 @@ class TreePlottingOptParser :
             self.options.usermodule = usermodule
 
             for x in ['histformat','weight','weightscale','blindcut'
-                      ,'treename','fb','colors','labels','mergesamples','bkgs','data'] :
+                      ,'treename','fb','colors','labels','mergesamples','bkgs','data','signal'] :
                 if hasattr(usermodule,x) :
                     setattr(self.options,x,getattr(usermodule,x))
 
@@ -437,6 +465,7 @@ class TreePlottingOptParser :
         
         # add .root to each background name.
         self.options.bkgs = AddDotRoot(self.options.bkgs)
+        self.options.signal = AddDotRoot(self.options.signal)
 
         # add up multiple data files
         if self.options.data == 'all' :
@@ -493,6 +522,11 @@ class TreePlottingOptParser :
 def doSaving(options,cans) :
     import os,sys
     directory = os.getcwd()
+    if options.outdir :
+        directory = options.outdir
+        if not os.path.exists(directory) :
+            os.makedirs(directory)
+        options.save = True
     if not options.save :
         return 
     for can in cans :
@@ -502,6 +536,7 @@ def doSaving(options,cans) :
                 open(name, 'a').close()
                 can.Print(name)
                 can.Print(name.replace('.pdf','.C'))
+                can.Print(name.replace('.pdf','.root'))
                 # some weird quirk in can.Print(blah.C) requires us to remove "__1" suffixes
                 sed_mac_quirk = ''
                 if 'darwin' in sys.platform :
