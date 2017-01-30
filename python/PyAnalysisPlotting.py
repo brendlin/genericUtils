@@ -290,24 +290,28 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
     return hists
 
 #-------------------------------------------------------------------------
-def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,n1,low1,high1,n2,low2,high2
-                                ,normalize=False,rebin1=[],rebin2=[],scale=0) :
+def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,scales=0,inputname='') :
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
     import math
 
-    def formatfloat(a) :
-        a = str(a).rstrip('0') if '.' in str(a) else a
-        return a
+    print options.limits
 
-    n1,low1,high1 = formatfloat(n1),formatfloat(low1),formatfloat(high1)
-    n2,low2,high2 = formatfloat(n2),formatfloat(low2),formatfloat(high2)
+    if not options.limits.get(variable1,None) or not options.limits.get(variable2,None) :
+        print 'Error - you need to specify limits for both %s and %s.'%(variable1,variable2)
+        print '(Note you probably have to add these variables to the list of variables as well.)'
+        import sys; sys.exit()
+
+    n1,low1,high1 = options.limits.get(variable1)
+    n2,low2,high2 = options.limits.get(variable2)
+
+    if not inputname :
+        inputname = '%s_%s'%(variable1,variable2)
         
     hists = []
     for k in keys :
-        name = '%s_%s_%s'%(variable1,variable2,k)
-        name = name.replace('[','_').replace(']','_').replace('(','_').replace(')','_').replace('/','_over_')
+        name = CleanUpName('%s_%s'%(inputname,k))
         while ROOT.gDirectory.Get(name) :
             #print 'changing name'
             name = name+'x'
@@ -324,8 +328,9 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,n1,low1,hi
         hists[-1].SetTitle(k)
         hists[-1].SetMinimum(-0.00001)
 
-        if scale and (scale != 1) :
-            hists[-1].Scale(scale)
+        hists[-1].SetTitle(k)
+        if scales and (scales[k] != 1) :
+            hists[-1].Scale(scales[k])
 
         # print the yield and error after cuts (includes overflow)
         pm = u"\u00B1"
@@ -333,7 +338,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,n1,low1,hi
                                                             ,0,hists[-1].GetNbinsY()+1)
                                     ,pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))        
 
-        if normalize :
+        if options.normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
 
     return hists

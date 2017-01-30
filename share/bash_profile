@@ -28,7 +28,7 @@ copyln () {
     for i in $(ls $1 | grep root) ; do 
         if [ -L $1/$i ] ; then
             echo ln -s $(readlink $1/$i) $i;
-            ln -s $(readlink $1/$i) $i;
+            # ln -s $(readlink $1/$i) $i;
         fi
     done
 }

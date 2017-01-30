@@ -59,41 +59,55 @@ def main(options,args) :
     scales_b = anaplot.GetScales(files_b,trees_b,keys_b,options)
     scales_s = anaplot.GetScales(files_s,trees_s,keys_s,options)
 
+    dweight = '' # weight value (and cuts) applied to data
+    weight = options.weight
+    if ''.join(options.cuts) :
+        weight = (weight+'*(%s)'%(' && '.join(options.cuts))).lstrip('*')
+        dweight = '('+' && '.join(options.cuts+options.blindcut)+')'
+
     cans = []
 
-    v = 'HGamEventInfoAuxDyn.m_yy/1000'
+    v1 = 'HGamEventInfoAuxDyn.m_yy/1000'
+    v2 = 'HGamEventInfoAuxDyn.catCoup_Moriond2017'
+    bkg_hists = []
+    sig_hists = []
+    data_hist = None
+
+    if options.data :
+        data_hist = anaplot.Get2dVariableHistsFromTrees(tree_d,key_d,v1,v2,dweight,options)[0]
+        data_hist.SetLineWidth(2)
+        data_hist.SetLineColor(1)
+        data_hist.SetMarkerColor(1)
+    if options.bkgs :
+        bkg_hists = anaplot.Get2dVariableHistsFromTrees(trees_b,keys_b,v1,v2,weight,options,scales=scales_b)
+        bkg_hists = anaplot.MergeSamples(bkg_hists,options)
+        anaplot.PrepareBkgHistosForStack(bkg_hists,options)
+    if options.signal :
+        sig_hists = anaplot.Get2dVariableHistsFromTrees(trees_s,keys_s,v1,v2,weight,options,scales=scales_s)
+        sig_hists = anaplot.MergeSamples(sig_hists,options)
+        sig_hists[-1].SetLineColor(2)
+        sig_hists[-1].SetMarkerColor(2)
+
     # get the histograms from the files
     for c in range(len(categories)) :
         if not categories[c] : continue
-        bkg_hists = []
-        sig_hists = []
-        data_hist = None
 
-        dweight = '' # weight value (and cuts) applied to data
-        weight = options.weight
-        if ''.join(options.cuts) :
-            catcut = ['HGamEventInfoAuxDyn.catCoup_Moriond2017 == %d'%(c)]
-            weight = (weight+'*(%s)'%(' && '.join(options.cuts + catcut))).lstrip('*')
-            dweight = '('+' && '.join(options.cuts+catcut+options.blindcut)+')'
-
-        name = 'c%d_%s'%(c,categories[c])
-
+        name = '_c%d_%s'%(c,categories[c])
+        
+        bkg_projs = []
+        sig_projs = []
+        data_proj = None
+        
         if options.data :
-            data_hist = anaplot.GetVariableHistsFromTrees(tree_d,key_d,v,dweight,options,inputname=name)[0]
-            data_hist.SetLineWidth(2)
-            data_hist.SetLineColor(1)
-            data_hist.SetMarkerColor(1)
+            data_proj = data_hist.ProjectionX(name,c+1,c+1)
         if options.bkgs :
-            bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight,options,scales=scales_b,inputname=name)
-            bkg_hists = anaplot.MergeSamples(bkg_hists,options)
-            anaplot.PrepareBkgHistosForStack(bkg_hists,options)
+            for b in bkg_hists :
+                bkg_projs.append(b.ProjectionX(name,c+1,c+1))
         if options.signal :
-            sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight,options,scales=scales_s,inputname=name)
-            sig_hists = anaplot.MergeSamples(sig_hists,options)
-            sig_hists[-1].SetLineColor(2)
-            sig_hists[-1].SetMarkerColor(2)
+            for s in sig_hists :
+                sig_projs.append(s.ProjectionX(name,c+1,c+1))
 
-        cans.append(anaplot.DrawHistos(v,options,bkg_hists,sig_hists,data_hist))
+        cans.append(anaplot.DrawHistos(v1,options,bkg_projs,sig_projs,data_proj))
         cans[-1].SetName(anaplot.CleanUpName(name))
 
     anaplot.UpdateCanvases(options,cans)
