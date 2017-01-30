@@ -20,22 +20,23 @@
 ## If a text or legend has been added to the plot it will force the plot content to appear BELOW
 ## the text.
 ##
-def AutoFixAxes(can,symmetrize=False) :
+def AutoFixAxes(can,symmetrize=False,ignorelegend=False) :
     if can.GetPrimitive('pad_top') :
-        AutoFixAxes(can.GetPrimitive('pad_top'))
-        AutoFixAxes(can.GetPrimitive('pad_bot'))
+        AutoFixAxes(can.GetPrimitive('pad_top'),ignorelegend=ignorelegend)
+        AutoFixAxes(can.GetPrimitive('pad_bot'),ignorelegend=ignorelegend)
         return
     FixXaxisRanges(can)    
-    AutoFixYaxis(can)
+    AutoFixYaxis(can,ignorelegend=ignorelegend)
     return
 
-def AutoFixYaxis(can) :
+def AutoFixYaxis(can,ignorelegend=False) :
     #
     # Makes space for text as well!
     #
     can.Update()
-    from ROOT import TFrame
+    import ROOT
     import math
+    # maxy_frac is the fractional maximum of the y-axis stuff.
     maxy_frac = 1
     #
     # Now we make space for any text we drew on the canvas, and
@@ -44,23 +45,31 @@ def AutoFixYaxis(can) :
     plots_exist = False
     tframe_height = 1-can.GetTopMargin()-can.GetBottomMargin()
     for i in can.GetListOfPrimitives() :
-        if type(i) == type(TFrame()) :
+        if issubclass(type(i),ROOT.TH1) or issubclass(type(i),ROOT.TGraph) :
+            plots_exist = True
+        if (ignorelegend) and ('legend' in i.GetName()) :
+            continue
+        if type(i) == type(ROOT.TFrame()) :
             continue
         if hasattr(i,'GetY1NDC') :
             maxy_frac = min(maxy_frac,i.GetY1NDC())
-            plots_exist = True
         if hasattr(i,'GetY') :
             maxy_frac = min(maxy_frac,i.GetY())
-            plots_exist = True
     if not plots_exist :
-        print 'Your plot %s has nothing in it. Doing nothing.'%(can.GetName())
+        print 'Your plot %s has nothing in it. AutoFixYaxis() is Doing nothing.'%(can.GetName())
         return
     (miny,maxy) = GetYaxisRanges(can,check_all=True)
     # print 'AutoFixAxes0',miny,maxy
     if miny == 0 and maxy == 0 :
         return
-    miny = (0.95*miny)*(miny>0)+(1.05*miny)*(miny<0)
+    miny = (0.95*miny) if (miny>0) else (1.05*miny)
     maxy_frac = maxy_frac-can.GetBottomMargin()
+
+    if maxy_frac < 0 :
+        print 'Error in AutoFixAxes - somehow there is no more room for your plot.'
+        print '(Bad legend placement?)'
+        return
+
     if can.GetLogy() :
         # special treatment for log plots
         miny = 0.85*MinimumForLog(can)
