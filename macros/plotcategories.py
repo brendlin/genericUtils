@@ -80,11 +80,11 @@ def main(options,args) :
         data_hist.SetMarkerColor(1)
     if options.bkgs :
         bkg_hists = anaplot.Get2dVariableHistsFromTrees(trees_b,keys_b,v1,v2,weight,options,scales=scales_b)
-        bkg_hists = anaplot.MergeSamples(bkg_hists,options)
+        bkg_hists,keys_b = anaplot.MergeSamples(bkg_hists,options)
         anaplot.PrepareBkgHistosForStack(bkg_hists,options)
     if options.signal :
         sig_hists = anaplot.Get2dVariableHistsFromTrees(trees_s,keys_s,v1,v2,weight,options,scales=scales_s)
-        sig_hists = anaplot.MergeSamples(sig_hists,options)
+        sig_hists,keys_s = anaplot.MergeSamples(sig_hists,options)
         sig_hists[-1].SetLineColor(2)
         sig_hists[-1].SetMarkerColor(2)
 
@@ -92,20 +92,23 @@ def main(options,args) :
     for c in range(len(categories)) :
         if not categories[c] : continue
 
-        name = '_c%d_%s'%(c,categories[c])
+        name = 'c%d_%s'%(c,categories[c])
         
         bkg_projs = []
         sig_projs = []
         data_proj = None
         
         if options.data :
-            data_proj = data_hist.ProjectionX(name,c+1,c+1)
+            data_proj = data_hist.ProjectionX('%s_data'%(name),c+1,c+1)
+            print data_proj.GetName()
         if options.bkgs :
-            for b in bkg_hists :
-                bkg_projs.append(b.ProjectionX(name,c+1,c+1))
+            for i,b in enumerate(bkg_hists) :
+                bkg_projs.append(b.ProjectionX('%s_%s'%(name,keys_b[i]),c+1,c+1))
+                print bkg_projs[-1].GetName()
         if options.signal :
-            for s in sig_hists :
-                sig_projs.append(s.ProjectionX(name,c+1,c+1))
+            for i,s in enumerate(sig_hists) :
+                sig_projs.append(s.ProjectionX('%s_%s'%(name,keys_s[i]),c+1,c+1))
+                print sig_projs[-1].GetName()
 
         cans.append(anaplot.DrawHistos(v1,options,bkg_projs,sig_projs,data_proj))
         cans[-1].SetName(anaplot.CleanUpName(name))
@@ -115,12 +118,24 @@ def main(options,args) :
     if not options.batch :
         raw_input('Press enter to exit')
 
-
-    f = ROOT.TFile('couplings.root','RECREATE')
-    for can in cans :
-        can.Write()
-    f.Close()
     anaplot.doSaving(options,cans)
+
+    # Do this afterwards, to make sure the outdir exists.
+    f = ROOT.TFile('%s/couplings.root'%(options.outdir),'RECREATE')
+    for can in cans :
+        for i in can.GetListOfPrimitives() :
+            if '_SM_' in i.GetName() :
+                continue
+            if 'stack' in i.GetName() :
+                if not issubclass(type(i),ROOT.THStack) :
+                    continue
+                for j in range(i.GetNhists()) :
+                    print 'writing from stack:',i.GetHists()[j].GetName()
+                    i.GetHists()[j].Write()
+            if issubclass(type(i),ROOT.TH1) :
+                i.Write()
+
+    f.Close()
 
     print 'done.'
     return

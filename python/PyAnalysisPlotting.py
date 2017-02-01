@@ -541,7 +541,7 @@ def doSaving(options,cans) :
                 open(name, 'a').close()
                 can.Print(name)
                 can.Print(name.replace('.pdf','.C'))
-                can.Print(name.replace('.pdf','.root'))
+                #can.Print(name.replace('.pdf','.root'))
                 # some weird quirk in can.Print(blah.C) requires us to remove "__1" suffixes
                 sed_mac_quirk = ''
                 if 'darwin' in sys.platform :
@@ -570,42 +570,50 @@ def UpdateCanvases(options,cans) :
     return
 
 #-------------------------------------------------------------------------
-def MergeSamples(bkg_hists,options) :
+def MergeSamples(hists,options) :
     #
     # Yeah so this adds the samples together that you specify, in a resonable
     # order close to the one you specify in the command line "bkgs"
     #
     import math
+    import ROOT
 
     if not options.mergesamples :
-        return bkg_hists
-    bkg_hists_new = []
-    bkg_hists_index = dict()
-    for i in bkg_hists :
+        return hists
+    hists_new = []
+    keys_new = []
+    hists_index = dict()
+    for i in hists :
         added = False
         for j in options.mergesamples.keys() :
             if i.GetTitle() not in options.mergesamples[j] :
                 continue
-            if j in bkg_hists_index.keys() :
+            if j in hists_index.keys() :
                 #print 'adding to existing histo'
-                bkg_hists_new[bkg_hists_index[j]].Add(i)
+                hists_new[hists_index[j]].Add(i)
                 added = True
             else :
                 #print 'starting a new histo'
-                bkg_hists_index[j] = len(bkg_hists_new)
-                bkg_hists_new.append(i)
-                bkg_hists_new[-1].SetTitle(j)
+                hists_index[j] = len(hists_new)
+                hists_new.append(i)
+                keys_new.append(j)
+                hists_new[-1].SetTitle(j)
                 added = True
         if not added :
-            bkg_hists_new.append(i)
+            hists_new.append(i)
 
-    for i in bkg_hists_index.keys() :
+    for i in hists_index.keys() :
         pm = u"\u00B1"
-        tmphist = bkg_hists_new[bkg_hists_index[i]]
-        print '%s: %2.2f %s %2.2f'%(i,tmphist.Integral(0,tmphist.GetNbinsX()+1)
-                                    ,pm,math.sqrt(sum(list(tmphist.GetSumw2()))))
+        tmphist = hists_new[hists_index[i]]
+        if issubclass(type(tmphist),ROOT.TH2) :
+            print '%s: %2.2f %s %2.2f'%(i,tmphist.Integral(0,tmphist.GetNbinsX()+1
+                                                           ,0,tmphist.GetNbinsY()+1)
+                                        ,pm,math.sqrt(sum(list(tmphist.GetSumw2()))))
+        else :
+            print '%s: %2.2f %s %2.2f'%(i,tmphist.Integral(0,tmphist.GetNbinsX()+1)
+                                        ,pm,math.sqrt(sum(list(tmphist.GetSumw2()))))
 
-    return bkg_hists_new
+    return hists_new,keys_new
 
 #-------------------------------------------------------------------------
 def RebinSmoothlyFallingFunction(hist) :
