@@ -35,16 +35,15 @@ categories = [
     'M17_VHlep_HIGH',        # 22
     'M17_VHdilep_LOW',       # 23
     'M17_VHdilep_HIGH',      # 24
-    # 'M17_ttH',               # 25
-    'M17_ttH_Had_6j2b',      # 25
-    'M17_ttH_Had_6j1b',      # 26
-    'M17_ttH_Had_5j2b',      # 27
-    'M17_ttH_Had_5j1b',      # 28
-    'M17_ttH_Had_4j2b',      # 29
-    'M17_ttH_Had_4j1b',      # 30
+    'M17_tH_Had_4j2b',       # 25
+    'M17_tH_Had_4j1b',       # 26
+    'M17_ttH_Had_BDT4',      # 27
+    'M17_ttH_Had_BDT3',      # 28
+    'M17_ttH_Had_BDT2',      # 29
+    'M17_ttH_Had_BDT1',      # 30
     'M17_ttH_Lep',           # 31
-    'M17_ttH_Lep_0fwd',      # 32
-    'M17_ttH_Lep_1fwd',      # 33
+    'M17_tH_lep_1fwd',       # 32
+    'M17_tH_lep_0fwd',       # 33
     ]
 
 #-------------------------------------------------------------------------
@@ -68,7 +67,7 @@ def main(options,args) :
     cans = []
 
     v1 = 'HGamEventInfoAuxDyn.m_yy/1000'
-    v2 = 'HGamEventInfoAuxDyn.catCoup_Moriond2017'
+    v2 = 'HGamEventInfoAuxDyn.catCoup_Moriond2017BDT'
     bkg_hists = []
     sig_hists = []
     data_hist = None
