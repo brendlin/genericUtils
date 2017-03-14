@@ -1,0 +1,5 @@
+results.root
+fit-logy.pdf
+*winMax*
+*_nSignal*
+Points

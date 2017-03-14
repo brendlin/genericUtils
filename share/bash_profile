@@ -20,6 +20,28 @@ isdq2 () {
     [ -n "$DQ2_HOME" ] && echo "[*]" 
 }
 
+dsync () {
+    if [ -z "$1" ]
+    then
+        echo rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/dsync $mydir
+             rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/dsync $mydir
+    else
+        echo rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/dsync/$1 $mydir/dsync
+             rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/dsync/$1 $mydir/dsync
+    fi
+}
+
+lsync () {
+    if [ -z "$1" ]
+    then
+        echo rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlin@lxplus.cern.ch:/afs/cern.ch/work/b/brendlin/lsync $mydir
+             rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlin@lxplus.cern.ch:/afs/cern.ch/work/b/brendlin/lsync $mydir
+    else
+        echo rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlik@naf-atlas.desy.de:/afs/cern.ch/work/b/brendlin/lsync/$1 $mydir/lsync
+             rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlik@naf-atlas.desy.de:/afs/cern.ch/work/b/brendlin/lsync/$1 $mydir/lsync
+    fi
+}
+
 isScreen () {
     [ $TERM = "screen" ] && echo "[S]"
 }
@@ -75,7 +97,9 @@ export pennsvn=svn+ssh://brendlin@svn.cern.ch/reps/penn/
 export svnatlasoff=svn+ssh://brendlin@svn.cern.ch/reps/atlasoff/
 export genericUtils=$HOME/genericUtils
 export PYTHONPATH=$PYTHONPATH:$genericUtils/python #add generic python utilities to path
+export PYTHONPATH=$PYTHONPATH:$HOME/higgsUtils/python
 export PATH=$PATH:$genericUtils/macros # add plot script to python path
+export PATH=$PATH:$HOME/higgsUtils/macros
 
 alias 'nemacs=emacs -nw'
 alias 'asdf=%emacs'
@@ -91,6 +115,12 @@ killpy () {
     thiswindow=$(tty | sed -e "s:/dev/::")
     echo $thiswindow
     ps | grep $thiswindow | grep python | grep -v "grep python" | awk '{print $1}' | xargs kill -9
+}
+
+killroot () {
+    thiswindow=$(tty | sed -e "s:/dev/::")
+    echo $thiswindow
+    ps | grep $thiswindow | grep root | grep -v "grep root" | awk '{print $1}' | xargs kill -9
 }
 
 killsh () {
@@ -228,15 +258,16 @@ case $HOSTNAME in
     # slc6
     # Pick the LAST lxplus machine in this list, and save the previous ones.:
     # for i in {1..999}; do ping -c 1 lxplus$(printf "%03d" $i).cern.ch>/dev/null && echo lxplus$(printf "%03d" $i).cern.ch exists; done;
-    alias 'lxplus=caffeinate -i ssh -Y brendlin@lxplus136.cern.ch'
+    alias 'lxplus=caffeinate -i ssh -Y brendlin@lxplus136.cern.ch' # 136 135
     alias 'tier3screen=caffeinate -i ssh -Y kurb@at3i00.hep.upenn.edu'
-    alias 'dsync=rsync -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/dsync ~/Documents/desyHEP'
-    alias 'lsync=rsync -r brendlin@lxplus.cern.ch:/afs/cern.ch/work/b/brendlin/lsync ~/Documents/desyHEP'
+    # alias 'dsync=rsync --exclude-from "$HOME/rsync_exclude.txt" -q -r brendlik@naf-atlas.desy.de:/nfs/dust/atlas/user/brendlik/dsync ~/Documents/desyHEP'
+    # alias 'lsync=rsync -q -r brendlin@lxplus.cern.ch:/afs/cern.ch/work/b/brendlin/lsync ~/Documents/desyHEP'
 
     alias 'higgs=caffeinate -i ssh -Y kurb@higgs.hep.upenn.edu'
     alias 'dionysus=caffeinate -i ssh -Y kurb@dionysus.hep.upenn.edu'
     export pennscp=kurb@at3i00.hep.upenn.edu
     export desyscp=brendlik@naf-atlas.desy.de
+    export lxscp=brendlin@lxplus.cern.ch
 
     alias 'atlasgw=caffeinate -i ssh -Y brendlin@atlasgw.cern.ch'
     alias 'atlidali=caffeinate -i ssh -Y atlidali@lxplus415.cern.ch'
@@ -266,7 +297,6 @@ case $HOSTNAME in
     export pennsvn=svn+ssh://brendlin@svn.cern.ch/reps/penn
     export svnatlasoff=svn+ssh://brendlin@svn.cern.ch/reps/atlasoff
     #
-    export scpbrendlin=brendlin@lxplus.cern.ch:/
     export scpatlidali=atlidali@lxplus.cern.ch:/
     export workflow="$mydir/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
     export lorkflow="$mydir/lsync/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
