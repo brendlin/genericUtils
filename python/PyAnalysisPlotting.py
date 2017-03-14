@@ -40,7 +40,7 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
     return
 
 #-------------------------------------------------------------------------
-def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None) :
+def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name='') :
     #
     # bkg_hists is a list of background histograms (TH1)
     # sig_hists is a list of signal histograms (TH1)
@@ -67,7 +67,7 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None) :
 
     if bkg_hists :
         totb = bkg_hists[0].Clone()
-        totb.SetNameTitle('SM_%s'%(canname),'remove me')
+        totb.SetNameTitle(('%s_%s_SM'%(canname,name)).replace('__','_'),'remove me')
         totb.SetLineColor(1)
         totb.SetLineWidth(1)
         totb.SetMarkerSize(0)
@@ -75,7 +75,7 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None) :
         for i in bkg_hists[1:] :
             totb.Add(i)
         totberror = totb.Clone()
-        totberror.SetName(totb.GetName()+'_error')
+        totberror.SetName(totb.GetName().replace('_SM','_error'))
         totberror.SetTitle('SM (stat)')
         totberror.SetFillColor(12)
         totberror.SetFillStyle(3254)
@@ -92,8 +92,8 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None) :
 
     if bkg_hists and options.stack :
         plotfunc.Stack(can)
-        plotfunc.AddHistogram(can,totberror,drawopt='E2')
-        plotfunc.AddHistogram(can,totb,drawopt='hist')
+        plotfunc.AddHistogram(can,totberror,drawopt='E2',keepname=True)
+        plotfunc.AddHistogram(can,totb,drawopt='hist',keepname=True)
 
     for h in sig_hists :
         plotfunc.AddHistogram(can,h)
@@ -393,7 +393,7 @@ class TreePlottingOptParser :
 
         self.options.stack = not self.options.nostack
 
-        if not self.options.outdir :
+        if self.options.save and not self.options.outdir :
             self.options.outdir = os.getcwd()
         
         if self.options.signal and not '.root' in self.options.signal :

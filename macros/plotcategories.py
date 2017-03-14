@@ -10,7 +10,7 @@ import PyAnalysisPlotting as anaplot
 import PlotFunctions as plotfunc
 
 categories = [
-    None,
+    'Inclusive',
     'M17_ggH_0J_Cen',        # 1
     'M17_ggH_0J_Fwd',        # 2
     'M17_ggH_1J_LOW',        # 3
@@ -35,7 +35,7 @@ categories = [
     'M17_VHlep_HIGH',        # 22
     'M17_VHdilep_LOW',       # 23
     'M17_VHdilep_HIGH',      # 24
-    'M17_ttH',               # 25
+    # 'M17_ttH',               # 25
     'M17_ttH_Had_6j2b',      # 25
     'M17_ttH_Had_6j1b',      # 26
     'M17_ttH_Had_5j2b',      # 27
@@ -90,7 +90,13 @@ def main(options,args) :
 
     # get the histograms from the files
     for c in range(len(categories)) :
-        if not categories[c] : continue
+        #if not categories[c] : continue
+        
+        lo_bin = c+1
+        hi_bin = c+1
+        if c == 0 : # inclusive case.
+            lo_bin = 0
+            hi_bin = 10000 # just to be safe, 10k categories
 
         name = 'c%d_%s'%(c,categories[c])
         
@@ -99,18 +105,18 @@ def main(options,args) :
         data_proj = None
         
         if options.data :
-            data_proj = data_hist.ProjectionX('%s_data'%(name),c+1,c+1)
+            data_proj = data_hist.ProjectionX('%s_data'%(name),lo_bin,hi_bin)
             print data_proj.GetName()
         if options.bkgs :
             for i,b in enumerate(bkg_hists) :
-                bkg_projs.append(b.ProjectionX('%s_%s'%(name,keys_b[i]),c+1,c+1))
+                bkg_projs.append(b.ProjectionX('%s_%s'%(name,keys_b[i]),lo_bin,hi_bin))
                 print bkg_projs[-1].GetName()
         if options.signal :
             for i,s in enumerate(sig_hists) :
-                sig_projs.append(s.ProjectionX('%s_%s'%(name,keys_s[i]),c+1,c+1))
+                sig_projs.append(s.ProjectionX('%s_%s'%(name,keys_s[i]),lo_bin,hi_bin))
                 print sig_projs[-1].GetName()
-
-        cans.append(anaplot.DrawHistos(v1,options,bkg_projs,sig_projs,data_proj))
+                
+        cans.append(anaplot.DrawHistos(v1,options,bkg_projs,sig_projs,data_proj,name=name))
         cans[-1].SetName(anaplot.CleanUpName(name))
 
     anaplot.UpdateCanvases(options,cans)
@@ -124,7 +130,7 @@ def main(options,args) :
     f = ROOT.TFile('%s/couplings.root'%(options.outdir),'RECREATE')
     for can in cans :
         for i in can.GetListOfPrimitives() :
-            if '_SM_' in i.GetName() :
+            if i.GetName()[-6:] == '_error' :
                 continue
             if 'stack' in i.GetName() :
                 if not issubclass(type(i),ROOT.THStack) :
@@ -133,6 +139,7 @@ def main(options,args) :
                     print 'writing from stack:',i.GetHists()[j].GetName()
                     i.GetHists()[j].Write()
             if issubclass(type(i),ROOT.TH1) :
+                print 'writing:',i.GetName()
                 i.Write()
 
     f.Close()
