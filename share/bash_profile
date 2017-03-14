@@ -197,6 +197,7 @@ case $HOSTNAME in
     export public=/afs/cern.ch/user/b/brendlin/public
     export scratch=/afs/cern.ch/user/b/brendlin/scratch0
     export mxaod=/afs/cern.ch/user/b/brendlin/eos/atlas/atlascerngroupdisk/phys-higgs/HSG1/MxAOD
+    export desyscp=brendlik@naf-atlas.desy.de
     #
     alias 'bjobs=bjobs -w'
     alias 'bjbos=bjobs -w'
