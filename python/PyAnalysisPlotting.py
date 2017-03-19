@@ -250,7 +250,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
 
         # if Draw did not work, then exit.
         if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-            print 'ERROR TTree::Draw failed. Exiting.'
+            print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
             import sys
             sys.exit()
 
@@ -322,6 +322,12 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
         ROOT.gErrorIgnoreLevel = ROOT.kFatal
         trees[k].Draw(arg1,arg2,arg3)
         ROOT.gErrorIgnoreLevel = tmp
+
+        # if Draw did not work, then exit.
+        if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
+            print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
+            import sys
+            sys.exit()
 
         hists.append(ROOT.gDirectory.Get(name))
 
@@ -409,8 +415,9 @@ class TreePlottingOptParser :
 
 
         # some defaults are not set in the option parser
-        for x in ['blindcut','mergesamples','colors','labels','histformat','usermodule'] :
+        for x in ['blindcut','truthcuts','mergesamples','colors','labels','histformat','usermodule'] :
             defaults = {'blindcut':[],
+                        'truthcuts':[],
                         'mergesamples':None,
                         'colors':dict(),
                         'labels':dict(),
@@ -444,7 +451,7 @@ class TreePlottingOptParser :
             usermodule = importlib.import_module(self.options.config.replace('.py',''))
             self.options.usermodule = usermodule
 
-            for x in ['histformat','weight','weightscale','blindcut'
+            for x in ['histformat','weight','weightscale','blindcut','truthcuts'
                       ,'treename','fb','colors','labels','mergesamples','bkgs','data','signal'] :
                 if hasattr(usermodule,x) :
                     setattr(self.options,x,getattr(usermodule,x))
@@ -601,6 +608,7 @@ def MergeSamples(hists,options) :
                 added = True
         if not added :
             hists_new.append(i)
+            keys_new.append(i.GetTitle())
 
     for i in hists_index.keys() :
         pm = u"\u00B1"
