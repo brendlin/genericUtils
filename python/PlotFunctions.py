@@ -83,8 +83,8 @@ def ConvertToDifferential(hist) :
 ##
 def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
     if can.GetPrimitive('pad_top') :
-        AddHistogram(can.GetPrimitive('pad_top'),hist,drawopt)
-        return
+        return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist,drawopt)
+        return return_hist
     from ROOT import TH1,TGraph
     tmp = hist.Clone()
     is_graph = issubclass(type(hist),TGraph)
@@ -92,7 +92,7 @@ def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
     plot_exists = list(issubclass(type(a),TH1) for a in can.GetListOfPrimitives())
     plot_exists += list(issubclass(type(a),TGraph) for a in can.GetListOfPrimitives())
 
-    if not is_graph :
+    if hasattr(tmp,'SetDirectory') :
         tmp.SetDirectory(0)
 
     if (not is_graph) and (True in plot_exists) :
@@ -108,7 +108,7 @@ def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
     tmp.Draw(drawopt)
     can.Modified()
     #can.Update()
-    return
+    return tmp
 
 ##
 ## Set x- and y-axis labels. Do this *after* you have added your first histogram to the canvas.
@@ -190,7 +190,7 @@ def KurtColorPalate() :
 ## If you give this function a RatioCanvas, it will make histograms and their corresponding 
 ## ratio histograms the same color.
 ##
-def SetColors(can,these_colors=[],fill=False) :
+def SetColors(can,these_colors=[],fill=False,line=False) :
     if not these_colors :
         these_colors = KurtColorPalate()
         
@@ -210,7 +210,8 @@ def SetColors(can,these_colors=[],fill=False) :
             i.SetFillColor(0)
             if fill :
                 i.SetFillColor(these_colors[color_count])
-                i.SetLineColor(1)
+                if not line :
+                    i.SetLineColor(1)
             #
             # Check if there is a bottom pad, with ratios...
             #
@@ -262,6 +263,7 @@ def DrawText(can,text='text',x1=.2,y1=.84,x2=.5,y2=.9,angle=0,align='',textsize=
         can.GetPrimitive('pad_top').cd()
     from ROOT import TLegend
     leg = TLegend(x1,y1,x2,y2)
+    leg.SetMargin(0)
     leg.SetName('text')
     tobject_collector.append(leg)
     leg.SetTextSize(textsize)
@@ -302,7 +304,7 @@ def CanvasEmpty(can) :
 def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0,option='f',skip=[]) :
     from ROOT import TLegend,TH1,gStyle,TGraph
     if can.GetPrimitive('pad_top') :
-        MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,skip=skip)
+        MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,option,skip=skip)
         return
     if CanvasEmpty(can) :
         print 'Error: trying to make legend from canvas with 0 plots. Will do nothing.'
@@ -342,7 +344,7 @@ def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0
         if issubclass(type(i),TH1) or issubclass(type(i),TGraph) :
             if i.GetTitle() in skip :
                 continue
-            leg.AddEntry(i,i.GetTitle(),option[total]) # plef
+            leg.AddEntry(i,'^{ }'+i.GetTitle(),option[total]) # plef
             total += 1
 
     #
@@ -357,7 +359,11 @@ def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0
     # recipe for making roughly square boxes
     h = leg.GetY2()-leg.GetY1()
     w = leg.GetX2()-leg.GetX1()
-    leg.SetMargin(leg.GetNColumns()*h/float(leg.GetNRows()*w))
+    h_can = can.GetWh()
+    w_can = can.GetWw()
+    h_pad = can.GetAbsHNDC()
+    w_pad = can.GetAbsWNDC()
+    leg.SetMargin(leg.GetNColumns()*h*h_can*h_pad/float(leg.GetNRows()*w*w_can*w_pad))
     can.cd()
     if can.GetPrimitive('pad_top') :
         can.GetPrimitive('pad_top').cd()
@@ -626,18 +632,38 @@ def AddHistogramBot(can,hist,drawopt='pE1') :
 ##
 def AddRatio(can,hist,ref_hist,divide='') :
     from ROOT import TH1
+    import math
     TH1.SetDefaultSumw2(True)
     ratioplot = hist.Clone()
     ratioplot.SetName(hist.GetName()+'_ratio')
-    ratioplot.Divide(hist,ref_hist,1.,1.,divide)
-    AddHistogram(can.GetPrimitive('pad_top'),hist)
-    AddHistogram(can.GetPrimitive('pad_bot'),ratioplot)
-    return
+    if divide == 'pull' :
+        ratioplot.GetYaxis().SetTitle('pull')
+        for i in range(ratioplot.GetNbinsX()+2) :
+            bc1 = hist.GetBinContent(i)
+            bc2 = ref_hist.GetBinContent(i)
+            be1 = hist    .GetBinErrorLow(i) if (bc1 > bc2) else hist    .GetBinErrorUp(i)
+            be2 = ref_hist.GetBinErrorLow(i) if (bc2 > bc1) else ref_hist.GetBinErrorUp(i)
+            
+            if (be1**2 + be2**2) :
+                ratioplot.SetBinContent(i,(bc1-bc2)/math.sqrt(be1**2+be2**2))
+            ratioplot.SetBinError(i,1)
+    else :
+        ratioplot.GetYaxis().SetTitle('ratio')
+        ratioplot.Divide(hist,ref_hist,1.,1.,divide)
+    return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist)
+    return_ratio = AddHistogram(can.GetPrimitive('pad_bot'),ratioplot)
+    return return_hist, return_ratio
+
+def AddRatioManual(can,hist,ratioplot,drawopt1='pE1',drawopt2='pE1') :
+    ratioplot.SetName(hist.GetName()+'_ratio')
+    return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist,drawopt=drawopt1)
+    return_ratio = AddHistogram(can.GetPrimitive('pad_bot'),ratioplot,drawopt=drawopt2)
+    return return_hist, return_ratio
 
 ##
 ## Stack plot functionality
 ##
-def Stack(can,reverse=False) :
+def Stack(can,reverse=False,title='') :
     if can.GetPrimitive('pad_top') :
         return Stack(can.GetPrimitive('pad_top'),reverse=reverse)
     

@@ -29,7 +29,7 @@ def AutoFixAxes(can,symmetrize=False,ignorelegend=False) :
     AutoFixYaxis(can,ignorelegend=ignorelegend)
     return
 
-def AutoFixYaxis(can,ignorelegend=False) :
+def AutoFixYaxis(can,ignorelegend=False,minzero=False) :
     #
     # Makes space for text as well!
     #
@@ -63,6 +63,7 @@ def AutoFixYaxis(can,ignorelegend=False) :
     if miny == 0 and maxy == 0 :
         return
     miny = (0.95*miny) if (miny>0) else (1.05*miny)
+    maxy = (1.05*maxy) if (maxy>0) else (0.95*maxy)
     maxy_frac = maxy_frac-can.GetBottomMargin()
 
     if maxy_frac < 0 :
@@ -86,8 +87,10 @@ def AutoFixYaxis(can,ignorelegend=False) :
     # print 'AutoFixAxes',miny,maxy
 #     if symmetrize :
 #         (miny,maxy) = -max(math.fabs(miny),math.fabs(maxy)),max(math.fabs(miny),math.fabs(maxy))
+    if minzero == True :
+        miny = 0
     SetYaxisRanges(can,miny,maxy)
-    return
+    return miny,maxy
 
 ##
 ## Snap to base-ten-centric numbers
@@ -207,8 +210,8 @@ def GetYaxisRanges(can,check_all=False) :
                 return ymin,ymax
         if issubclass(type(i),TH1) :
             for bin in range(i.GetNbinsX()) :
-                if bin < i.GetXaxis().GetFirst() : continue # X-axis SetRange should be done first
-                if bin > i.GetXaxis().GetLast() : continue # X-axis SetRange should be done first
+                if bin+1 < i.GetXaxis().GetFirst() : continue # X-axis SetRange should be done first
+                if bin+1 > i.GetXaxis().GetLast() : continue # X-axis SetRange should be done first
                 y = i.GetBinContent(bin+1)
                 ye = i.GetBinError(bin+1)
                 ymin = min(ymin,y-ye)

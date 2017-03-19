@@ -211,3 +211,32 @@ def EnsureSumw2(hist) :
     if not hist.GetSumw2N() :
         hist.Sumw2()
     return
+
+def PrintLatexTable(thing) :
+    max_column_width = []
+    for i,x in enumerate(thing) :
+        for j,y in enumerate(x) :
+            if '$' not in y :
+                y = y.replace('_','\_')
+            if i == 0 :
+                max_column_width.append(len(y))
+            else :
+                if len(max_column_width) < j + 1 :
+                    print 'Error in PrintLatexTable - column widths are not the same.'
+                    import sys; sys.exit()
+                max_column_width[j] = max(max_column_width[j],len(y))
+
+    text = ''
+    for i,x in enumerate(thing) :
+        for j,y in enumerate(x) :
+            if '$' not in y :
+                y = y.replace('_','\_')
+            if j == len(x)-1 :
+                text += '%s \\\\ \n'%(y.rjust(max_column_width[j]))
+            elif j == 0 :
+                text += '%s & '%(y.ljust(max_column_width[j]))
+            else :
+                text += '%s & '%(y.rjust(max_column_width[j]))
+                
+    return text
+
