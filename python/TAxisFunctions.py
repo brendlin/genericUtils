@@ -99,8 +99,11 @@ def NearestNiceNumber(miny,maxy) :
     import math
     round_number = 10 # or 5 perhaps
     smallest_increment = pow(10,math.floor(math.log((maxy-miny))/math.log(10))-2)
-    newminy = round_number*smallest_increment*      int(miny/(round_number*smallest_increment))
-    newmaxy = round_number*smallest_increment*math.ceil(maxy/(round_number*smallest_increment))
+    if miny > 0 :
+        newminy = round_number*smallest_increment*       int(miny/(round_number*smallest_increment))
+    else :
+        newminy = round_number*smallest_increment*math.floor(miny/(round_number*smallest_increment))
+    newmaxy     = round_number*smallest_increment*math.ceil (maxy/(round_number*smallest_increment))
     # print 'NearestNiceNumber',newminy,newmaxy
     return newminy,newmaxy
 
@@ -193,7 +196,7 @@ def GetYaxisRanges(can,check_all=False) :
     #
     # check_all is if you want to check the maximum extent of all the histograms you plotted.
     #
-    from ROOT import TGraph,TH1,TMath,THStack
+    import ROOT
     ymin = 999999999
     ymax = -999999999
     
@@ -203,12 +206,29 @@ def GetYaxisRanges(can,check_all=False) :
         primitives += the_stack
 
     for i in primitives :
-        if issubclass(type(i),TGraph) :
-            ymin = min(ymin,TMath.MinElement(i.GetN(),i.GetY()))
-            ymax = max(ymax,TMath.MaxElement(i.GetN(),i.GetY()))
+        if issubclass(type(i),ROOT.TGraph) :
+            tmp_ymin = None
+            tmp_ymax = None
+            for j in range(i.GetN()) :
+                eyl = 0
+                eyh = 0
+                if issubclass(type(i),ROOT.TGraphAsymmErrors) :
+                    eyl = i.GetEYlow()[j]
+                    eyh = i.GetEYhigh()[j]
+                elif issubclass(type(i),ROOT.TGraphErrors) :
+                    eyl = i.GetEY()[j]
+                    eyh = i.GetEY()[j]
+                if tmp_ymin == None :
+                    tmp_ymin = i.GetY()[j]-eyl
+                    tmp_ymax = i.GetY()[j]+eyh
+                    continue
+                tmp_ymin = min(tmp_ymin,i.GetY()[j]-eyl)
+                tmp_ymax = max(tmp_ymax,i.GetY()[j]+eyh)
+            ymin = min(ymin,tmp_ymin)
+            ymax = max(ymax,tmp_ymax)
             if not check_all :
                 return ymin,ymax
-        if issubclass(type(i),TH1) :
+        if issubclass(type(i),ROOT.TH1) :
             for bin in range(i.GetNbinsX()) :
                 if bin+1 < i.GetXaxis().GetFirst() : continue # X-axis SetRange should be done first
                 if bin+1 > i.GetXaxis().GetLast() : continue # X-axis SetRange should be done first
@@ -218,7 +238,7 @@ def GetYaxisRanges(can,check_all=False) :
                 ymax = max(ymax,y+ye)
             if not check_all :
                 return ymin,ymax
-        if issubclass(type(i),THStack) :
+        if issubclass(type(i),ROOT.THStack) :
             ymin = min(ymin,i.GetMinimum())
             ymax = max(ymax,i.GetMaximum())
             if not check_all :
