@@ -8,6 +8,33 @@
 #include <iostream>
 #include <sstream>
 #include "TBrowser.h"
+#include "TTree.h"
+#include "TDirectory.h"
+#include "TPRegexp.h"
+#include "RooAbsReal.h"
+#include "RooDataHist.h"
+#include "RooCmdArg.h"
+#include "RooGlobalFunc.h"
+
+void chi2FitTo_KB(RooAbsReal& fcn,RooDataHist& data
+/*                   ,const RooCmdArg& arg1=RooCmdArg::none(), */
+/*                   const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(), */
+/*                   const RooCmdArg& arg4=RooCmdArg::none(),const RooCmdArg& arg5=RooCmdArg::none() */
+                  ){
+  fcn.chi2FitTo(data
+                ,RooFit::Extended(kTRUE)
+/*                 ,RooFit::Save() */
+                ,RooFit::Minimizer("Minuit2")
+                ,RooFit::Strategy(2)
+/*                 ,RooFit::Range("lower,upper") */
+                ,RooFit::Range("all")
+/*                 ,RooFit::Optimize() */
+                ,RooFit::DataError(RooAbsData::SumW2)
+/*                 ,RooFit::DataError(RooAbsData::Poisson) */
+/*                 ,RooFit::Verbose(kTRUE) */
+                );
+  return;
+}
 
 void ListExtras(void){
   std::cout << "# Extras.C: " << "Plot options:"             << std::endl;
