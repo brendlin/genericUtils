@@ -115,7 +115,8 @@ def MinimumForLog(can) :
     ymin = 999999999
     for i in can.GetListOfPrimitives() :
         if issubclass(type(i),TGraph) :
-            for y in i.GetY() :
+            for ii in range(i.GetN()) :
+                y = i.GetY()[ii]
                 if y <= 0 :
                     y = ymin
                 ymin = min(ymin,y)
