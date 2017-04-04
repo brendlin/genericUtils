@@ -8,43 +8,8 @@ import ROOT,sys,os
 import TAxisFunctions as taxisfunc
 import PyAnalysisPlotting as anaplot
 import PlotFunctions as plotfunc
-
-categories = [
-    'Inclusive',
-    'M17_ggH_0J_Cen',        # 1
-    'M17_ggH_0J_Fwd',        # 2
-    'M17_ggH_1J_LOW',        # 3
-    'M17_ggH_1J_MED',        # 4
-    'M17_ggH_1J_HIGH',       # 5
-    'M17_ggH_1J_BSM',        # 6
-    'M17_ggH_2J_LOW',        # 7
-    'M17_ggH_2J_MED',        # 8
-    'M17_ggH_2J_HIGH',       # 9
-    'M17_ggH_2J_BSM',        # 10
-    'M17_VBF_HjjLOW_loose',  # 11
-    'M17_VBF_HjjLOW_tight',  # 12
-    'M17_VBF_HjjHIGH_loose', # 13
-    'M17_VBF_HjjHIGH_tight', # 14
-    'M17_VHhad_loose',       # 15
-    'M17_VHhad_tight',       # 16
-    'M17_qqH_BSM',           # 17
-    'M17_VHMET_LOW',         # 18
-    'M17_VHMET_HIGH',        # 19
-    'M17_VHMET_BSM',         # 20
-    'M17_VHlep_LOW',         # 21
-    'M17_VHlep_HIGH',        # 22
-    'M17_VHdilep_LOW',       # 23
-    'M17_VHdilep_HIGH',      # 24
-    'M17_tH_Had_4j2b',       # 25
-    'M17_tH_Had_4j1b',       # 26
-    'M17_ttH_Had_BDT4',      # 27
-    'M17_ttH_Had_BDT3',      # 28
-    'M17_ttH_Had_BDT2',      # 29
-    'M17_ttH_Had_BDT1',      # 30
-    'M17_ttH_Lep',           # 31
-    'M17_tH_lep_1fwd',       # 32
-    'M17_tH_lep_0fwd',       # 33
-    ]
+import CouplingsHelpers
+import PyHelpers
 
 #-------------------------------------------------------------------------
 def main(options,args) :
@@ -61,13 +26,14 @@ def main(options,args) :
     dweight = '' # weight value (and cuts) applied to data
     weight = options.weight
     if ''.join(options.cuts) :
-        weight = (weight+'*(%s)'%(' && '.join(options.cuts))).lstrip('*')
+        weight = (weight+'*(%s)'%(' && '.join(options.cuts+options.truthcuts))).lstrip('*')
         dweight = '('+' && '.join(options.cuts+options.blindcut)+')'
 
     cans = []
 
     v1 = 'HGamEventInfoAuxDyn.m_yy/1000'
     v2 = 'HGamEventInfoAuxDyn.catCoup_Moriond2017BDT'
+
     bkg_hists = []
     sig_hists = []
     data_hist = None
@@ -88,7 +54,7 @@ def main(options,args) :
         sig_hists[-1].SetMarkerColor(2)
 
     # get the histograms from the files
-    for c in range(len(categories)) :
+    for c in range(len(CouplingsHelpers.categories)) :
         #if not categories[c] : continue
         
         lo_bin = c+1
@@ -97,7 +63,12 @@ def main(options,args) :
             lo_bin = 0
             hi_bin = 10000 # just to be safe, 10k categories
 
-        name = 'c%d_%s'%(c,categories[c])
+        # MERGE VH LEP CATEGORIES (23 and 24 --> 23):
+        if CouplingsHelpers.categories[c] == 'M17_VHlep_LOW' :
+            hi_bin = hi_bin+1
+
+
+        name = 'c%d_%s'%(c,CouplingsHelpers.categories[c])
         
         bkg_projs = []
         sig_projs = []
@@ -105,15 +76,15 @@ def main(options,args) :
         
         if options.data :
             data_proj = data_hist.ProjectionX('%s_data'%(name),lo_bin,hi_bin)
-            print data_proj.GetName()
+            PyHelpers.PrintNumberOfEvents(data_proj)
         if options.bkgs :
             for i,b in enumerate(bkg_hists) :
                 bkg_projs.append(b.ProjectionX('%s_%s'%(name,keys_b[i]),lo_bin,hi_bin))
-                print bkg_projs[-1].GetName()
+                PyHelpers.PrintNumberOfEvents(bkg_projs[-1])
         if options.signal :
             for i,s in enumerate(sig_hists) :
                 sig_projs.append(s.ProjectionX('%s_%s'%(name,keys_s[i]),lo_bin,hi_bin))
-                print sig_projs[-1].GetName()
+                PyHelpers.PrintNumberOfEvents(sig_projs[-1])
                 
         cans.append(anaplot.DrawHistos(v1,options,bkg_projs,sig_projs,data_proj,name=name))
         cans[-1].SetName(anaplot.CleanUpName(name))

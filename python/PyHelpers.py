@@ -42,6 +42,26 @@ def ConvertToInt(thing) :
     return out
 
 #-------------------------------------------------------------------------
+def PrintNumberOfEvents(hist,isUnicode=False) :
+    import math
+    import ROOT
+
+    pm = u"\u00B1"
+    sumw2 = sum(list(hist.GetSumw2()))
+
+    if issubclass(type(hist),ROOT.TH2) :
+        integral = hist.Integral(0,hist.GetNbinsX()+1,0,hist.GetNbinsY()+1)
+    elif issubclass(type(hist),ROOT.TH1) :
+        integral = hist.Integral(0,hist.GetNbinsX()+1)
+    
+    text = '%s: %2.2f'%(hist.GetName(),integral)
+                        
+    if sumw2 :
+        text += ' %s %2.2f'%(pm,math.sqrt(sumw2))
+    print text
+    return text
+
+#-------------------------------------------------------------------------
 def PrintCutflow(label,hist,samp_list=[],scientific=False,spreadsheet=False,latex=False) :
     pm = '$\pm$' if latex else u"\u00B1" # unicode +/-
     import ROOT

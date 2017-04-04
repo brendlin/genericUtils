@@ -223,6 +223,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
     from array import array
     import PlotFunctions as plotfunc
     import math
+    import PyHelpers
 
     n,low,high = options.limits.get(variable)
     rebin = options.rebin.get(variable,[])
@@ -278,9 +279,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
             hists[-1].Scale(scales[k])
 
         # print the yield and error after cuts (includes overflow)
-        pm = u"\u00B1"
-        print '%s: %2.2f %s %2.2f'%(name,hists[-1].Integral(0,hists[-1].GetNbinsX()+1)
-                                    ,pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))        
+        PyHelpers.PrintNumberOfEvents(hists[-1])
 
         if options.normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
@@ -295,6 +294,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
     from array import array
     import PlotFunctions as plotfunc
     import math
+    import PyHelpers
 
     print options.limits
 
@@ -339,10 +339,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
             hists[-1].Scale(scales[k])
 
         # print the yield and error after cuts (includes overflow)
-        pm = u"\u00B1"
-        print '%s: %2.2f %s %2.2f'%(name,hists[-1].Integral(0,hists[-1].GetNbinsX()+1
-                                                            ,0,hists[-1].GetNbinsY()+1)
-                                    ,pm,math.sqrt(sum(list(hists[-1].GetSumw2()))))        
+        PyHelpers.PrintNumberOfEvents(hists[-1])
 
         if options.normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
@@ -584,6 +581,7 @@ def MergeSamples(hists,options) :
     #
     import math
     import ROOT
+    import PyHelpers
 
     if not options.mergesamples :
         return hists
@@ -611,15 +609,7 @@ def MergeSamples(hists,options) :
             keys_new.append(i.GetTitle())
 
     for i in hists_index.keys() :
-        pm = u"\u00B1"
-        tmphist = hists_new[hists_index[i]]
-        if issubclass(type(tmphist),ROOT.TH2) :
-            print '%s: %2.2f %s %2.2f'%(i,tmphist.Integral(0,tmphist.GetNbinsX()+1
-                                                           ,0,tmphist.GetNbinsY()+1)
-                                        ,pm,math.sqrt(sum(list(tmphist.GetSumw2()))))
-        else :
-            print '%s: %2.2f %s %2.2f'%(i,tmphist.Integral(0,tmphist.GetNbinsX()+1)
-                                        ,pm,math.sqrt(sum(list(tmphist.GetSumw2()))))
+        PyHelpers.PrintNumberOfEvents(hists_new[hists_index[i]])
 
     return hists_new,keys_new
 
