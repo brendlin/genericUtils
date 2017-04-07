@@ -44,7 +44,7 @@ void ListExtras(void){
   std::cout << "# Extras.C: " << "    set_plot_style_sth()" << std::endl;
   std::cout << "# Extras.C: " << "Functions:"            << std::endl;
   std::cout << "# Extras.C: " << "    h = hist(\"h\",c)" << std::endl;
-  std::cout << "# Extras.C: " << "    i = integral(TH1F* h,double binedge1, double binedge2)" << std::endl;
+  std::cout << "# Extras.C: " << "    i = integral(TH1* h,double binedge1, double binedge2)" << std::endl;
   std::cout << "# Extras.C: " << "    h = SF(TH2F* h,TH2F* err,int bin)" << std::endl;
   std::cout << "# rootlogon.C: " << "gStyle->SetPaintTextFormat(\"4.3f \")" << std::endl;
   std::cout << "# rootlogon.C: " << "To turn off title: gStyle->SetOptTitle(0);" << std::endl;
@@ -96,14 +96,14 @@ TH1F* hist(const char* name,TCanvas* c){
   return (TH1F*)c->GetPrimitive(name);
 }
 
-double integral(TH1F* h,double f,double l){
-  std::cout << "##################################" << std::endl;
-  std::cout << "#" << std::endl;
-  std::cout << "# Extras.C integral" << std::endl;
-  std::cout << "#" << std::endl;
-  std::cout << "##################################" << std::endl;
-
-  return h->Integral(h->FindBin(f+0.00000001),h->FindBin(l+0.00000001));
+double integral(TH1* h,double f,double l){
+/*   std::cout << "##################################" << std::endl; */
+/*   std::cout << "#" << std::endl; */
+/*   std::cout << "# Extras.C integral" << std::endl; */
+/*   std::cout << "#" << std::endl; */
+/*   std::cout << "##################################" << std::endl; */
+  // Good to a precision of 1 in 10^6
+  return h->Integral(h->FindBin(f*(1+1e-6)),h->FindBin(l*(1-1e-6)));
 }
 
 void dump(const char* grep="",const char* name="CollectionTree") {
