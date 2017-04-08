@@ -24,7 +24,7 @@ def main(options,args) :
     dweight = '' # weight value (and cuts) applied to data
     weight = options.weight
     if ''.join(options.cuts) :
-        weight = (weight+'*(%s)'%(' && '.join(options.cuts))).lstrip('*')
+        weight = (weight+'*(%s)'%(' && '.join(options.cuts+options.truthcuts))).lstrip('*')
         dweight = '('+' && '.join(options.cuts+options.blindcut)+')'
 
     cans = []
@@ -42,11 +42,11 @@ def main(options,args) :
             data_hist.SetMarkerColor(1)
         if options.bkgs :
             bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight,options,scales=scales_b)
-            bkg_hists = anaplot.MergeSamples(bkg_hists,options)
+            bkg_hists,keys_b_tmp = anaplot.MergeSamples(bkg_hists,options)
             anaplot.PrepareBkgHistosForStack(bkg_hists,options)
         if options.signal :
             sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight,options,scales=scales_s)
-            sig_hists = anaplot.MergeSamples(sig_hists,options)
+            sig_hists,keys_s_tmp = anaplot.MergeSamples(sig_hists,options)
             sig_hists[-1].SetLineColor(2)
             sig_hists[-1].SetMarkerColor(2)
 
