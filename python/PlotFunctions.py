@@ -302,7 +302,7 @@ def CanvasEmpty(can) :
 ## The x and y coordinates are the fractional distances, with the origin at the bottom left.
 ##
 def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0,option='f',skip=[]) :
-    from ROOT import TLegend,TH1,gStyle,TGraph
+    import ROOT
     if can.GetPrimitive('pad_top') :
         MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,option,skip=skip)
         return
@@ -314,7 +314,7 @@ def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0
     #
     if can.GetPrimitive('legend') :
         can.GetPrimitive('legend').Delete()
-    leg = TLegend(x1,y1,x2,y2)
+    leg = ROOT.TLegend(x1,y1,x2,y2)
     leg.SetName('legend')
     tobject_collector.append(leg)
     leg.SetTextFont(43)
@@ -341,7 +341,7 @@ def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0
         if 'stack' in i.GetTitle() : continue
         if 'remove' in i.GetTitle() : continue
         drawopt = i.GetDrawOption()
-        if issubclass(type(i),TH1) or issubclass(type(i),TGraph) :
+        if issubclass(type(i),ROOT.TH1) or issubclass(type(i),ROOT.TGraph) or issubclass(type(i),ROOT.TF1):
             if i.GetTitle() in skip :
                 continue
             leg.AddEntry(i,'^{ }'+i.GetTitle(),option[total]) # plef
