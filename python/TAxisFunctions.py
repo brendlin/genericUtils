@@ -29,7 +29,7 @@ def AutoFixAxes(can,symmetrize=False,ignorelegend=False) :
     AutoFixYaxis(can,ignorelegend=ignorelegend)
     return
 
-def AutoFixYaxis(can,ignorelegend=False,minzero=False) :
+def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False) :
     #
     # Makes space for text as well!
     #
@@ -45,7 +45,11 @@ def AutoFixYaxis(can,ignorelegend=False,minzero=False) :
     plots_exist = False
     tframe_height = 1-can.GetTopMargin()-can.GetBottomMargin()
     for i in can.GetListOfPrimitives() :
-        if issubclass(type(i),ROOT.TH1) or issubclass(type(i),ROOT.TGraph) :
+        if issubclass(type(i),ROOT.TH1) :
+            plots_exist = True
+        if issubclass(type(i),ROOT.TF1) :
+            plots_exist = True
+        if issubclass(type(i),ROOT.TGraph) :
             plots_exist = True
         if (ignorelegend) and ('legend' in i.GetName()) :
             continue
@@ -89,6 +93,8 @@ def AutoFixYaxis(can,ignorelegend=False,minzero=False) :
 #         (miny,maxy) = -max(math.fabs(miny),math.fabs(maxy)),max(math.fabs(miny),math.fabs(maxy))
     if minzero == True :
         miny = 0
+    if forcemin :
+        miny = forcemin
     SetYaxisRanges(can,miny,maxy)
     return miny,maxy
 
@@ -234,11 +240,17 @@ def GetYaxisRanges(can,check_all=False) :
                 if bin+1 < i.GetXaxis().GetFirst() : continue # X-axis SetRange should be done first
                 if bin+1 > i.GetXaxis().GetLast() : continue # X-axis SetRange should be done first
                 y = i.GetBinContent(bin+1)
-                ye = i.GetBinError(bin+1)
-                ymin = min(ymin,y-ye)
-                ymax = max(ymax,y+ye)
+                yel = i.GetBinErrorLow(bin+1)
+                yeu = i.GetBinErrorUp(bin+1)
+                ymin = min(ymin,y-yel)
+                ymax = max(ymax,y+yeu)
             if not check_all :
                 return ymin,ymax
+        if issubclass(type(i),ROOT.TF1) :
+            ymin = min(ymin,i.GetMinimum())
+            ymax = max(ymax,i.GetMaximum())
+            if not check_all :
+                return ymin,ymax            
         if issubclass(type(i),ROOT.THStack) :
             ymin = min(ymin,i.GetMinimum())
             ymax = max(ymax,i.GetMaximum())
