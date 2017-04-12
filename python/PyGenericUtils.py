@@ -212,10 +212,18 @@ def EnsureSumw2(hist) :
         hist.Sumw2()
     return
 
-def PrintLatexTable(thing) :
+#
+# A "list of rows"
+#
+def PrintLatexTable(thing,justs=[]) :
+
+    #
+    # Get the max column width
+    #
     max_column_width = []
     for i,x in enumerate(thing) :
         for j,y in enumerate(x) :
+            y = y.replace('%','\\%')
             if '$' not in y :
                 y = y.replace('_','\_')
             if i == 0 :
@@ -226,17 +234,29 @@ def PrintLatexTable(thing) :
                     import sys; sys.exit()
                 max_column_width[j] = max(max_column_width[j],len(y))
 
+    #
+    # Fill in the text
+    #
     text = ''
     for i,x in enumerate(thing) :
         for j,y in enumerate(x) :
+            # justification
+            just = 'rjust'
+            if j == 0 :
+                just = 'ljust'
+            if j < len(justs) :
+                just = justs[j].replace('l','ljust').replace('r','rjust')
+
+            y = y.replace('%','\\%')
             if '$' not in y :
                 y = y.replace('_','\_')
             if j == len(x)-1 :
-                text += '%s \\\\ \n'%(y.rjust(max_column_width[j]))
+                hline = '' if i else '\\hline'
+                text += '%s \\\\ %s\n'%(getattr(y,just)(max_column_width[j]),hline)
             elif j == 0 :
-                text += '%s & '%(y.ljust(max_column_width[j]))
+                text += '%s & '%(getattr(y,just)(max_column_width[j]))
             else :
-                text += '%s & '%(y.rjust(max_column_width[j]))
+                text += '%s & '%(getattr(y,just)(max_column_width[j]))
                 
     return text
 
