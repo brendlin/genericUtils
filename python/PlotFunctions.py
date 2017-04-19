@@ -3,25 +3,26 @@ from TAxisFunctions import *
 ##
 ## New plotting functions :
 ##
-## FullFormatCanvasDefault(can,...)
-## ConvertToDifferential()
-## AddHistogram(can,hist)
-## SetAxisLabels(can,xlabel,ylabel)
-## SetColors(can,[color1,color2,color3...])
-## GetLuminosityText(lumi)
-## GetSqrtsText(sqrts)
-## GetAtlasInternalText(status='Internal')
-## DrawText(can,text,x1,y1,x2,y2,...)
-## MakeLegend(can,x1,x2,y1,y2,...)
-## FormatCanvasAxes(can,options...) - must be run AFTER the first histograms are added!
-## SetupStyle()
-## RatioCanvas(name,title,canw,canh,ratio_size_as_fraction)
-## SetLeftMargin(can,margin)
-## GetTopPad(can)
-## GetBotPad(can)
-## AddHistogramTop(can,hist)
-## AddHistogramBot(can,hist)
-## AddRatio(can,hist,ref_hist)
+def help() :
+    print 'FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',preliminary=False)'
+    print 'ConvertToDifferential()'
+    print 'AddHistogram(can,hist)'
+    print 'SetAxisLabels(can,xlabel,ylabel)'
+    print 'SetColors(can,[color1,color2,color3...])'
+    print 'GetLuminosityText(lumi)'
+    print 'GetSqrtsText(sqrts)'
+    print 'GetAtlasInternalText(status=\'Internal\')'
+    print 'DrawText(can,text,x1,y1,x2,y2,...)'
+    print 'MakeLegend(can,x1,x2,y1,y2,...)'
+    print 'FormatCanvasAxes(can,options...) - must be run AFTER the first histograms are added!'
+    print 'SetupStyle()'
+    print 'RatioCanvas(name,title,canw,canh,ratio_size_as_fraction)'
+    print 'SetLeftMargin(can,margin)'
+    print 'GetTopPad(can)'
+    print 'GetBotPad(can)'
+    print 'AddHistogramTop(can,hist)'
+    print 'AddHistogramBot(can,hist)'
+    print 'AddRatio(can,hist,ref_hist)'
 ##
 ## # SetMarkerStyles() Coming soon!
 ## # SetFillStyles() Coming soon!
@@ -43,7 +44,7 @@ tobject_collector = []
 ##
 ## FullFormatCanvasDefault is a collection of functions for easy "1-step" plotting.
 ##
-def FullFormatCanvasDefault(can,lumi=20.3,sqrts=8,additionaltext='',preliminary=False) :
+def FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',preliminary=False) :
     FormatCanvasAxes(can)
     SetColors(can)
     text_lines = []

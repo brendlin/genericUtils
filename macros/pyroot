@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+import atexit
+import os
+import readline
+import rlcompleter
+
+import ROOT
+import sys
+
+# Credit to effbot.org/librarybook/code.htm for loading variables into current namespace
+def keyboard(banner=None,namespace=None):
+    import code, sys
+
+    # use exception trick to pick up the current frame
+    try:
+        raise None
+    except:
+        frame = sys.exc_info()[2].tb_frame.f_back
+
+    if not namespace :
+        # evaluate commands in current namespace
+        namespace = frame.f_globals.copy()
+        namespace.update(frame.f_locals)
+
+    code.interact(banner=banner, local=namespace)
+
+
+
+if __name__ == '__main__':
+
+    ROOT.gROOT.LoadMacro('Extras.h')
+
+    #print globals()
+    #print dir(sys.modules[__name__])
+    #print getattr(ROOT,'b')
+
+    namespace = dict()
+    namespace['ROOT'] = ROOT
+    for i in ['b','TCanvas','TH1','TH1F'] :
+        namespace[i] = getattr(ROOT,i)
+
+    nfile = 0
+    for i in sys.argv :
+        # print i    
+        if 'pyroot' in i : continue
+
+        if i[-2:] == '.C' :
+            print 'Processing %s...'%(i)
+            ROOT.gROOT.ProcessLine('.x %s'%(i))
+
+        if i[-5:] == '.root' :
+            print 'Attaching file %s as _file%d...'%(i,nfile)
+            ROOT.gROOT.ProcessLine('TFile* _file%d = TFile::Open(\"%s\")'%(nfile,i))
+            namespace['_file%d'%(nfile)] = ROOT.gDirectory.Get('_file%d'%(nfile))
+            # exec('print _file%d'%(nfile))
+            nfile += 1
+
+    keyboard(namespace=namespace)
