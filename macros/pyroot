@@ -37,7 +37,14 @@ if __name__ == '__main__':
 
     namespace = dict()
     namespace['ROOT'] = ROOT
-    for i in ['b','TCanvas','TH1','TH1F'] :
+    #
+    # From Extras.h
+    for i in ['b','dump'] :
+        namespace[i] = getattr(ROOT,i)
+        
+    #
+    # Root 
+    for i in ['TCanvas','TH1','TH1F'] :
         namespace[i] = getattr(ROOT,i)
 
     nfile = 0
@@ -45,15 +52,46 @@ if __name__ == '__main__':
         # print i    
         if 'pyroot' in i : continue
 
+        # Execute .C files
         if i[-2:] == '.C' :
             print 'Processing %s...'%(i)
             ROOT.gROOT.ProcessLine('.x %s'%(i))
+            # add canvases
+            for j in list(ROOT.gROOT.GetListOfCanvases()) :
+                if j.GetName() in namespace.keys() :
+                    continue
+                namespace[j.GetName()] = j
+                # add hists from canvases
+                for k in list(j.GetListOfPrimitives()) :
+                    if k.GetName() in namespace.keys() :
+                        continue
+                    print k
+                    namespace[k.GetName()] = k
+                    # add hists from stacks
+                    if issubclass(type(k),ROOT.THStack) :
+                        for l in list(k.GetHists()) :
+                            if l.GetName() in namespace.keys() :
+                                continue
+                            print l
+                            namespace[l.GetName()] = l
 
+        # Load .root files
         if i[-5:] == '.root' :
             print 'Attaching file %s as _file%d...'%(i,nfile)
             ROOT.gROOT.ProcessLine('TFile* _file%d = TFile::Open(\"%s\")'%(nfile,i))
-            namespace['_file%d'%(nfile)] = ROOT.gDirectory.Get('_file%d'%(nfile))
-            # exec('print _file%d'%(nfile))
+            namespace['_file%d'%(nfile)] = ROOT.gROOT.GetFile(i)
+
+            print '_file%d:'%(nfile),namespace['_file%d'%(nfile)]
+            for j in namespace['_file%d'%(nfile)].GetListOfKeys() :
+                print j.ReadObj()
+                namespace[j.ReadObj().GetName()] = j.ReadObj()
             nfile += 1
+
+    # more useful things
+    import TAxisFunctions as taxisfunc
+    namespace['taxisfunc'] = taxisfunc
+    import PlotFunctions as plotfunc
+    plotfunc.SetupStyle()
+    namespace['plotfunc'] = plotfunc
 
     keyboard(namespace=namespace)
