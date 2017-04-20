@@ -59,10 +59,10 @@ TStyle* AtlasStyle()
   atlasStyle->SetLabelSize(tsize,"z");
   atlasStyle->SetTitleSize(tsize,"z");
 
-  // use bold lines and markers
-  atlasStyle->SetMarkerStyle(20);
-  atlasStyle->SetMarkerSize(1.2); // 1.2 // k
-  atlasStyle->SetHistLineWidth(2.);
+  // use bold lines and markers - these should be done inside the script itself.
+  //atlasStyle->SetMarkerStyle(20);
+  //atlasStyle->SetMarkerSize(1.2); // 1.2 // k
+  //atlasStyle->SetHistLineWidth(2.);
   atlasStyle->SetLineStyleString(2,"[12 12]"); // postscript dashes
 
   // get rid of X error bars 
