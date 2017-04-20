@@ -1,14 +1,17 @@
 ##
 ## Available functions:
 ##
-## AutoFixAxes(can)
-## FixYaxisRanges(can)
-## SetYaxisRanges(can,ymin,ymax)
-## GetYaxisRanges(can,check_all=False)
-## 
-## FixXaxisRanges(can)
-## SetXaxisRanges(can,xmin,xmax)
-## GetXaxisRanges(can,check_all=False)
+def help() :
+    print 'AutoFixAxes(can,symmetrize=False,ignorelegend=False)'
+    print 'AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False)'
+    print
+    print 'FixYaxisRanges(can)'
+    print 'SetYaxisRanges(can,ymin,ymax)'
+    print 'GetYaxisRanges(can,check_all=False)'
+    print
+    print 'FixXaxisRanges(can)'
+    print 'SetXaxisRanges(can,xmin,xmax)'
+    print 'GetXaxisRanges(can,check_all=False)'
 ## 
 ## Smaller, helpers:
 ##  NearestNiceNumber(miny,maxy)
