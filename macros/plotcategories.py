@@ -63,8 +63,11 @@ def main(options,args) :
             lo_bin = 0
             hi_bin = 10000 # just to be safe, 10k categories
 
-        # MERGE VH LEP CATEGORIES (23 and 24 --> 23):
-        if CouplingsHelpers.categories[c] == 'M17_VHlep_LOW' :
+        # MERGE VH DILEP CATEGORIES (23 and 24 --> 23):
+        if CouplingsHelpers.categories[c] == 'M17_VHdilep_LOW' :
+            hi_bin = hi_bin+1
+        # MERGE VH MET HIGH and BSM CATEGORIES (19 and 20 --> 19):
+        if CouplingsHelpers.categories[c] == 'M17_VHMET_HIGH' :
             hi_bin = hi_bin+1
 
 
