@@ -301,9 +301,20 @@ def CanvasEmpty(can) :
 ## The entry label is taken from the title of the TH1 or TGraph. *Be sure to set the title
 ## of your TH1 or TGraph *before* you add it to the canvas.*
 ## The x and y coordinates are the fractional distances, with the origin at the bottom left.
-##
-def MakeLegend(can,x1=.8,y1=.8,x2=.9,y2=.9,textsize=18,ncolumns=1,totalentries=0,option='f',skip=[]) :
+## 
+def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totalentries=3,option='f',skip=[]) :
     import ROOT
+
+    if x1 == None : x1 = 0.6
+    if x2 == None : x2 = 0.8
+
+    if can.GetPrimitive('pad_top') :
+        if y1 == None : y1 = 0.73
+        if y2 == None : y2 = 0.93
+    else :
+        if y1 == None : y1 = 0.78
+        if y2 == None : y2 = 0.94
+
     if can.GetPrimitive('pad_top') :
         MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,option,skip=skip)
         return
