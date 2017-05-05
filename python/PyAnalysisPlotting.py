@@ -243,6 +243,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
             bins = ''
         arg1,arg2,arg3 = '%s>>%s%s'%(variable,name,bins),weight,'egoff'
         #arg1,arg2,arg3 = '%s>>%s'%(variable,name),weight,'egoff'
+        ROOT.gEnv.SetValue('Hist.Binning.1D.x','100')
         print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
         tmp = ROOT.gErrorIgnoreLevel
         ROOT.gErrorIgnoreLevel = ROOT.kFatal
@@ -488,9 +489,10 @@ class TreePlottingOptParser :
 
         self.options.data = AddDotRoot(self.options.data)
 
-        if (not self.options.bkgs) and (not self.options.signal) and (not self.options.data) :
-            print 'No --bkgs, --signal, or --data specified. Exiting.'
-            sys.exit()
+        if self.p.has_option('--bkgs') :
+            if (not self.options.bkgs) and (not self.options.signal) and (not self.options.data) :
+                print 'No --bkgs, --signal, or --data specified. Exiting.'
+                sys.exit()
 
 
         self.options.xlabel = dict()
