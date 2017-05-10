@@ -156,7 +156,9 @@ void dump(const char* grep="",const char* name="CollectionTree") {
     TString asdf = i->GetName();
     if (!asdf(matchTo)) continue;
     dynamic_cast<TBranch*>(i)->GetExpectedType(cl,type);
-    std::cout << i->GetName() << " type: \"" << DataTypeToChar(type) << "\"" << std::endl;
+    std::cout << i->GetName() 
+              << " type: \"" << DataTypeToChar(type) << "\""
+              << " (" << ((TBranchElement*)i)->GetClassName() << ")" << std::endl;
   }
   return;
 }
