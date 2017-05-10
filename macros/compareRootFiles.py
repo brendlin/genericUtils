@@ -5,6 +5,7 @@ import PlotFunctions as plotfunc
 import TAxisFunctions as taxisfunc
 import PyAnalysisPlotting as anaplot
 import os,sys
+from inspect import currentframe
 
 ROOT.gROOT.SetBatch(True)
 plotfunc.SetupStyle()
@@ -32,11 +33,13 @@ def IterateAllTheThings(i,j,outdir,options):
     # TCanvas
     elif issubclass(type(i),ROOT.TCanvas) :
         newdir = '%s/%s'%(outdir,i.GetName())
+        print 'Making new directory %s (line %d)'%(newdir,currentframe().f_lineno)
         IterateAllTheThings(i.GetListOfPrimitives(),j.GetListOfPrimitives(),newdir,options)
         
     # TDirectoryFile
     elif issubclass(type(i),ROOT.TDirectoryFile) :
         newdir = '%s/%s'%(outdir,i.GetName())
+        print 'Making new directory %s (line %d)'%(newdir,currentframe().f_lineno)
         IterateAllTheThings(i.GetListOfKeys(),j.GetListOfKeys(),newdir,options)
 
     #TTree
@@ -44,7 +47,6 @@ def IterateAllTheThings(i,j,outdir,options):
 
         cans = []
         treename = i.GetName()
-        newdir = '%s/%s'%(outdir,i.GetName())
         
         # for compatibility with GetVariableHistsFromTrees
         i_keys = [options.label1]
@@ -107,14 +109,14 @@ def IterateAllTheThings(i,j,outdir,options):
             cans.append(anaplot.DrawHistos(v,options,mc_hists))
 
         anaplot.UpdateCanvases(options,cans)
-        if not os.path.exists(newdir) :
-            os.makedirs(newdir)
+        if not os.path.exists(outdir) :
+            os.makedirs(outdir)
         for c in cans :
-            c.Print('%s/%s.pdf'%(newdir,c.GetName()))
-            c.Print('%s/%s.C'%(newdir,c.GetName()))
+            c.Print('%s/%s.pdf'%(outdir,c.GetName()))
+            c.Print('%s/%s.C'%(outdir,c.GetName()))
         # anaplot.doSaving(options,cans)
 
-    #TList,THashList
+    #TList,THashList,ListOfKeys
     elif issubclass(type(i),ROOT.TList) :
 
         secondarray = list(jitem.GetName() for jitem in j)
@@ -125,21 +127,35 @@ def IterateAllTheThings(i,j,outdir,options):
                 continue
             jitem = j.At(secondarray.index(iitem.GetName()))
 
-            # TKey
-            if issubclass(type(iitem),ROOT.TKey) :
-                newdir = '%s/%s'%(outdir,iitem.GetName())
-                IterateAllTheThings(iitem.ReadObj(),jitem.ReadObj(),newdir,options)
+            is_tkey = False
+            is_th1_or_tgraph = False
+
+            if issubclass(type(iitem.ReadObj()),ROOT.TH1) :
+                #print '%s is a TH1!'%(iitem.GetName())
+                is_th1_or_tgraph = True
+            elif issubclass(type(iitem.ReadObj()),ROOT.TGraph) :
+                #print '%s is a TGraph!'%(iitem.GetName())
+                is_th1_or_tgraph = True
+            elif issubclass(type(iitem),ROOT.TKey) :
+                #print '%s is a TKey!'%(iitem.GetName())
+                is_tkey = True
 
             # TH1, TGraph
-            elif issubclass(type(iitem),ROOT.TH1) or issubclass(type(iitem),ROOT.TGraph) :
+            if is_th1_or_tgraph :
+                print 'Processing %s as a TH1 or TGraph.'%(iitem.GetName())
+                IterateAllTheThings(iitem.ReadObj(),jitem.ReadObj(),outdir,options)
+
+            # TKey (not sure why we have to find is_tkey earlier)
+            elif is_tkey :
                 newdir = '%s/%s'%(outdir,iitem.GetName())
-                IterateAllTheThings(iitem,jitem,newdir,options)
+                print 'Processing %s as a TKey. Making new directory %s (line %d)'%(iitem.GetName(),newdir,currentframe().f_lineno)
+                IterateAllTheThings(iitem.ReadObj(),jitem.ReadObj(),newdir,options)
 
             else :
-                print 'Within list: Type',type(iitem),'not supported yet. Let Kurt know! (Ref: 2)'
+                print 'Within list: %s type'%(iitem.GetName()),type(iitem),'not supported yet. Let Kurt know! (Ref: 2)'
 
     else :
-        print 'Type',type(i),'not supported yet. Let Kurt know! (Ref: 1)'
+        print '%s type'%(i.GetName()),type(i),'not supported yet. Let Kurt know! (Ref: 1)'
         return
 
 #-----------------------------------------------
