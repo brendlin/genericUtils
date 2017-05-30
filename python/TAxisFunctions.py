@@ -283,8 +283,8 @@ def SetXaxisRanges(can,xmin,xmax) :
     xaxis = 0
     for i in can.GetListOfPrimitives() :
         if issubclass(type(i),TGraph) :
-            xaxis = i.GetHistogram().GetXaxis()
-            xaxis.SetRangeUser(xmin,xmax)
+            xaxis = i.GetXaxis()
+            xaxis.SetLimits(xmin,xmax)
         if issubclass(type(i),TH1) :
             xaxis = i.GetXaxis()
             xaxis.SetRangeUser(xmin,xmax)
