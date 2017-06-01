@@ -139,6 +139,11 @@ cern () {
     # aklog
 }
 
+mycmake () {
+    export MYCMAKE_TMP=(${CMAKE_PREFIX_PATH//:/ })
+    export CMAKE_ATLAS=$MYCMAKE_TMP # not sure why this is necessary.
+}
+
 setupdq2() {
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalDQ2ClientSetup.sh --dq2ClientVersion ${dq2ClientVersionVal} --quiet
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalPandaClientSetup.sh --pandaClientVersion ${pandaClientVersionVal} currentJedi --noAthenaCheck
@@ -185,6 +190,8 @@ case $HOSTNAME in
     echo ATLAS is set up.
     source ${ATLAS_LOCAL_ROOT_BASE}/utilities/oldAliasSetup.sh root
     echo ROOT is set up.
+    lsetup git
+    echo Set up later version of git
     alias r=localSetupROOT
     #
     # this is for that crappy ansys thing.
@@ -220,6 +227,8 @@ case $HOSTNAME in
     # set up BIRD system
     echo 'setting up bird (SGE)'
     source /usr/sge/default/common/settings.sh
+    lsetup git
+    echo Set up later version of git
     export mxaod=$mydir/mxaod
     export workflow="$mydir/dsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
     ;;
