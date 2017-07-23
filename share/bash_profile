@@ -149,6 +149,10 @@ setupdq2() {
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalPandaClientSetup.sh --pandaClientVersion ${pandaClientVersionVal} currentJedi --noAthenaCheck
 }
 
+# For notifications on iterm2
+source ~/.iterm2_shell_integration.`basename $SHELL`
+#test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+
 ##
 ## BASIC LOGIN
 ##
@@ -238,9 +242,7 @@ case $HOSTNAME in
     #(Macintosh.local | macintosh.* | pb-d-*)
     (*) # everything else (local machine, etc)
     #source /Developer/CMT/v1r20p20090520/mgr/setup.sh
-    cd ~/root
-    . bin/thisroot.sh;
-    cd -;
+    source ~/rootbuild/bin/thisroot.sh
     echo Setting up ROOT branch v5-34-25... done.
     # add boost libraries to library paths
     # not needed so far # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/Users/brendlin/boost_1_61_0/stage/lib
@@ -287,8 +289,8 @@ case $HOSTNAME in
     alias 'dnaf=caffeinate -i ssh -Y brendlik@nafhh-atlas01.desy.de'
     alias 'dnafrand=caffeinate -i ssh -Y brendlik@naf-atlas.desy.de'
     alias 'cdpenn=cd Documents/PennHighEnergy/'
-    alias 'whoareyou=echo No more questions.'
     alias 'usa=ssh -D 8080 kurb@at3i00.hep.upenn.edu'
+    alias 'usa1=ssh -L8080:localhost:2020 kurb@at3i00.hep.upenn.edu'
     alias 'usa_heph=ssh -D 8080 kurb@hephaestus.hep.upenn.edu'
     alias 'usatwo=ssh -D 8080 kurb@nereus.hep.upenn.edu'
     alias 'taneycat=caffeinate -i ssh -Y taneycat@69.242.1.96'
