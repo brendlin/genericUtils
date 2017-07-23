@@ -144,6 +144,31 @@ mycmake () {
     export CMAKE_ATLAS=$MYCMAKE_TMP # not sure why this is necessary.
 }
 
+mymake () {
+    cd $TestArea/../build
+    cmake ../source
+}
+
+mybuild () {
+    cd $TestArea/../build
+    cmake --build .
+    if [[ -z "$WorkDir_SET_UP" ]] ; then 
+        echo source $TestArea/../build/$CMTCONFIG/setup.sh
+        source $TestArea/../build/$CMTCONFIG/setup.sh
+    fi
+}
+
+cm_version () {
+    export MYCMAKE_TMP=(${CMAKE_PREFIX_PATH//:/ })
+    export CMAKE_ATLAS=$MYCMAKE_TMP # not sure why this is necessary.
+    for i in $(find $CMAKE_ATLAS/src -name "$1") ; do 
+        if [ -a $i/cmt/version.cmt ]
+        then
+            cat $i/cmt/version.cmt
+        fi
+    done
+}
+
 setupdq2() {
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalDQ2ClientSetup.sh --dq2ClientVersion ${dq2ClientVersionVal} --quiet
     source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalPandaClientSetup.sh --pandaClientVersion ${pandaClientVersionVal} currentJedi --noAthenaCheck
