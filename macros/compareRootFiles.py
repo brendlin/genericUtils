@@ -15,12 +15,14 @@ def IterateAllTheThings(i,j,outdir,options):
 
     #if type(i) in unsupported_types : return
 
-    #TH1 Types
-    if issubclass(type(i),ROOT.TH1) :
-        #OverlayPlots(outdir,'',i.GetName(),[i,j])
+    # TH1, TGraph Types
+    if issubclass(type(i),ROOT.TH1) or issubclass(type(i),ROOT.TGraph) :
         c = plotfunc.RatioCanvas(i.GetName(),i.GetName(),600,500)
+        i.SetTitle(options.label1)
+        j.SetTitle(options.label2)
         plotfunc.AddHistogram(c,i)
         plotfunc.AddRatio(c,j,i)
+        plotfunc.SetAxisLabels(c,j.GetXaxis().GetTitle(),j.GetYaxis().GetTitle())
         plotfunc.FormatCanvasAxes(c)
         plotfunc.SetColors(c)
         plotfunc.MakeLegend(c)
