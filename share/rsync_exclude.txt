@@ -3,3 +3,16 @@ fit-logy.pdf
 *winMax*
 *_nSignal*
 Points
+
+fetch
+input
+submit
+submitted
+location
+hist
+data-MxAOD
+output-MxAOD
+run
+driver.root
+hist-*.root
+
