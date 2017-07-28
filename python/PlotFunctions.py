@@ -44,19 +44,23 @@ tobject_collector = []
 ##
 ## FullFormatCanvasDefault is a collection of functions for easy "1-step" plotting.
 ##
-def FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',preliminary=False) :
+def FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',status='Internal') :
     FormatCanvasAxes(can)
     SetColors(can)
     text_lines = []
-    if sqrts : text_lines += [GetSqrtsText(sqrts)]
-    if lumi : text_lines += [GetLuminosityText(lumi)]
     text_lines += [GetAtlasInternalText()]
+    if sqrts and lumi :
+        text_lines += [GetSqrtsText(sqrts)+', '+GetLuminosityText(lumi)]
+    elif sqrts :
+        text_lines += [GetSqrtsText(sqrts)]
+    elif lumi :
+        text_lines += [GetLuminosityText(lumi)]
     if additionaltext : text_lines += [additionaltext]
     if can.GetPrimitive('pad_top') :
         DrawText(can,text_lines,.2,.73,.5,.93,totalentries=3)
         MakeLegend(can,.6,.73,.8,.93,totalentries=3)
     else :
-        DrawText(can,text_lines,.2,.78,.5,.94,totalentries=3)
+        DrawText(can,text_lines,0.20,0.78,0.5,0.92,totalentries=3)
         MakeLegend(can,.6,.78,.8,.94,totalentries=3)
     AutoFixAxes(can)
     return
@@ -276,7 +280,7 @@ def DrawText(can,text='text',x1=None,y1=None,x2=None,y2=None,angle=0,align='',te
     from ROOT import TLegend
     leg = TLegend(x1,y1,x2,y2)
     leg.SetMargin(0)
-    leg.SetName('text')
+    leg.SetName(can.GetName()+'_text')
     tobject_collector.append(leg)
     leg.SetTextSize(textsize)
     leg.SetTextFont(43)
@@ -372,7 +376,6 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         if i.GetTitle() in skip :
             continue
 
-        print i.GetName()
         drawopt = i.GetDrawOption()
         if not drawopt : drawopt = 'f'
         if option[total] == None :
@@ -403,7 +406,7 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         can.GetPrimitive('pad_top').cd()
     leg.Draw()
     can.Modified()
-    #can.Update()
+    can.Update()
     return
 
 ##

@@ -186,7 +186,7 @@ def SetYaxisRanges(can,ymin,ymax) :
     
     yaxis.SetRangeUser(ymin,ymax)
     can.Modified()
-    #can.Update()
+    can.Update()
     return
 
 def SetNdivisions(can,a,b,c) :
@@ -194,7 +194,7 @@ def SetNdivisions(can,a,b,c) :
         if hasattr(i,'GetXaxis') :
             i.GetXaxis().SetNdivisions(a,b,c)
     can.Modified()
-    #can.Update()
+    can.Update()
     return
     
 
@@ -297,7 +297,7 @@ def SetXaxisRanges(can,xmin,xmax) :
         return
 
     can.Modified()
-    #can.Update()
+    can.Update()
     return
 
 ##
