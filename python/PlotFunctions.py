@@ -258,7 +258,18 @@ def GetAtlasInternalText(status='Internal') :
 ## The x and y coordinates are the fractional distances, with the origin at the bottom left.
 ## Specify multi-lines by specifing a list ['line1','line2','line3'] instead of a string 'single line'.
 ##
-def DrawText(can,text='text',x1=.2,y1=.84,x2=.5,y2=.9,angle=0,align='',textsize=18,totalentries=0) :
+def DrawText(can,text='text',x1=None,y1=None,x2=None,y2=None,angle=0,align='',textsize=18,totalentries=1) :
+
+    if x1 == None : x1 = 0.2
+    if x2 == None : x2 = 0.5
+
+    if can.GetPrimitive('pad_top') :
+        if y1 == None : y1 = 0.73
+        if y2 == None : y2 = 0.93
+    else :
+        if y1 == None : y1 = 0.78
+        if y2 == None : y2 = 0.94
+
     can.cd()
     if can.GetPrimitive('pad_top') :
         can.GetPrimitive('pad_top').cd()
@@ -302,7 +313,7 @@ def CanvasEmpty(can) :
 ## of your TH1 or TGraph *before* you add it to the canvas.*
 ## The x and y coordinates are the fractional distances, with the origin at the bottom left.
 ## 
-def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totalentries=3,option='f',skip=[]) :
+def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totalentries=3,option=None,skip=[]) :
     import ROOT
 
     if x1 == None : x1 = 0.6
@@ -347,17 +358,28 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
 
     if type(option) == type('') :
         option = [option]*100
+    if option == None :
+        option = [None]*100
 
     total = 0
     for i in the_primitives :
-        if 'stack' in i.GetTitle() : continue
-        if 'remove' in i.GetTitle() : continue
+        if 'stack' in i.GetTitle() :
+            continue
+        if 'remove' in i.GetTitle() :
+            continue
+        if (not issubclass(type(i),ROOT.TH1)) and (not issubclass(type(i),ROOT.TGraph)) and (not issubclass(type(i),ROOT.TF1)) :
+            continue
+        if i.GetTitle() in skip :
+            continue
+
+        print i.GetName()
         drawopt = i.GetDrawOption()
-        if issubclass(type(i),ROOT.TH1) or issubclass(type(i),ROOT.TGraph) or issubclass(type(i),ROOT.TF1):
-            if i.GetTitle() in skip :
-                continue
-            leg.AddEntry(i,'^{ }'+i.GetTitle(),option[total]) # plef
-            total += 1
+        if not drawopt : drawopt = 'f'
+        if option[total] == None :
+            option[total] = drawopt
+        #print '%s: drawopt \"%s\"'%(i.GetName(),drawopt)
+        leg.AddEntry(i,'^{ }'+i.GetTitle(),option[total]) # plef
+        total += 1
 
     #
     # Add empty entries to ensure a standard layout
@@ -643,25 +665,32 @@ def AddHistogramBot(can,hist,drawopt='pE1') :
 ## by the "divide" option ("B" for binomial, "" for uncorrelated histograms)
 ##
 def AddRatio(can,hist,ref_hist,divide='') :
-    from ROOT import TH1
+    import ROOT
     import math
-    TH1.SetDefaultSumw2(True)
+    ROOT.TH1.SetDefaultSumw2(True)
     ratioplot = hist.Clone()
     ratioplot.SetName(hist.GetName()+'_ratio')
-    if divide == 'pull' :
-        ratioplot.GetYaxis().SetTitle('pull')
-        for i in range(ratioplot.GetNbinsX()+2) :
-            bc1 = hist.GetBinContent(i)
-            bc2 = ref_hist.GetBinContent(i)
-            be1 = hist    .GetBinErrorLow(i) if (bc1 > bc2) else hist    .GetBinErrorUp(i)
-            be2 = ref_hist.GetBinErrorLow(i) if (bc2 > bc1) else ref_hist.GetBinErrorUp(i)
-            
-            if (be1**2 + be2**2) :
-                ratioplot.SetBinContent(i,(bc1-bc2)/math.sqrt(be1**2+be2**2))
-            ratioplot.SetBinError(i,1)
-    else :
+    if issubclass(type(hist),ROOT.TGraph) :
         ratioplot.GetYaxis().SetTitle('ratio')
-        ratioplot.Divide(hist,ref_hist,1.,1.,divide)
+        for i in range(ratioplot.GetN()) :
+            if ref_hist.GetY()[i] == 0 : continue
+            ratioplot.SetPoint(i,hist.GetX()[i],hist.GetY()[i]/float(ref_hist.GetY()[i]))
+    else :
+        if divide == 'pull' :
+            ratioplot.GetYaxis().SetTitle('pull')
+            for i in range(ratioplot.GetNbinsX()+2) :
+                bc1 = hist.GetBinContent(i)
+                bc2 = ref_hist.GetBinContent(i)
+                be1 = hist    .GetBinErrorLow(i) if (bc1 > bc2) else hist    .GetBinErrorUp(i)
+                be2 = ref_hist.GetBinErrorLow(i) if (bc2 > bc1) else ref_hist.GetBinErrorUp(i)
+
+                if (be1**2 + be2**2) :
+                    ratioplot.SetBinContent(i,(bc1-bc2)/math.sqrt(be1**2+be2**2))
+                ratioplot.SetBinError(i,1)
+        else :
+            ratioplot.GetYaxis().SetTitle('ratio')
+            ratioplot.Divide(hist,ref_hist,1.,1.,divide)
+
     return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist)
     return_ratio = AddHistogram(can.GetPrimitive('pad_bot'),ratioplot)
     return return_hist, return_ratio
