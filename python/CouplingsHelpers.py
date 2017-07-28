@@ -36,16 +36,19 @@ categories = [
     'M17_tH_lep_0fwd',       # 33
     ]
 
-def weightscale_h015(tfile) :
+def weightscale_h015(tfile,is_h015d=False) :
     import re
 
     def weightscale_onefile(t_file) :
         fix_2DP20 = 1.
+        print 'Processing %s'%(t_file.GetName())
 
         for i in t_file.GetListOfKeys() :
             name = i.GetName()
 
             fix_re = '.*Sherpa_2DP20_myy_80_90_3jets_weighted'
+            if is_h015d :
+                fix_re = 'Nothing_To_Fix'
             if re.match(fix_re,name) and not re.match('CutFlow_.*_noDalitz_weighted',name):
                 print name,'-- applying fix.'
                 # see https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/MxAODs
@@ -88,6 +91,9 @@ def weightscale_h015(tfile) :
     # add 1000. for matching our fb lumi to the MxAOD cross section.
     #print 1000. * DxAOD / float( xAOD * Ntuple_DxAOD )
     return 1000. * DxAOD / float( xAOD * Ntuple_DxAOD )
+
+def weightscale_h015_d(tfile) :
+    return weightscale_h015(tfile,is_h015d=True)
 
 stxs_bins = {
     'GG2H_FWDH'             : 100,

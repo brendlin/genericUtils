@@ -9,6 +9,8 @@
 #include <sstream>
 #include "TBrowser.h"
 #include "TTree.h"
+#include "TChain.h"
+#include "TFile.h"
 #include "TDirectory.h"
 
 #include "TPRegexp.h"
@@ -281,6 +283,8 @@ void makePicoXaod_Categories(TChain* oldchain,const char* name,const char* cuts,
     trees[0]->Fill();
     for (unsigned int i=0;i<trees.size();++i) {
       if (catCoup_Moriond2017BDT == i) trees[i]->Fill();
+      if (i == 19 && catCoup_Moriond2017BDT == 20) trees[i]->Fill(); // merge VHMET_BSM --> HIGH
+      if (i == 23 && catCoup_Moriond2017BDT == 24) trees[i]->Fill(); // merge VHdilep_HIGH --> LOW
     }
   }
 
