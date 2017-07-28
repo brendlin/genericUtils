@@ -52,7 +52,7 @@ def main(options,args) :
 
         cans.append(anaplot.DrawHistos(v,options,bkg_hists,sig_hists,data_hist))
 
-    anaplot.UpdateCanvases(options,cans)
+    anaplot.UpdateCanvases(cans,options)
 
     if not options.batch :
         raw_input('Press enter to exit')

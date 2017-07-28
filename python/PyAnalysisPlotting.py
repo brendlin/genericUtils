@@ -390,10 +390,7 @@ class TreePlottingOptParser :
 
         self.options,self.args = self.p.parse_args()
 
-        if self.options.batch :
-            ROOT.gROOT.SetBatch(True)
-        else :
-            ROOT.gROOT.SetBatch(False)
+        ROOT.gROOT.SetBatch(self.options.batch)
 
         self.options.stack = not self.options.nostack
 
@@ -547,6 +544,7 @@ def doSaving(options,cans) :
                 open(name, 'a').close()
                 can.Print(name)
                 can.Print(name.replace('.pdf','.C'))
+                can.Print(name.replace('.pdf','.eps'))
                 #can.Print(name.replace('.pdf','.root'))
                 # some weird quirk in can.Print(blah.C) requires us to remove "__1" suffixes
                 sed_mac_quirk = ''
@@ -565,8 +563,8 @@ def doSaving(options,cans) :
 #
 # Update plots (argument is a list of canvases)
 #
-def UpdateCanvases(options,cans) :
-    if not options.batch :
+def UpdateCanvases(cans,options=None) :
+    if (not options) or (not options.batch) :
         for can in cans :
             can.Update()
             if can.GetPrimitive('pad_bot') :
@@ -616,7 +614,7 @@ def MergeSamples(hists,options) :
     return hists_new,keys_new
 
 #-------------------------------------------------------------------------
-def RebinSmoothlyFallingFunction(hist) :
+def RebinSmoothlyFallingFunction(hist,error=0.10) :
     #
     # This function defines a new binning such that the error is not more than 10% in any bin.
     #
@@ -630,7 +628,7 @@ def RebinSmoothlyFallingFunction(hist) :
         weight += hist.GetBinContent(binj)
         #print weight
         err2 += hist.GetBinError(binj)**2
-        if weight > 0 and math.sqrt(err2)/weight < 0.10 :
+        if weight > 0 and math.sqrt(err2)/weight < error :
             'error is',math.sqrt(err2)/weight
             therange.append(hist.GetBinLowEdge(binj+1))
             weight = 0
