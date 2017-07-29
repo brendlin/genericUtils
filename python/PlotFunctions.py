@@ -101,7 +101,7 @@ def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
         tmp.SetDirectory(0)
 
     if (not is_graph) and (True in plot_exists) :
-        drawopt += 'sames'
+        drawopt += 'same'
     if is_graph and not (True in plot_exists) :
         drawopt += 'a'
 
@@ -376,11 +376,11 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         if i.GetTitle() in skip :
             continue
 
-        drawopt = i.GetDrawOption()
+        drawopt = i.GetDrawOption().replace('same','')
         if not drawopt : drawopt = 'f'
         if option[total] == None :
             option[total] = drawopt
-        #print '%s: drawopt \"%s\"'%(i.GetName(),drawopt)
+        # print '%s: drawopt \"%s\"'%(i.GetName(),drawopt)
         leg.AddEntry(i,'^{ }'+i.GetTitle(),option[total]) # plef
         total += 1
 

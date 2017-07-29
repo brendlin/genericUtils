@@ -17,10 +17,13 @@ def main() :
 
     a = ROOT.TH1F('a','Legend text for a',48,-6,6)
     b = ROOT.TH1F('b','Legend text for b',48,-6,6)
+
     d = ROOT.TGraph(8,array('d',[-5.5,-4.5,-3.5,-2.5,-2.0,0,3.5,4.5])
                     ,array('d',[1000,2000,3000,2500,1000,2000,2200,2400,2500,2600]))
     d.SetNameTitle('mygraph','Legend text for graph')
     d.SetLineWidth(2)
+
+    e = ROOT.TF1('e','12*sin(x*3)+20',-5,5)
 
     for i in [a,b] :
         i.Sumw2()
@@ -37,7 +40,7 @@ def main() :
     mycanvas = ROOT.TCanvas('mycanvas','blah',600,500)
     plotfunc.AddHistogram(mycanvas,a)
     plotfunc.AddHistogram(mycanvas,b)
-    plotfunc.AddHistogram(mycanvas,d,drawopt='l')
+    plotfunc.AddHistogram(mycanvas,e,drawopt='l')
 
     plotfunc.SetAxisLabels(mycanvas,'x axis','y axis')
     mycanvas.SetLogy()
@@ -60,9 +63,9 @@ def main() :
     # A ratio canvas from functions
     #
     mycanvas_ratio = plotfunc.RatioCanvas('my_ratiocanvas','blah',600,500)
-    plotfunc.AddHistogram(mycanvas_ratio,d,drawopt='pl')
     plotfunc.AddHistogram(mycanvas_ratio,a)
     plotfunc.AddRatio(mycanvas_ratio,b,a)
+    plotfunc.AddHistogram(mycanvas_ratio,d,drawopt='pl')
     plotfunc.SetAxisLabels(mycanvas_ratio,'x axis','y axis')
 
     plotfunc.FullFormatCanvasDefault(mycanvas_ratio)
