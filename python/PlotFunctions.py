@@ -46,7 +46,9 @@ tobject_collector = []
 ##
 def FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',status='Internal') :
     FormatCanvasAxes(can)
-    SetColors(can)
+    if not can.GetPrimitive('stack') :
+        SetColors(can)
+
     text_lines = []
     text_lines += [GetAtlasInternalText()]
     if sqrts and lumi :
@@ -55,7 +57,9 @@ def FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',status='Int
         text_lines += [GetSqrtsText(sqrts)]
     elif lumi :
         text_lines += [GetLuminosityText(lumi)]
-    if additionaltext : text_lines += [additionaltext]
+    if additionaltext :
+        text_lines += [additionaltext]
+
     if can.GetPrimitive('pad_top') :
         DrawText(can,text_lines,.2,.73,.5,.93,totalentries=3)
         MakeLegend(can,.6,.73,.8,.93,totalentries=3)
@@ -196,16 +200,18 @@ def KurtColorPalate() :
 ## ratio histograms the same color.
 ##
 def SetColors(can,these_colors=[],fill=False,line=False) :
+
+    if can.GetPrimitive('stack') :
+        print 'WARNING in PlotFunctions SetColors: canvas has a THStack, but colors must be set'
+        print '  before adding to the THStack. Please call SetColors() before calling Stack(). Doing nothing.'
+        return
+
     if not these_colors :
         these_colors = KurtColorPalate()
         
-    the_primitives = can.GetListOfPrimitives()
+    the_primitives = list(can.GetListOfPrimitives())
     if can.GetPrimitive('pad_top') :
-        the_primitives = can.GetPrimitive('pad_top').GetListOfPrimitives()
-
-    if can.GetPrimitive('stack') :
-        the_stack = list(reversed(list(can.GetPrimitive('stack').GetHists())))
-        the_primitives = the_stack+list(the_primitives)
+        the_primitives = list(can.GetPrimitive('pad_top').GetListOfPrimitives())
 
     color_count = 0
     for i in the_primitives :
@@ -228,13 +234,13 @@ def SetColors(can,these_colors=[],fill=False,line=False) :
                     j.SetMarkerColor(these_colors[color_count])
                     j.SetFillColor(0)
                     can.GetPrimitive('pad_bot').Modified()
-                    #can.GetPrimitive('pad_bot').Update()
+                    can.GetPrimitive('pad_bot').Update()
             color_count += 1
         if color_count >= len(these_colors) :
             break
 
     can.Modified()
-    #can.Update()
+    can.Update()
     return
 
 
@@ -357,8 +363,13 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
     if can.GetPrimitive('pad_top') :
         the_primitives = can.GetPrimitive('pad_top').GetListOfPrimitives()
     if can.GetPrimitive('stack') :
-        the_stack = list(reversed(list(can.GetPrimitive('stack').GetHists())))
+        the_stack = list(can.GetPrimitive('stack').GetHists())
         the_primitives = the_stack+list(the_primitives)
+
+    print 'MakeLegend the_primitives:',the_primitives
+
+    for i in the_primitives :
+        print i,i.GetName(),i.GetTitle()
 
     if type(option) == type('') :
         option = [option]*100
@@ -707,7 +718,7 @@ def AddRatioManual(can,hist,ratioplot,drawopt1='pE1',drawopt2='pE1') :
 ##
 ## Stack plot functionality
 ##
-def Stack(can,reverse=False,title='') :
+def Stack(can,reverse=False) :
     if can.GetPrimitive('pad_top') :
         return Stack(can.GetPrimitive('pad_top'),reverse=reverse)
     
@@ -727,6 +738,7 @@ def Stack(can,reverse=False,title='') :
             if not binlabels and i.GetXaxis().GetBinLabel(1) :
                 for j in range(i.GetNbinsX()) :
                     binlabels.append(i.GetXaxis().GetBinLabel(j+1))
+    # The original objects are cleared from the histogram:
     can.Clear()
     tobject_collector.append(stack)
     can.cd()
@@ -736,7 +748,7 @@ def Stack(can,reverse=False,title='') :
     if binlabels :
         for i in range(stack.GetXaxis().GetNbins()) :
             stack.GetXaxis().SetBinLabel(i+1,binlabels[i])
-    can.Modified()
-    #can.Update()
     can.RedrawAxis()
+    can.Modified()
+    can.Update()
     return

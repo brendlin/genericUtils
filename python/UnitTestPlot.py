@@ -33,6 +33,8 @@ def main() :
     for i in range(100000) :
         a.Fill(rand.Gaus(0,1))
         b.Fill(rand.Gaus(0,1))
+    a.Fill(2,2000)
+
 
     #
     # The class-based way of making plots
@@ -72,6 +74,19 @@ def main() :
     taxisfunc.SetYaxisRanges(mycanvas_ratio.GetPrimitive('pad_bot'),0,2)
     # mycanvas_ratio.Print(plot_functions_can.GetName()+'.pdf')
     
+
+
+    #
+    # Stack Histogram
+    #
+    mycanvas_stack = ROOT.TCanvas('my_stackcanvas','blah',600,500)
+    plotfunc.AddHistogram(mycanvas_stack,a)
+    plotfunc.AddHistogram(mycanvas_stack,b)
+    plotfunc.SetColors(mycanvas_stack,[ROOT.kGreen+1,ROOT.kAzure+2],fill=True)
+    plotfunc.Stack(mycanvas_stack)
+    plotfunc.SetAxisLabels(mycanvas_stack,'x axis','y axis')
+    plotfunc.FullFormatCanvasDefault(mycanvas_stack)
+
 
 
     #
