@@ -631,7 +631,7 @@ def SetLeftMargin(can,margin) :
         SetLeftMargin(can.GetPrimitive('pad_bot'),margin)
     can.SetLeftMargin(margin)
     can.Modified()
-    #can.Update()
+    can.Update()
     return
 
 ##
@@ -644,7 +644,7 @@ def SetRightMargin(can,margin) :
         SetRightMargin(can.GetPrimitive('pad_bot'),margin)
     can.SetRightMargin(margin)
     can.Modified()
-    #can.Update()
+    can.Update()
     return
 
 ##
