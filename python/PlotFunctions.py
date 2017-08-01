@@ -50,7 +50,7 @@ def FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',status='Int
         SetColors(can)
 
     text_lines = []
-    text_lines += [GetAtlasInternalText()]
+    text_lines += [GetAtlasInternalText(status)]
     if sqrts and lumi :
         text_lines += [GetSqrtsText(sqrts)+', '+GetLuminosityText(lumi)]
     elif sqrts :
