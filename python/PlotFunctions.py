@@ -50,7 +50,7 @@ def FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',status='Int
         SetColors(can)
 
     text_lines = []
-    text_lines += [GetAtlasInternalText()]
+    text_lines += [GetAtlasInternalText(status)]
     if sqrts and lumi :
         text_lines += [GetSqrtsText(sqrts)+', '+GetLuminosityText(lumi)]
     elif sqrts :
@@ -631,7 +631,7 @@ def SetLeftMargin(can,margin) :
         SetLeftMargin(can.GetPrimitive('pad_bot'),margin)
     can.SetLeftMargin(margin)
     can.Modified()
-    #can.Update()
+    can.Update()
     return
 
 ##
@@ -644,7 +644,7 @@ def SetRightMargin(can,margin) :
         SetRightMargin(can.GetPrimitive('pad_bot'),margin)
     can.SetRightMargin(margin)
     can.Modified()
-    #can.Update()
+    can.Update()
     return
 
 ##
