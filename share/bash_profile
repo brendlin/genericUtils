@@ -142,6 +142,11 @@ cern () {
 mycmake () {
     export MYCMAKE_TMP=(${CMAKE_PREFIX_PATH//:/ })
     export CMAKE_ATLAS=$MYCMAKE_TMP # not sure why this is necessary.
+    if [ -a $TestArea/../build/$AnalysisBase_PLATFORM/setup.sh ]
+    then
+        echo source $TestArea/../build/$AnalysisBase_PLATFORM/setup.sh
+        source $TestArea/../build/$AnalysisBase_PLATFORM/setup.sh
+    fi
 }
 
 mymake () {
@@ -153,8 +158,8 @@ mybuild () {
     cd $TestArea/../build
     cmake --build .
     if [[ -z "$WorkDir_SET_UP" ]] ; then 
-        echo source $TestArea/../build/$CMTCONFIG/setup.sh
-        source $TestArea/../build/$CMTCONFIG/setup.sh
+        echo source $TestArea/../build/$AnalysisBase_PLATFORM/setup.sh
+        source $TestArea/../build/$AnalysisBase_PLATFORM/setup.sh
     fi
 }
 
@@ -353,4 +358,17 @@ rcSetupLocal() {
     source ~/ATLAS/sw/rcSetup/AnalysisBase/2.4.15/RootCore/scripts/setup.sh
     export PATH=$PATH:$ROOTCOREDIR/../pennSoftLepton/macros
     export me=$ROOTCOREDIR/../.
+}
+
+ruciohelp() {
+    echo 'rucio list-datasets-rse DESY-HH_LOCALGROUPDISK | grep brendlin'
+    echo 'rucio list-dids mc15_13TeV:*'
+    echo 'rucio list-files data16_13TeV:data16_13TeV.00304008.physics_Main.merge.DAOD_HIGG1D2.r9264_p3083_p3101'
+    echo 'rucio list-parent-dids data16_13TeV:DAOD_HIGG1D2.11092993._000001.pool.root.1'
+    echo 'rucio download data16_13TeV:DAOD_HIGG1D2.11092993._000001.pool.root.1'
+    echo "rucio list-rules --account brendlin | grep DESY-HH_LOCALGROUPDISK | cut -d' ' -f6- | sort"
+    echo 'rucio add-rule data16_13TeV:data16_13TeV.00297730.physics_Main.merge.DAOD_HIGG1D1.r9264_p3083_p3101 1 DESY-HH_LOCALGROUPDISK'
+    echo 'rucio delete-rule --rse_expression PRAGUELCG2_LOCALGROUPDISK user.tkouba:user.tkouba.prun_test2.130307124138'
+    #echo 'rucio list-file-replicas data16_13TeV:data16_13TeV.00297730.physics_Main.merge.DAOD_HIGG1D1.r9264_p3083_p3101 | grep DESY-HH_LOCALGROUPDISK'
+    echo "rucio list-file-replicas data16_13TeV:data16_13TeV.00297730.physics_Main.merge.DAOD_HIGG1D1.r9264_p3083_p3101 | grep DESY-HH_LOCALGROUPDISK | sort | cut -d'|' -f4,6 | sed 's/[ \t]*$//'"
 }
