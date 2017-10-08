@@ -1,0 +1,22 @@
+
+
+"------------------------------------------------------------
+" Indentation options {{{1"
+" Indentation settings according to personal preference.
+
+" ATLAS defaults seem to be:
+"  - 4-space indents for python files (very important)
+"  - 2-space indents for all other filetypes
+"  - Spaces instead of tabs (but ok to preserve the spaces that others accidentally put in)
+
+" Indentation settings for using 4 spaces instead of tabs.
+" Do not change 'tabstop' from its default value of 8 with this setup.
+set shiftwidth=2
+set softtabstop=2
+set expandtab
+
+" For python files, use tabstop of 4
+autocmd BufEnter *.py setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
+
+" This one does not work, so it is commented out:
+" autocmd Filetype python setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
