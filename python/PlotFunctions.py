@@ -366,11 +366,6 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         the_stack = list(can.GetPrimitive('stack').GetHists())
         the_primitives = the_stack+list(the_primitives)
 
-    print 'MakeLegend the_primitives:',the_primitives
-
-    for i in the_primitives :
-        print i,i.GetName(),i.GetTitle()
-
     if type(option) == type('') :
         option = [option]*100
     if option == None :

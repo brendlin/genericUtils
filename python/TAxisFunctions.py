@@ -16,6 +16,8 @@ def help() :
 ## Smaller, helpers:
 ##  NearestNiceNumber(miny,maxy)
 ##  MinimumForLog(can)
+##  SetNdivisions(can,a,b,c)
+##  SetYaxisNdivisions(can,a,b,c)
 ##  
 
 ##
@@ -196,7 +198,14 @@ def SetNdivisions(can,a,b,c) :
     can.Modified()
     can.Update()
     return
-    
+
+def SetYaxisNdivisions(can,a,b,c) :
+    for i in can.GetListOfPrimitives() :
+        if hasattr(i,'GetYaxis') :
+            i.GetYaxis().SetNdivisions(a,b,c)
+    can.Modified()
+    can.Update()
+    return
 
 ##
 ## Returns the y-range of the first plotted histogram.
