@@ -638,6 +638,7 @@ def SetRightMargin(can,margin) :
     if can.GetPrimitive('pad_bot') :
         SetRightMargin(can.GetPrimitive('pad_bot'),margin)
     can.SetRightMargin(margin)
+    can.RedrawAxis()
     can.Modified()
     can.Update()
     return
@@ -746,4 +747,41 @@ def Stack(can,reverse=False) :
     can.RedrawAxis()
     can.Modified()
     can.Update()
+    return
+
+def ColorGradient(i,ntotal) :
+    import ROOT
+    if ntotal == 1 :
+        return ROOT.kBlack
+
+    NCont = 255
+    ROOT.gStyle.SetNumberContours(NCont)
+    the_int = int((NCont-1)*i/float(ntotal-1))
+    return ROOT.gStyle.GetColorPalette(the_int)
+
+def SetColorGradient(name='MyThermometer') :
+
+    import ROOT
+    from array import array
+    NCont = 255
+    ROOT.gStyle.SetNumberContours(255)
+
+    if name == 'MyThermometer' :
+        # Blue -> Red (but it doesn't go through white)
+        NRGBs = 2
+        stops = array('d',[ 0.00,1.00 ])
+        red   = array('d',[ 0.10,0.90 ])
+        green = array('d',[ 0.10,0.10 ])
+        blue  = array('d',[ 1.00,0.10 ])
+        ROOT.TColor.CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont)
+
+    if name == 'HiggsBlue' :
+        # Higgs white -> Blue
+        NRGBs = 2
+        stops = array('d',[ 0.00,1.00 ])
+        red   = array('d',[ 1.00,0.50 ])
+        green = array('d',[ 1.00,0.50 ])
+        blue  = array('d',[ 1.00,1.00 ])
+        ROOT.TColor.CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont)
+
     return
