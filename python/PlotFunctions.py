@@ -674,7 +674,7 @@ def AddHistogramBot(can,hist,drawopt='pE1') :
 ## histogram ref_hist) to the bottom pad of the RatioCanvas. Specify the division type
 ## by the "divide" option ("B" for binomial, "" for uncorrelated histograms)
 ##
-def AddRatio(can,hist,ref_hist,divide='') :
+def AddRatio(can,hist,ref_hist,divide='',drawopt='pE1') :
     import ROOT
     import math
     ROOT.TH1.SetDefaultSumw2(True)
@@ -701,8 +701,8 @@ def AddRatio(can,hist,ref_hist,divide='') :
             ratioplot.GetYaxis().SetTitle('ratio')
             ratioplot.Divide(hist,ref_hist,1.,1.,divide)
 
-    return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist)
-    return_ratio = AddHistogram(can.GetPrimitive('pad_bot'),ratioplot)
+    return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist,drawopt=drawopt)
+    return_ratio = AddHistogram(can.GetPrimitive('pad_bot'),ratioplot,drawopt=drawopt)
     return return_hist, return_ratio
 
 def AddRatioManual(can,hist,ratioplot,drawopt1='pE1',drawopt2='pE1') :

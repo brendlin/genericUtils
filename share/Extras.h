@@ -165,7 +165,7 @@ void dump(const char* grep="",const char* name="CollectionTree") {
   return;
 }
 
-void set_plot_style()
+void set_plot_style() // Some weird default with a bunch of colors
 {
   const Int_t NRGBs = 5;
   const Int_t NCont = 255;
@@ -179,7 +179,7 @@ void set_plot_style()
   std::cout << "# Extras.C: " << "Setting plot style to ... something." << std::endl;
 }
 
-void set_plot_style_gr()
+void set_plot_style_gr() // Green -> Red
 {
   const Int_t NRGBs = 2;
   const Int_t NCont = 255;
@@ -193,7 +193,7 @@ void set_plot_style_gr()
   std::cout << "# Extras.C: Setting plot style to RB" << std::endl;
 }
 
-void set_plot_style_kurt()
+void set_plot_style_kurt() // Blue -> Green -> Red
 {
   const Int_t NRGBs = 3;
   const Int_t NCont = 255;

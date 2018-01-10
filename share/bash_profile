@@ -273,7 +273,7 @@ case $HOSTNAME in
     (*) # everything else (local machine, etc)
     #source /Developer/CMT/v1r20p20090520/mgr/setup.sh
     source ~/rootbuild/bin/thisroot.sh
-    echo Setting up ROOT branch v5-34-25... done.
+    echo Setting up ROOT branch $(cat $ROOTSYS/etc/gitinfo.txt | head -n 1)... done.
     # add boost libraries to library paths
     # not needed so far # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/Users/brendlin/boost_1_61_0/stage/lib
     # not needed so far # export LIBPATH=$LIBPATH:/Users/brendlin/boost_1_61_0/stage/lib
@@ -318,6 +318,9 @@ case $HOSTNAME in
     alias 'desy=caffeinate -i ssh -Y brendlik@bastion.desy.de'
     alias 'dnaf=caffeinate -i ssh -Y brendlik@nafhh-atlas01.desy.de'
     alias 'dnafrand=caffeinate -i ssh -Y brendlik@naf-atlas.desy.de'
+    alias 'dnafhtc=caffeinate -i ssh -Y brendlik@htc-atlas01.desy.de'
+    alias 'windesy=caffeinate -i ssh brendlik@bastion.desy.de -L 1024:ATLASLAB01.desy.de:3389'
+    alias 'desyport=caffeinate -i ssh -D 60000 brendlik@bastion.desy.de'
     alias 'cdpenn=cd Documents/PennHighEnergy/'
     alias 'usa=ssh -D 8080 kurb@at3i00.hep.upenn.edu'
     alias 'usa1=ssh -L8080:localhost:2020 kurb@at3i00.hep.upenn.edu'
@@ -343,6 +346,9 @@ case $HOSTNAME in
     export workflow="$mydir/hsync/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
     export lorkflow="$mydir/lsync/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
     export dorkflow="$mydir/dsync/$(date -v -$(( $(date +%u) - 1 ))d +%y%m%d_w%V)"
+
+    export PYTHONPATH=$PYTHONPATH:$HOME/pyusb-1.0.0rc1
+    export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$HOME/libusb/lib
     ;;
 esac 
 
