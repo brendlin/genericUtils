@@ -15,20 +15,28 @@ import os,string
 
 def main(options) :
 
-    my_trigger_file = open(options.file).readlines()
     my_triggers = []
-    for i in my_trigger_file :
-        i = i.replace('\n','')
-        if not i :
-            continue
-        if 'lumitag' in i :
-            lumitag = i.split()[-1]
-        if 'livetrigger' in i :
-            livetrigger = i.split()[-1]
-        if 'lartag' in i :
-            lartag = i.split()[-1]
-        if '#' not in i :
-            my_triggers.append(i.rstrip())
+
+    if options.trigger :
+        my_triggers.append(options.trigger)
+        lumitag = options.lumitag
+        livetrigger = options.livetrigger
+        lartag = options.lartag
+
+    if options.file :
+        my_trigger_file = open(options.file).readlines()
+        for i in my_trigger_file :
+            i = i.replace('\n','')
+            if not i :
+                continue
+            if 'lumitag' in i :
+                lumitag = i.split()[-1]
+            if 'livetrigger' in i :
+                livetrigger = i.split()[-1]
+            if 'lartag' in i :
+                lartag = i.split()[-1]
+            if '#' not in i :
+                my_triggers.append(i.rstrip())
 
     for i in my_triggers :
         print i
@@ -110,6 +118,9 @@ def main(options) :
         # import sys
         # sys.exit()
         output = os.popen(cmd).readlines()
+        if not output :
+            import sys; sys.exit()
+            continue
         total_int = 0
         recorded_int = 0
         #print output
@@ -154,8 +165,13 @@ if __name__ == "__main__":
     from optparse import OptionParser
     p = OptionParser()
 
-    p.add_option('--grl' ,type  ='string',default='',dest='grl' ,help='GRL xml file')
-    p.add_option('--file',type  ='string',default='',dest='file',help='File containing the triggers')
+    p.add_option('--grl'    ,type='string',default='',dest='grl'    ,help='GRL xml file')
+    p.add_option('--file'   ,type='string',default='',dest='file'   ,help='File containing the triggers')
+    p.add_option('--trigger',type='string',default='',dest='trigger',help='trigger')
+    p.add_option('--lumitag',type='string',default='',dest='lumitag',help='lumitag option')
+    p.add_option('--livetrigger',type='string',default='',dest='livetrigger',help='livetrigger option')
+    p.add_option('--lartag',type='string',default='',dest='lartag',help='lartag option')
+
     # In the file, you need these three lines (including "#")
     # # lumitag OflLumi-13TeV-001
     # # livetrigger L1_EM24VHI
