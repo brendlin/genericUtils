@@ -161,6 +161,7 @@ def FixYaxisRanges(can) :
 def SetYaxisRanges(can,ymin,ymax) :
     if can.GetPrimitive('pad_top') :
         SetYaxisRanges(can.GetPrimitive('pad_top'),ymin,ymax)
+        return
     from ROOT import TGraph,TH1,THStack
     yaxis = 0
     for i in can.GetListOfPrimitives() :

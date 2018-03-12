@@ -40,7 +40,7 @@ def main() :
 
 
     #
-    # The class-based way of making plots
+    # The function-based way of making plots
     #
     mycanvas = ROOT.TCanvas('mycanvas','blah',600,500)
     plotfunc.AddHistogram(mycanvas,a)
@@ -56,8 +56,8 @@ def main() :
     plotfunc.DrawText(mycanvas,[plotfunc.GetAtlasInternalText(status='Preliminary')
                                 ,plotfunc.GetSqrtsText(13)+', '+plotfunc.GetLuminosityText()
                                 ],0.20,0.78,0.5,0.92,totalentries=3)
-    plotfunc.AutoFixAxes(mycanvas)
     plotfunc.MakeLegend(mycanvas)
+    plotfunc.AutoFixAxes(mycanvas)
 
     # Automatic (this one line replaces everything under "Manual")
     # plotfunc.FullFormatCanvasDefault(mycanvas)
