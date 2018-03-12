@@ -23,6 +23,7 @@ def help() :
     print 'AddHistogramTop(can,hist)'
     print 'AddHistogramBot(can,hist)'
     print 'AddRatio(can,hist,ref_hist)'
+    print 'AddRatioManual(can,hist,ratioplot,drawopt1=\'pE1\',drawopt2=\'pE1\')'
 ##
 ## # SetMarkerStyles() Coming soon!
 ## # SetFillStyles() Coming soon!
@@ -92,7 +93,7 @@ def ConvertToDifferential(hist) :
 ##
 def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
     if can.GetPrimitive('pad_top') :
-        return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist,drawopt)
+        return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist,drawopt,keepname)
         return return_hist
     from ROOT import TH1,TGraph
     tmp = hist.Clone()
@@ -298,9 +299,7 @@ def DrawText(can,text='text',x1=None,y1=None,x2=None,y2=None,angle=0,align='',te
     for i in text :
         leg.AddEntry(0,i,'')
         total += 1
-    for i in range(100) :
-        if totalentries == 0 : break
-        if total >= totalentries : break
+    while (total < totalentries) :
         leg.AddEntry(None,'','')
         total += 1
     leg.Draw()
@@ -393,9 +392,7 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
     #
     # Add empty entries to ensure a standard layout
     #            
-    for i in range(100) :
-        if totalentries == 0 : break
-        if total >= totalentries : break
+    while (total < totalentries) :
         leg.AddEntry(None,'','')
         total += 1
 
@@ -554,7 +551,12 @@ def SetupStyle() :
 
     # y axis
     mystyle.SetTitleOffset(1.75 ,'y')
-    mystyle.SetLabelOffset(0.002,'y')
+    mystyle.SetLabelOffset(0.006,'y')
+    mystyle.SetNdivisions(510,'y') # n1 = 10, n2 = 5, n3 = 0 -> 00 05 10 = 510
+
+    # z axis
+    mystyle.SetTitleOffset(0.85,'z')
+    mystyle.SetLabelOffset(0.004,'z')
 
     # Gradient colors
     ncont = 255
