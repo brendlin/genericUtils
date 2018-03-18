@@ -279,8 +279,9 @@ namespace GU {
 
       TString drawopt = prim->GetDrawOption();
       drawopt.ReplaceAll("same","");
-      if (drawopt.IsNull() && int(options.size()) > total) drawopt = options[total];
-      if (drawopt.IsNull() && options.size() == 1) drawopt = options[0];
+      drawopt.ReplaceAll("hist","l");
+      if (int(options.size()) > total) drawopt = options[total];
+      if (options.size() == 1) drawopt = options[0];
       if (drawopt.IsNull()) drawopt = "f";
 
       leg->AddEntry(prim,"^{ }"+TString(prim->GetTitle()),drawopt);
