@@ -38,9 +38,15 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False) :
     #
     # Makes space for text as well!
     #
-    can.Update()
     import ROOT
     import math
+    can.Update()
+
+    for i in can.GetListOfPrimitives() :
+        if issubclass(type(i),ROOT.TH2) :
+            print 'Warning: AutoFixYaxis for a 2d plot. Skipping for this canvas.'
+            return
+
     # maxy_frac is the fractional maximum of the y-axis stuff.
     maxy_frac = 1
     #
