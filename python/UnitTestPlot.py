@@ -53,7 +53,7 @@ def main() :
     # Manual
     plotfunc.FormatCanvasAxes(mycanvas)
     plotfunc.SetColors(mycanvas)
-    plotfunc.DrawText(mycanvas,[plotfunc.GetAtlasInternalText(status='Preliminary')
+    plotfunc.DrawText(mycanvas,[plotfunc.GetAtlasInternalText(status='Internal')
                                 ,plotfunc.GetSqrtsText(13)+', '+plotfunc.GetLuminosityText()
                                 ],0.20,0.78,0.5,0.92,totalentries=3)
     plotfunc.MakeLegend(mycanvas)
@@ -99,7 +99,7 @@ def main() :
     plotfunc.FormatCanvasAxes(mycanvas_2d)
     plotfunc.AddHistogram(mycanvas_2d,hist_2d,'colz')
     plotfunc.SetAxisLabels(mycanvas_2d,'x axis','y axis')
-    plotfunc.DrawText(mycanvas_2d,[plotfunc.GetAtlasInternalText(status='Preliminary')
+    plotfunc.DrawText(mycanvas_2d,[plotfunc.GetAtlasInternalText(status='Internal')
                                 ,plotfunc.GetSqrtsText(13)+', '+plotfunc.GetLuminosityText()
                                 ],0.20,0.79,0.5,0.93,totalentries=3)
     plotfunc.SetRightMargin(mycanvas_2d,0.15)

@@ -256,7 +256,7 @@ def GetLuminosityText(lumi=20.3) :
     if lumi < 1 :
         unit = 'pb'
         lumi = lumi * 1000.
-    return '#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f %s^{-1}'%(lumi,unit)
+    return '#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f %s^{#minus1}'%(lumi,unit)
 
 def GetSqrtsText(sqrts=13) :
     return '#sqrt{s} = %d TeV'%(sqrts)
@@ -365,11 +365,6 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         the_stack = list(can.GetPrimitive('stack').GetHists())
         the_primitives = the_stack+list(the_primitives)
 
-    if type(option) == type('') :
-        option = [option]*100
-    if option == None :
-        option = [None]*100
-
     total = 0
     for i in the_primitives :
         if 'stack' in i.GetTitle() :
@@ -381,12 +376,16 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         if i.GetTitle() in skip :
             continue
 
-        drawopt = i.GetDrawOption().replace('same','')
-        if not drawopt : drawopt = 'f'
-        if option[total] == None :
-            option[total] = drawopt
+        drawopt = i.GetDrawOption().replace('same','').replace('hist','l')
+        if (type(option) == type([])) and len(option) > total :
+            drawopt = option[total]
+        if (type(option) == type('')) :
+            drawopt = option
+        if not drawopt :
+            drawopt = 'f'
+
         # print '%s: drawopt \"%s\"'%(i.GetName(),drawopt)
-        leg.AddEntry(i,'^{ }'+i.GetTitle(),option[total]) # plef
+        leg.AddEntry(i,'^{ }'+i.GetTitle(),drawopt) # plef
         total += 1
 
     #
@@ -557,6 +556,12 @@ def SetupStyle() :
     # z axis
     mystyle.SetTitleOffset(0.85,'z')
     mystyle.SetLabelOffset(0.004,'z')
+
+    # Legend
+    mystyle.SetLegendTextSize(18)
+    mystyle.SetLegendFont(43)
+    mystyle.SetLegendFillColor(0)
+    mystyle.SetLegendBorderSize(0)
 
     # Gradient colors
     ncont = 255
