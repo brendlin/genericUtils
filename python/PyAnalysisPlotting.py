@@ -10,7 +10,7 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
     if not colors :
         colors = GetHWWColors()
     used_colors = []
-    
+
     if not labels :
         labels = dict()
 
@@ -36,6 +36,31 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
             i.SetMarkerColor(colors_for_unassigned_samples[index])
             i.SetFillColor(colors_for_unassigned_samples[index])
             index += 1
+
+    return
+
+#-------------------------------------------------------------------------
+def PrepareDataHisto(data_hist,options) :
+    data_hist.SetLineWidth(2)
+    data_hist.SetLineColor(1)
+    data_hist.SetMarkerColor(1)
+
+    return
+
+#-------------------------------------------------------------------------
+def PrepareSignalHistos(sig_hists,options) :
+
+    sig_hists[-1].SetLineColor(2)
+    sig_hists[-1].SetMarkerColor(2)
+
+    labels = getattr(options,'labels',None)
+
+    if not labels :
+        labels = dict()
+
+    # Set colors according to your color dictionary, or the HWW color dictionary
+    for i in sig_hists :
+        i.SetTitle(labels.get(i.GetTitle(),i.GetTitle()))
 
     return
 
@@ -181,6 +206,9 @@ def GetChainFromFiles(filelist_csv,treename='physics',chainname='data') :
     trees = dict()
     keys = [chainname]
 
+    if not filelist_csv :
+        return files,trees,keys
+
     trees[chainname] = ROOT.TChain(treename)
 
     for f in filelist_csv.split(',') :
@@ -222,6 +250,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
+    import TAxisFunctions as taxisfunc
     import math
     import PyHelpers
 
@@ -272,6 +301,9 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
             options.limits[variable][1] = hists[-1].GetBinLowEdge(1)
             options.limits[variable][2] = hists[-1].GetBinLowEdge(options.limits[variable][0]+1)
 
+        if options.showflows :
+            taxisfunc.PutOverflowIntoLastBin(hists[-1])
+            taxisfunc.PutUnderflowIntoFirstBin(hists[-1])
 
         #RebinSmoothlyFallingFunction(hists[-1])
 
@@ -375,6 +407,7 @@ class TreePlottingOptParser :
         self.p.add_option('--ratio',action='store_true',default=False,dest='ratio',help='Plot as a ratio')
         self.p.add_option('--nostack',action='store_true',default=False,dest='nostack',help='do not stack')
         self.p.add_option('--normalize',action='store_true',default=False,dest='normalize',help='normalize')
+        self.p.add_option('--showflows',action='store_true',default=False,dest='showflows',help='show overflows/underflows as first and last bin')
 
         # other options
         self.p.add_option('--batch',action='store_true',default=False,dest='batch',help='run in batch mode')
@@ -585,13 +618,14 @@ def MergeSamples(hists,options) :
 
     if not options.mergesamples :
         return hists
+
     hists_new = []
     keys_new = []
     hists_index = dict()
     for i in hists :
         added = False
         for j in options.mergesamples.keys() :
-            if i.GetTitle() not in options.mergesamples[j] :
+            if i.GetTitle() not in list(CleanUpName(a) for a in options.mergesamples[j]) :
                 continue
             if j in hists_index.keys() :
                 #print 'adding to existing histo'
@@ -611,7 +645,7 @@ def MergeSamples(hists,options) :
     for i in hists_index.keys() :
         PyHelpers.PrintNumberOfEvents(hists_new[hists_index[i]])
 
-    return hists_new,keys_new
+    return hists_new
 
 #-------------------------------------------------------------------------
 def RebinSmoothlyFallingFunction(hist,error=0.10) :

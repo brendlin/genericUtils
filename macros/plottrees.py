@@ -37,18 +37,15 @@ def main(options,args) :
 
         if options.data :
             data_hist = anaplot.GetVariableHistsFromTrees(tree_d,key_d,v,dweight,options)[0]
-            data_hist.SetLineWidth(2)
-            data_hist.SetLineColor(1)
-            data_hist.SetMarkerColor(1)
+            anaplot.PrepareDataHisto(data_hist,options)
         if options.bkgs :
             bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight,options,scales=scales_b)
-            bkg_hists,keys_b_tmp = anaplot.MergeSamples(bkg_hists,options)
+            bkg_hists = anaplot.MergeSamples(bkg_hists,options)
             anaplot.PrepareBkgHistosForStack(bkg_hists,options)
         if options.signal :
             sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight,options,scales=scales_s)
-            sig_hists,keys_s_tmp = anaplot.MergeSamples(sig_hists,options)
-            sig_hists[-1].SetLineColor(2)
-            sig_hists[-1].SetMarkerColor(2)
+            sig_hists = anaplot.MergeSamples(sig_hists,options)
+            anaplot.PrepareSignalHistos(sig_hists,options)
 
         cans.append(anaplot.DrawHistos(v,options,bkg_hists,sig_hists,data_hist))
 

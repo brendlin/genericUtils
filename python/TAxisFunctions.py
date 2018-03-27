@@ -342,16 +342,45 @@ def GetXaxisRanges(can,check_all=False) :
 ##
 ## Puts the overflow into the last bin
 ##
-def PutOverflowIntoLastBin(hist,high) :
+def PutOverflowIntoLastBin(hist,high=None) :
     import math
-    print hist.GetName(),high
-    if high == None :
-        high = hist.GetXaxis().GetBinLowEdge(hist.GetNbinsX()+1)
-    last_bin = hist.GetXaxis().FindBin(high)-1
+
+    high_quantized = high
+
+    if high_quantized == None :
+        high_quantized = hist.GetXaxis().GetBinLowEdge(hist.GetNbinsX()+1)
+
+    last_bin = hist.GetXaxis().FindBin(high_quantized)-1
+    high_quantized = hist.GetXaxis().GetBinLowEdge(last_bin+1)
+
     for i in range(hist.GetNbinsX()+1) :
-        if hist.GetXaxis().GetBinLowEdge(i+1) >= high :
+        if hist.GetXaxis().GetBinLowEdge(i+1) >= high_quantized :
             hist.SetBinContent(last_bin,hist.GetBinContent(i+1)+hist.GetBinContent(last_bin))
             hist.SetBinError(last_bin,math.sqrt(hist.GetBinError(i+1)**2 + hist.GetBinError(last_bin)**2))
             hist.SetBinContent(i+1,0)
             hist.SetBinError(i+1,0)
+    return
+
+##
+## Puts the underflow into the first bin
+##
+def PutUnderflowIntoFirstBin(hist,low=None) :
+    import math
+
+    low_quantized = low
+
+    if low_quantized == None :
+        low_quantized = hist.GetXaxis().GetBinLowEdge(1)
+
+    first_bin = hist.GetXaxis().FindBin(low_quantized)
+    low_quantized = hist.GetXaxis().GetBinLowEdge(first_bin)
+
+    for i in range(hist.GetNbinsX()+1) :
+
+        if hist.GetXaxis().GetBinLowEdge(i+1) <= low_quantized :
+            hist.SetBinContent(first_bin,hist.GetBinContent(i)+hist.GetBinContent(first_bin))
+            hist.SetBinError(first_bin,math.sqrt(hist.GetBinError(i)**2 + hist.GetBinError(first_bin)**2))
+            hist.SetBinContent(i,0)
+            hist.SetBinError(i,0)
+
     return
