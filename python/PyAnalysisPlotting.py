@@ -40,10 +40,12 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
     return
 
 #-------------------------------------------------------------------------
-def PrepareDataHisto(data_hist,options) :
-    data_hist.SetLineWidth(2)
-    data_hist.SetLineColor(1)
-    data_hist.SetMarkerColor(1)
+def PrepareDataHistos(data_hists,options) :
+
+    for i in data_hists :
+        i.SetLineWidth(2)
+        i.SetLineColor(1)
+        i.SetMarkerColor(1)
 
     return
 
@@ -199,7 +201,9 @@ def GetTreesFromFiles(filelist_csv,treename='physics') :
 
 #-------------------------------------------------------------------------
 def GetChainFromFiles(filelist_csv,treename='physics',chainname='data') :
-    
+
+    # Please do not use this! Use GetTreesFromFiles and MergeSamples instead!
+
     import ROOT,os
 
     files = dict()
@@ -210,6 +214,10 @@ def GetChainFromFiles(filelist_csv,treename='physics',chainname='data') :
         return files,trees,keys
 
     trees[chainname] = ROOT.TChain(treename)
+
+    # Need this to read individual branches that are part of a class.
+    # Note that now things like "blah.pt[0]" do not work.
+    trees[chainname].SetMakeClass(1)
 
     for f in filelist_csv.split(',') :
         if not f : continue
@@ -300,6 +308,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
             options.limits[variable][0] = hists[-1].GetNbinsX()
             options.limits[variable][1] = hists[-1].GetBinLowEdge(1)
             options.limits[variable][2] = hists[-1].GetBinLowEdge(options.limits[variable][0]+1)
+            n,low,high = options.limits.get(variable)
 
         if options.showflows :
             taxisfunc.PutOverflowIntoLastBin(hists[-1])
@@ -446,7 +455,7 @@ class TreePlottingOptParser :
         for x in ['blindcut','truthcuts','mergesamples','colors','labels','histformat','usermodule'] :
             defaults = {'blindcut':[],
                         'truthcuts':[],
-                        'mergesamples':None,
+                        'mergesamples':dict(),
                         'colors':dict(),
                         'labels':dict(),
                         'histformat':dict(),
@@ -493,6 +502,10 @@ class TreePlottingOptParser :
             if hasattr(usermodule,'variables') :
                 self.options.variables = ','.join(usermodule.variables)
 
+        # Use MergeSamples to add data hists into one data file
+        if hasattr(self.options,'data') :
+            data_merge_list = list(CleanUpName(a) for a in self.options.data.split(','))
+            self.options.mergesamples['data'] = data_merge_list
 
         def AddDotRoot(csv_list) :
             tmp = csv_list.split(',')

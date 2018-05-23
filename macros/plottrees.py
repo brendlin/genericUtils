@@ -16,15 +16,18 @@ def main(options,args) :
 
     files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename)
     files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename)
-    file_d ,tree_d ,key_d  = anaplot.GetChainFromFiles(options.data  ,treename=options.treename)
+    files_d,trees_d,keys_d  = anaplot.GetTreesFromFiles(options.data  ,treename=options.treename)
+    print files_d,trees_d,keys_d
 
     scales_b = anaplot.GetScales(files_b,trees_b,keys_b,options)
     scales_s = anaplot.GetScales(files_s,trees_s,keys_s,options)
 
-    dweight = '' # weight value (and cuts) applied to data
     weight = options.weight
-    if ''.join(options.cuts) :
+    if ''.join(options.cuts+options.truthcuts) :
         weight = (weight+'*(%s)'%(' && '.join(options.cuts+options.truthcuts))).lstrip('*')
+
+    dweight = '' # weight value (and cuts) applied to data
+    if ''.join(options.cuts+options.blindcut) :
         dweight = '('+' && '.join(options.cuts+options.blindcut)+')'
 
     cans = []
@@ -36,8 +39,9 @@ def main(options,args) :
         data_hist = None
 
         if options.data :
-            data_hist = anaplot.GetVariableHistsFromTrees(tree_d,key_d,v,dweight,options)[0]
-            anaplot.PrepareDataHisto(data_hist,options)
+            data_hists = anaplot.GetVariableHistsFromTrees(trees_d,keys_d,v,dweight,options)
+            data_hist = anaplot.MergeSamples(data_hists,options)[0]
+            anaplot.PrepareDataHistos(data_hists,options)
         if options.bkgs :
             bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight,options,scales=scales_b)
             bkg_hists = anaplot.MergeSamples(bkg_hists,options)
