@@ -243,6 +243,9 @@ TBrowser* b()
   return BROWSER;
 }
 
+//
+// This function makes a PicoXaod for every category of the 2015+2016 Couplings analysis.
+//
 void makePicoXaod_Categories(TChain* oldchain,const char* name,const char* cuts,const char* outdir,char* categories) {
   oldchain->SetBranchStatus("*",1);
   std::cout << Form("tree.Draw(\">>selection\",\"%s\",\"entrylist\")",cuts) << std::endl;
@@ -299,7 +302,10 @@ void makePicoXaod_Categories(TChain* oldchain,const char* name,const char* cuts,
   return;
 }
 
-void makePicoXaod(TTree* oldtree,const char* name,const char* cuts,const char* outdir,const char* filename_nodotroot) {
+//
+// This function makes a PicoXaod with arbitrary branch names (separated by ",")
+//
+void makePicoXaod(TTree* oldtree,const char* name,const char* cuts,char* branches,const char* outdir,const char* filename_nodotroot) {
 
   oldtree->SetBranchStatus("*",1);
   std::cout << Form("tree.Draw(\">>%s\",\"%s\")",name,cuts) << std::endl;
@@ -309,8 +315,15 @@ void makePicoXaod(TTree* oldtree,const char* name,const char* cuts,const char* o
   std::cout << "number in TEntryList: " << listEntries << std::endl;
   oldtree->SetEntryList(elist);
   oldtree->SetBranchStatus("*",0);
-  oldtree->SetBranchStatus("HGamEventInfoAuxDyn.m_yy",1);
-  
+
+  // Iterate over branches and set branch status of particular ones
+  char* tok;
+  tok = strtok(branches,",");
+  while (tok != NULL) {
+    oldtree->SetBranchStatus(tok,1);
+    tok = strtok(NULL,",");
+  }
+
   //Create a new file + a clone of old tree in new file
   TFile *newfile = new TFile(Form("%s/%s.root",outdir,filename_nodotroot),"recreate");
   TTree* newtree = oldtree->CopyTree("");
