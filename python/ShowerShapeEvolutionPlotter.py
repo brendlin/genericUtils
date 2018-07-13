@@ -37,21 +37,16 @@ def ShowerShapeEvolutionPlot(can,labels,plotset1,
     plotfunc.FormatCanvasAxes(can)
 
     #
+    # Add the histograms
     # Scale the histograms and offset them by 1
     #
     for plotset in all_plotsets :
         for i,plot in enumerate(plotset) :
-            plot.Scale(0.9/float(plot.GetMaximum()))
+            plot_copy = plotfunc.AddHistogram(can,plot,'hist')
+            plot_copy.Scale(0.9/float(plot_copy.GetMaximum()))
 
-            for bin in range(plot.GetNbinsX()) :
-                plot.SetBinContent(bin+1,i + plot.GetBinContent(bin+1))
-
-    #
-    # Add the histograms
-    #
-    for plotset in all_plotsets :
-        for plot in plotset :
-            plotfunc.AddHistogram(can,plot,'hist')
+            for bin in range(plot_copy.GetNbinsX()) :
+                plot_copy.SetBinContent(bin+1,i + plot_copy.GetBinContent(bin+1))
 
     #
     # Remove duplicate plot titles (= legend entries)
