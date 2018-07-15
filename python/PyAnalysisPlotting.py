@@ -254,7 +254,7 @@ def GetScales(files,trees,keys,options) :
     return weights
     
 #-------------------------------------------------------------------------
-def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputname='') :
+def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,inputname='') :
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
@@ -262,17 +262,26 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
     import math
     import PyHelpers
 
-    n,low,high = options.limits.get(variable)
-    rebin = options.rebin.get(variable,[])
+    # Parse options
+    n,low,high = -1,-1,-1
+    if hasattr(options,'limits') :
+        n,low,high = options.limits.get(variable,[-1,-1,-1])
+    rebin = options.rebin.get(variable,[]) if hasattr(options,'rebin') else []
+    showflows = hasattr(options,'showflows') and options.showflows
+    normalize = hasattr(options,'normalize') and options.normalize
+
     if not inputname :
         inputname = variable
 
     hists = []
     for k in keys :
         name = CleanUpName('%s_%s'%(inputname,k))
-        while ROOT.gDirectory.Get(name) :
-            #print 'changing name'
-            name = name+'x'
+        tmp_name,ni = name,0
+        while ROOT.gDirectory.Get(tmp_name) :
+            ni += 1
+            tmp_name = '%s_v%03d'%(name,ni)
+        name = tmp_name
+
         if rebin and type(rebin) == type([]) :
             name = name+'_unrebinned'
         bins = '(%s,%s,%s)'%(n,low,high)
@@ -280,6 +289,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
             bins = ''
         arg1,arg2,arg3 = '%s>>%s%s'%(variable,name,bins),weight,'egoff'
         #arg1,arg2,arg3 = '%s>>%s'%(variable,name),weight,'egoff'
+        # Reset the default binning to 100, if "n" is not specified.
         ROOT.gEnv.SetValue('Hist.Binning.1D.x','100')
         print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
         tmp = ROOT.gErrorIgnoreLevel
@@ -304,13 +314,13 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
 
         if (n <= 0) :
             print 'Changing limits to match those from the first plot.'
-            options.limits[variable] = [0,0,0]
-            options.limits[variable][0] = hists[-1].GetNbinsX()
-            options.limits[variable][1] = hists[-1].GetBinLowEdge(1)
-            options.limits[variable][2] = hists[-1].GetBinLowEdge(options.limits[variable][0]+1)
-            n,low,high = options.limits.get(variable)
+            n    = hists[-1].GetNbinsX()
+            low  = hists[-1].GetBinLowEdge(1)
+            high = hists[-1].GetBinLowEdge(n+1)
+            if hasattr(options,'limits') :
+                options.limits[variable] = [n,low,high]
 
-        if options.showflows :
+        if showflows :
             taxisfunc.PutOverflowIntoLastBin(hists[-1])
             taxisfunc.PutUnderflowIntoFirstBin(hists[-1])
 
@@ -323,7 +333,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options,scales=0,inputn
         # print the yield and error after cuts (includes overflow)
         PyHelpers.PrintNumberOfEvents(hists[-1])
 
-        if options.normalize :
+        if normalize :
             hists[-1].Scale(1/float(hists[-1].Integral()))
         if rebin :
             plotfunc.ConvertToDifferential(hists[-1])
@@ -694,6 +704,7 @@ def CleanUpName(name) :
     tmp = tmp.replace('[','_').replace(']','_').replace('(','_').replace(')','_')
     tmp = tmp.replace('/','_over_').replace('&&','and')
     tmp = tmp.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
+    tmp = tmp.replace('!','not').replace('*','times').replace('+','plus')
     tmp = tmp.lstrip('_').rstrip('_')
     return tmp
 
