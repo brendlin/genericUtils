@@ -63,6 +63,7 @@ if __name__ == '__main__':
 
     if not options.outdir :
         print 'Error! Please specify an output directory (--outdir)!'
+        sys.exit()
 
     main(options,args)
 
