@@ -9,8 +9,8 @@ import PlotFunctions as plotfunc
 def ShowerShapeEvolutionPlot(can,labels,plotset1,
                              plotset2=None,plotset3=None,plotset4=None,plotset5=None,plotset6=None) :
 
-    all_plotsets = [plotset1]
-    for others in [plotset2,plotset3,plotset4] :
+    all_plotsets = []
+    for others in [plotset1,plotset2,plotset3,plotset4] :
         if others :
             all_plotsets.append(others)
 
@@ -65,7 +65,7 @@ def ShowerShapeEvolutionPlot(can,labels,plotset1,
     #
     can.SetTopMargin(0.13)
     plotfunc.SetLeftMargin(can,0.27)
-    plotfunc.SetAxisLabels(can,'x axis','')
+    plotfunc.SetAxisLabels(can,sample_plot.GetXaxis().GetTitle(),'')
     can.SetGridy()
     plotfunc.MakeLegend(can,0.7,0.88,0.9,0.99,totalentries=2)
 

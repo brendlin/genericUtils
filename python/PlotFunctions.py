@@ -523,6 +523,7 @@ def SetupStyle() :
     mystyle.SetPaintTextFormat('4.1f ')
     mystyle.SetEndErrorSize(3)
 
+    # For top (x) / right (y) ticks
     mystyle.SetPadTickX(1)
     mystyle.SetPadTickY(1)
 
