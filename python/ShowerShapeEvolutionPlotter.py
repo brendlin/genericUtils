@@ -44,7 +44,10 @@ def ShowerShapeEvolutionPlot(can,labels,plotset1,
         for i,plot in enumerate(plotset) :
             if not plot.Integral() or not plot.GetMaximum() :
                 continue
-            plot_copy = plotfunc.AddHistogram(can,plot,'hist')
+            drawopt = 'hist'
+            if plot.GetOption() :
+                drawopt = plot.GetOption()
+            plot_copy = plotfunc.AddHistogram(can,plot,drawopt)
             plot_copy.Scale(0.9/float(plot_copy.GetMaximum()))
 
             for bin in range(plot_copy.GetNbinsX()) :
