@@ -40,12 +40,15 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False) :
     #
     import ROOT
     import math
+    import sys
     can.Update()
+
+    miny,maxy = sys.float_info.max,sys.float_info.min
 
     for i in can.GetListOfPrimitives() :
         if issubclass(type(i),ROOT.TH2) :
             print 'Warning: AutoFixYaxis for a 2d plot. Skipping for this canvas.'
-            return
+            return miny,maxy
 
     # maxy_frac is the fractional maximum of the y-axis stuff.
     maxy_frac = 1
@@ -72,11 +75,11 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False) :
             maxy_frac = min(maxy_frac,i.GetY())
     if not plots_exist :
         print 'Your plot %s has nothing in it. AutoFixYaxis() is Doing nothing.'%(can.GetName())
-        return
+        return  miny,maxy
     (miny,maxy) = GetYaxisRanges(can,check_all=True)
     # print 'AutoFixAxes0',miny,maxy
     if miny == 0 and maxy == 0 :
-        return
+        return miny,maxy
     miny = (0.95*miny) if (miny>0) else (1.05*miny)
     maxy = (1.05*maxy) if (maxy>0) else (0.95*maxy)
     maxy_frac = maxy_frac-can.GetBottomMargin()
@@ -84,7 +87,7 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False) :
     if maxy_frac < 0 :
         print 'Error in AutoFixAxes - somehow there is no more room for your plot.'
         print '(Bad legend placement?)'
-        return
+        return miny,maxy
 
     if can.GetLogy() :
         # special treatment for log plots
@@ -129,7 +132,8 @@ def NearestNiceNumber(miny,maxy) :
 ##
 def MinimumForLog(can) :
     from ROOT import TGraph,TH1,TMath,THStack
-    ymin = 999999999
+    import sys
+    ymin = sys.float_info.max
     for i in can.GetListOfPrimitives() :
         if issubclass(type(i),TGraph) :
             for ii in range(i.GetN()) :
@@ -159,7 +163,7 @@ def MinimumForLog(can) :
 def FixYaxisRanges(can) :
     (ymin,ymax) = GetYaxisRanges(can,check_all=True)
     SetYaxisRanges(can,ymin,ymax)
-    return
+    return ymin,ymax
 
 ##
 ## Set the x-axis ranges of a canvas
@@ -223,8 +227,9 @@ def GetYaxisRanges(can,check_all=False) :
     # check_all is if you want to check the maximum extent of all the histograms you plotted.
     #
     import ROOT
-    ymin = 999999999
-    ymax = -999999999
+    import sys
+    ymin = sys.float_info.max
+    ymax = sys.float_info.min
     
     primitives = list(can.GetListOfPrimitives())
     if can.GetPrimitive('stack') :
