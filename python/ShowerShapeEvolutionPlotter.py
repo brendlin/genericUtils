@@ -10,7 +10,7 @@ def ShowerShapeEvolutionPlot(can,labels,plotset1,
                              plotset2=None,plotset3=None,plotset4=None,plotset5=None,plotset6=None) :
 
     all_plotsets = []
-    for others in [plotset1,plotset2,plotset3,plotset4] :
+    for others in [plotset1,plotset2,plotset3,plotset4,plotset5,plotset6] :
         if others :
             all_plotsets.append(others)
 
