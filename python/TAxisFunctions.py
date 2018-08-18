@@ -399,7 +399,6 @@ def EqualizeYAxes(cans,ignorelegend=False) :
     for can in cans :
         tmp_miny,tmp_maxy = AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=True)
         miny,maxy = min(miny,tmp_miny),max(maxy,tmp_maxy)
-        print miny,maxy
     for can in cans :
         SetYaxisRanges(can,miny,maxy)
     return miny,maxy
