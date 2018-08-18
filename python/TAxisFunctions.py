@@ -3,11 +3,12 @@
 ##
 def help() :
     print 'AutoFixAxes(can,symmetrize=False,ignorelegend=False)'
-    print 'AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False)'
+    print 'AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=False)'
+    print 'EqualizeYAxes(cans,ignorelegend=False)'
     print
     print 'FixYaxisRanges(can)'
     print 'SetYaxisRanges(can,ymin,ymax)'
-    print 'GetYaxisRanges(can,check_all=False)'
+    print 'GetYaxisRanges(can,check_all=False,ignorezero=False)'
     print
     print 'FixXaxisRanges(can)'
     print 'SetXaxisRanges(can,xmin,xmax)'
@@ -25,16 +26,16 @@ def help() :
 ## If a text or legend has been added to the plot it will force the plot content to appear BELOW
 ## the text.
 ##
-def AutoFixAxes(can,symmetrize=False,ignorelegend=False) :
+def AutoFixAxes(can,symmetrize=False,ignorelegend=False,ignorezero=False) :
     if can.GetPrimitive('pad_top') :
         AutoFixAxes(can.GetPrimitive('pad_top'),ignorelegend=ignorelegend)
         AutoFixAxes(can.GetPrimitive('pad_bot'),ignorelegend=ignorelegend)
         return
     FixXaxisRanges(can)    
-    AutoFixYaxis(can,ignorelegend=ignorelegend)
+    AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=ignorezero)
     return
 
-def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False) :
+def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=False) :
     #
     # Makes space for text as well!
     #
@@ -65,7 +66,7 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False) :
             plots_exist = True
         if issubclass(type(i),ROOT.TGraph) :
             plots_exist = True
-        if (ignorelegend) and ('legend' in i.GetName()) :
+        if (ignorelegend) and issubclass(type(i),ROOT.TLegend) :
             continue
         if type(i) == type(ROOT.TFrame()) :
             continue
@@ -76,7 +77,7 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False) :
     if not plots_exist :
         print 'Your plot %s has nothing in it. AutoFixYaxis() is Doing nothing.'%(can.GetName())
         return  miny,maxy
-    (miny,maxy) = GetYaxisRanges(can,check_all=True)
+    (miny,maxy) = GetYaxisRanges(can,check_all=True,ignorezero=ignorezero)
     # print 'AutoFixAxes0',miny,maxy
     if miny == 0 and maxy == 0 :
         return miny,maxy
@@ -222,7 +223,7 @@ def SetYaxisNdivisions(can,a,b,c) :
 ## Returns the y-range of the first plotted histogram.
 ## If you specify "check_all=True", returns the maximal y-range of all the plots in the canvas
 ##
-def GetYaxisRanges(can,check_all=False) :
+def GetYaxisRanges(can,check_all=False,ignorezero=False) :
     #
     # check_all is if you want to check the maximum extent of all the histograms you plotted.
     #
@@ -266,6 +267,8 @@ def GetYaxisRanges(can,check_all=False) :
                 y = i.GetBinContent(bin+1)
                 yel = i.GetBinErrorLow(bin+1)
                 yeu = i.GetBinErrorUp(bin+1)
+                if ignorezero and y == 0 and yel == 0 and yeu == 0 :
+                    continue
                 ymin = min(ymin,y-yel)
                 ymax = max(ymax,y+yeu)
             if not check_all :
@@ -389,3 +392,14 @@ def PutUnderflowIntoFirstBin(hist,low=None) :
             hist.SetBinError(i,0)
 
     return
+
+def EqualizeYAxes(cans,ignorelegend=False) :
+    import sys
+    miny,maxy = sys.float_info.max,sys.float_info.min
+    for can in cans :
+        tmp_miny,tmp_maxy = AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=True)
+        miny,maxy = min(miny,tmp_miny),max(maxy,tmp_maxy)
+        print miny,maxy
+    for can in cans :
+        SetYaxisRanges(can,miny,maxy)
+    return miny,maxy
