@@ -393,11 +393,11 @@ def PutUnderflowIntoFirstBin(hist,low=None) :
 
     return
 
-def EqualizeYAxes(cans,ignorelegend=False) :
+def EqualizeYAxes(cans,ignorelegend=False,minzero=False) :
     import sys
     miny,maxy = sys.float_info.max,sys.float_info.min
     for can in cans :
-        tmp_miny,tmp_maxy = AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=True)
+        tmp_miny,tmp_maxy = AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=True,minzero=minzero)
         miny,maxy = min(miny,tmp_miny),max(maxy,tmp_maxy)
     for can in cans :
         SetYaxisRanges(can,miny,maxy)
