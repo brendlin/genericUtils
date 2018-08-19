@@ -753,6 +753,11 @@ def Stack(can,reverse=False) :
     # The original objects are cleared from the histogram:
     can.Clear()
     tobject_collector.append(stack)
+
+    # Set draw option of underlying histograms for automatically nice legends
+    for hist in stack.GetHists() :
+        hist.SetOption('f')
+
     can.cd()
     stack.Draw('hist')
     stack.GetXaxis().SetTitle(xaxislabel)
