@@ -112,7 +112,6 @@ def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
         drawopt += 'a'
 
     tobject_collector.append(tmp)
-    tmp.SetMarkerStyle(20)
     if not keepname :
         tmp.SetName('%s_%s'%(can.GetName(),hist.GetName()))
     can.cd()
