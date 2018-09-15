@@ -105,17 +105,22 @@ def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
     if hasattr(tmp,'SetDirectory') :
         tmp.SetDirectory(0)
 
+    drawopt_orig = drawopt
     if (not is_graph) and (True in plot_exists) :
         drawopt += 'same'
     if is_graph and not (True in plot_exists) :
         drawopt += 'a'
 
     tobject_collector.append(tmp)
-    tmp.SetMarkerStyle(20)
     if not keepname :
         tmp.SetName('%s_%s'%(can.GetName(),hist.GetName()))
     can.cd()
     tmp.Draw(drawopt)
+    if is_graph :
+        tmp.GetHistogram().SetOption(drawopt_orig)
+    else :
+        tmp.SetOption(drawopt_orig)
+
     can.Modified()
     #can.Update()
     return tmp
@@ -376,7 +381,9 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         if i.GetTitle() in skip :
             continue
 
-        drawopt = i.GetDrawOption().replace('same','').replace('hist','l')
+        drawopt = i.GetOption().replace('same','').replace('hist','l')
+        if issubclass(type(i),ROOT.TGraph) :
+            drawopt = i.GetHistogram().GetOption().replace('same','').replace('hist','l')
         if (type(option) == type([])) and len(option) > total :
             drawopt = option[total]
         if (type(option) == type('')) :
@@ -745,6 +752,11 @@ def Stack(can,reverse=False) :
     # The original objects are cleared from the histogram:
     can.Clear()
     tobject_collector.append(stack)
+
+    # Set draw option of underlying histograms for automatically nice legends
+    for hist in stack.GetHists() :
+        hist.SetOption('f')
+
     can.cd()
     stack.Draw('hist')
     stack.GetXaxis().SetTitle(xaxislabel)

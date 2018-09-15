@@ -10,7 +10,7 @@ def ShowerShapeEvolutionPlot(can,labels,plotset1,
                              plotset2=None,plotset3=None,plotset4=None,plotset5=None,plotset6=None) :
 
     all_plotsets = []
-    for others in [plotset1,plotset2,plotset3,plotset4] :
+    for others in [plotset1,plotset2,plotset3,plotset4,plotset5,plotset6] :
         if others :
             all_plotsets.append(others)
 
@@ -37,16 +37,43 @@ def ShowerShapeEvolutionPlot(can,labels,plotset1,
     plotfunc.FormatCanvasAxes(can)
 
     #
-    # Add the histograms
-    # Scale the histograms and offset them by 1
+    # Find the histogram with the largest peak relative to its integral
     #
-    for plotset in all_plotsets :
+    integral_lp       = [-1]*len(all_plotsets[0])
+    index_lp          = [-1]*len(all_plotsets[0])
+    max_over_integral = [ 0]*len(all_plotsets[0])
+    for j,plotset in enumerate(all_plotsets) :
         for i,plot in enumerate(plotset) :
             if not plot.Integral() or not plot.GetMaximum() :
                 continue
-            plot_copy = plotfunc.AddHistogram(can,plot,'hist')
-            plot_copy.Scale(0.9/float(plot_copy.GetMaximum()))
+            tmp_max_over_integral = plot.GetMaximum()/float(plot.Integral(0,plot.GetNbinsX()+1))
+            if tmp_max_over_integral > max_over_integral[i] :
+                max_over_integral[i] = tmp_max_over_integral
+                tmp_scale = 0.9/float(plot.GetMaximum())
+                integral_lp[i] = plot.Integral(0,plot.GetNbinsX()+1)*tmp_scale
+                index_lp[i] = j
 
+    #
+    # Add the histograms
+    # Scale the histograms and offset them by 1
+    #
+    for j,plotset in enumerate(all_plotsets) :
+        for i,plot in enumerate(plotset) :
+            if not plot.Integral() or not plot.GetMaximum() :
+                continue
+            drawopt = 'hist'
+            if plot.GetOption() :
+                drawopt = plot.GetOption()
+            plot_copy = plotfunc.AddHistogram(can,plot,drawopt)
+
+            # Scale either to 0.9 of maximum, or to
+            # the integral of the hist with the highest maximum relative to its integral
+            if index_lp[i] == j :
+                plot_copy.Scale(0.9/float(plot_copy.GetMaximum()))
+            else :
+                plot_copy.Scale(integral_lp[i]/float(plot_copy.Integral(0,plot_copy.GetNbinsX()+1)))
+
+            # Y-axis offset
             for bin in range(plot_copy.GetNbinsX()) :
                 plot_copy.SetBinContent(bin+1,i + plot_copy.GetBinContent(bin+1))
 
