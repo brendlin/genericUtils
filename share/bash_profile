@@ -249,7 +249,7 @@ case $HOSTNAME in
 
 
 
-    (nafhh-*.desy.de)
+    (nafhh-*.desy.de | htc-atlas01.desy.de | naf-atlas*.desy.de )
     echo setting up atlas
     export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
     alias 'setupATLAS=source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh'
@@ -258,13 +258,14 @@ case $HOSTNAME in
     source ${ATLAS_LOCAL_ROOT_BASE}/utilities/oldAliasSetup.sh root
     export DQ2_LOCAL_SITE_ID=DESY-HH_SCRATCHDISK
     export mydir=/nfs/dust/atlas/user/brendlik
-    # set up BIRD system
-    echo 'setting up bird (SGE)'
-    source /usr/sge/default/common/settings.sh
     lsetup git
     echo Set up later version of git
     export mxaod=$mydir/mxaod
     export workflow="$mydir/dsync/$(date -d "$(( $(date +%u) - 1 )) days ago" +%y%m%d_w%V)"
+    # Get using "rucio list-file-replicas --protocols root". Also, at DESY we are mounted. (?)
+    export GRIDDIRECT_FROM="root://dcache-atlas-xrootd.desy.de:1094//"
+    export GRIDDIRECT_TO="/"
+    export LOCALGROUPDISK="DESY-HH_LOCALGROUPDISK"
     ;;
     
 
@@ -376,14 +377,16 @@ rcSetupLocal() {
 }
 
 ruciohelp() {
+    echo 'rucio list-account-usage brendlin'
     echo 'rucio list-datasets-rse DESY-HH_LOCALGROUPDISK | grep brendlin'
     echo 'rucio list-dids mc15_13TeV:*'
     echo 'rucio list-files data16_13TeV:data16_13TeV.00304008.physics_Main.merge.DAOD_HIGG1D2.r9264_p3083_p3101'
     echo 'rucio list-parent-dids data16_13TeV:DAOD_HIGG1D2.11092993._000001.pool.root.1'
     echo 'rucio download data16_13TeV:DAOD_HIGG1D2.11092993._000001.pool.root.1'
-    echo "rucio list-rules --account brendlin | grep DESY-HH_LOCALGROUPDISK | cut -d' ' -f6- | sort"
+    echo "rucio list-rules --account brendlin | grep DESY-HH_LOCALGROUPDISK | awk '{printf \"%-135s %-13s %10s\n\", \$3, \$4, \$5}' | sort"
     echo 'rucio add-rule data16_13TeV:data16_13TeV.00297730.physics_Main.merge.DAOD_HIGG1D1.r9264_p3083_p3101 1 DESY-HH_LOCALGROUPDISK'
-    echo 'rucio delete-rule --rse_expression PRAGUELCG2_LOCALGROUPDISK user.tkouba:user.tkouba.prun_test2.130307124138'
+    echo 'rucio delete-rule --rse_expression DESY-HH_LOCALGROUPDISK user.tkouba:user.tkouba.prun_test2.130307124138'
     #echo 'rucio list-file-replicas data16_13TeV:data16_13TeV.00297730.physics_Main.merge.DAOD_HIGG1D1.r9264_p3083_p3101 | grep DESY-HH_LOCALGROUPDISK'
     echo "rucio list-file-replicas data16_13TeV:data16_13TeV.00297730.physics_Main.merge.DAOD_HIGG1D1.r9264_p3083_p3101 | grep DESY-HH_LOCALGROUPDISK | sort | cut -d'|' -f4,6 | sed 's/[ \t]*$//'"
+    echo "rucio list-account-usage --rse DESY-HH_LOCALGROUPDISK brendlin"
 }
