@@ -58,7 +58,7 @@ def PrintNumberOfEvents(hist,isUnicode=False) :
                         
     if sumw2 :
         text += ' %s %2.2f'%(pm,math.sqrt(sumw2))
-    print text
+    print text.encode('utf-8')
     return text
 
 #-------------------------------------------------------------------------

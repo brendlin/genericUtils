@@ -24,11 +24,11 @@ def main(options,args) :
 
     weight = options.weight
     if ''.join(options.cuts+options.truthcuts) :
-        weight = (weight+'*(%s)'%(' && '.join(options.cuts+options.truthcuts))).lstrip('*')
+        weight = (weight+'*(%s)'%(' && '.join(options.cuts+options.truthcuts).lstrip('& ').rstrip('& '))).lstrip('*')
 
     dweight = '' # weight value (and cuts) applied to data
     if ''.join(options.cuts+options.blindcut) :
-        dweight = '('+' && '.join(options.cuts+options.blindcut)+')'
+        dweight = '('+' && '.join(options.cuts+options.blindcut).lstrip('& ').rstrip('& ')+')'
 
     cans = []
 
