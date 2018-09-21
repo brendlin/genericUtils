@@ -381,7 +381,7 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         if i.GetTitle() in skip :
             continue
 
-        drawopt = i.GetOption().replace('same','').replace('hist','l')
+        drawopt = i.GetOption().replace('same','').replace('hist','l').replace('E2','f')
         if issubclass(type(i),ROOT.TGraph) :
             drawopt = i.GetHistogram().GetOption().replace('same','').replace('hist','l')
         if (type(option) == type([])) and len(option) > total :

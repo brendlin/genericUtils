@@ -83,6 +83,13 @@ config file:
  - **mergesamples** -- a dictionary for merging sub-samples into larger samples, e.g.
    'eeg':['eeg1','eeg2','eeg3','eeg4']
 
+### New! Regular expressions
+
+Now you can specify certain command-line (or config) options using regular expressions (use "%" instead of ".*"):
+ - **--bkgs**, **--signal** and **--data**
+ - **labels** (the dict in the conf file - the key can use regexp. Works for bkg, signal and data)
+ - **mergesamples** (the dict in the conf file - specify a regexp string instead of a list of strings)
+
 **makePicoXaod.py** - Description and Instructions
 ==================
 

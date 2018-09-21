@@ -3,6 +3,7 @@
 def PrepareBkgHistosForStack(bkg_hists,options) :
     from PlotFunctions import KurtColorPalate
     from PyHelpers import GetHWWColors
+    import re
 
     colors = getattr(options,'colors',None)
     labels = getattr(options,'labels',None)
@@ -14,14 +15,21 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
     if not labels :
         labels = dict()
 
-    # Set colors according to your color dictionary, or the HWW color dictionary
     for i in bkg_hists :
-        i.SetLineColor(1)
+
+        # Set colors according to your color dictionary, or the HWW color dictionary
         i.SetMarkerColor(colors.get(i.GetTitle(),1))
         i.SetFillColor(colors.get(i.GetTitle(),1))
         used_colors.append(i.GetFillColor())
         i.SetLineWidth(1)
-        i.SetTitle(labels.get(i.GetTitle(),i.GetTitle()))
+        i.SetLineColor(1)
+
+        # Set labels according to "labels" dict (allows for reg-exp)
+        for j in labels.keys() :
+            # Compare to regexp
+            if not re.match(j.replace('%','.*'),i.GetTitle()) :
+                continue
+            i.SetTitle(labels[j])
 
     # Set the un-assigned colors to random stuff in this KurtPalate. Make sure the color is unused.
     colors_for_unassigned_samples = KurtColorPalate()
@@ -41,28 +49,48 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
 
 #-------------------------------------------------------------------------
 def PrepareDataHistos(data_hists,options) :
+    import re
+
+    labels = getattr(options,'labels',None)
+    if not labels :
+        labels = dict()
 
     for i in data_hists :
         i.SetLineWidth(2)
         i.SetLineColor(1)
         i.SetMarkerColor(1)
+        i.SetMarkerStyle(20)
+        i.SetMarkerSize(1)
+
+        # Set labels according to "labels" dict (allows for reg-exp)
+        for j in labels.keys() :
+            # Compare to regexp
+            if not re.match(j.replace('%','.*'),i.GetTitle()) :
+                continue
+            i.SetTitle(labels[j])
 
     return
 
 #-------------------------------------------------------------------------
 def PrepareSignalHistos(sig_hists,options) :
+    import re
 
+    sig_hists[-1].SetLineWidth(2)
     sig_hists[-1].SetLineColor(2)
     sig_hists[-1].SetMarkerColor(2)
+    sig_hists[-1].SetMarkerStyle(20)
+    sig_hists[-1].SetMarkerSize(1)
 
     labels = getattr(options,'labels',None)
-
     if not labels :
         labels = dict()
 
-    # Set colors according to your color dictionary, or the HWW color dictionary
-    for i in sig_hists :
-        i.SetTitle(labels.get(i.GetTitle(),i.GetTitle()))
+    # Set labels according to "labels" dict (allows for reg-exp)
+    for j in labels.keys() :
+        # Compare to regexp
+        if not re.match(j.replace('%','.*'),sig_hists[-1].GetTitle()) :
+            continue
+        sig_hists[-1].SetTitle(labels[j])
 
     return
 
@@ -93,6 +121,8 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
         if options.log : can.GetPrimitive('pad_top').SetLogy()
 
     if bkg_hists :
+
+        # Make a histogram that includes the total of all bkgs:
         totb = bkg_hists[0].Clone()
         totb.SetNameTitle(('%s_%s_SM'%(canname,name)).replace('__','_'),'remove me')
         totb.SetLineColor(1)
@@ -101,6 +131,8 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
         totb.SetFillColor(0)
         for i in bkg_hists[1:] :
             totb.Add(i)
+
+        # A copy of the total bkg histo, for plotting the error bar
         totberror = totb.Clone()
         totberror.SetName(totb.GetName().replace('_SM','_error'))
         totberror.SetTitle('SM (stat)')
@@ -160,7 +192,7 @@ def GetTreesFromFiles(filelist_csv,treename='physics') :
     keys = []
     for f in filelist_csv.split(',') :
         if not f : continue
-        name = f.replace('.root','').replace('/','_').replace('-','_').replace('.','_')
+        name = f.replace('.root','')
         #
         # folder of files
         #
@@ -512,10 +544,20 @@ class TreePlottingOptParser :
             if hasattr(usermodule,'variables') :
                 self.options.variables = ','.join(usermodule.variables)
 
-        # Use MergeSamples to add data hists into one data file
-        if hasattr(self.options,'data') :
-            data_merge_list = list(CleanUpName(a) for a in self.options.data.split(','))
-            self.options.mergesamples['data'] = data_merge_list
+        def ExpandWildcard(csv_list) :
+            import re
+            tmp = csv_list.split(',')
+            tmp_new = []
+            for i in range(len(tmp)) :
+                if not tmp[i] :
+                    continue
+                if '%' in tmp[i] :
+                    for j in sorted(os.listdir('.')) :
+                        if re.match(tmp[i].replace('%','.*'),j) :
+                            tmp_new.append(j)
+                else :
+                    tmp_new.append(tmp[i])
+            return ','.join(tmp_new)
 
         def AddDotRoot(csv_list) :
             tmp = csv_list.split(',')
@@ -527,7 +569,9 @@ class TreePlottingOptParser :
             return ','.join(tmp)
         
         # add .root to each background name.
+        self.options.bkgs = ExpandWildcard(self.options.bkgs)
         self.options.bkgs = AddDotRoot(self.options.bkgs)
+        self.options.signal = ExpandWildcard(self.options.signal)
         self.options.signal = AddDotRoot(self.options.signal)
 
         # add up multiple data files
@@ -540,6 +584,8 @@ class TreePlottingOptParser :
                 datalist.append(i)
             self.options.data = ','.join(datalist)
 
+        self.options.data = ExpandWildcard(self.options.data)
+        self.options.mergesamples['data'] = list(a.replace('.root','') for a in self.options.data.split(','))
         self.options.data = AddDotRoot(self.options.data)
 
         if self.p.has_option('--bkgs') :
@@ -638,6 +684,7 @@ def MergeSamples(hists,options) :
     import math
     import ROOT
     import PyHelpers
+    import re
 
     if not options.mergesamples :
         return hists
@@ -648,8 +695,18 @@ def MergeSamples(hists,options) :
     for i in hists :
         added = False
         for j in options.mergesamples.keys() :
-            if i.GetTitle() not in list(CleanUpName(a) for a in options.mergesamples[j]) :
-                continue
+
+            # Compare to regexp
+            print i.GetTitle(),j,options.mergesamples[j]
+            if type(options.mergesamples[j]) == type('') :
+                if not re.match(options.mergesamples[j].replace('%','.*'),i.GetTitle()) :
+                    continue
+
+            # Compare to list of samples
+            if type(options.mergesamples[j]) == type([]) :
+                if i.GetTitle() not in options.mergesamples[j] :
+                    continue
+
             if j in hists_index.keys() :
                 #print 'adding to existing histo'
                 hists_new[hists_index[j]].Add(i)
