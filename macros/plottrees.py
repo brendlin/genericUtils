@@ -14,10 +14,9 @@ def main(options,args) :
 
     plotfunc.SetupStyle()
 
-    files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename)
-    files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename)
-    files_d,trees_d,keys_d  = anaplot.GetTreesFromFiles(options.data  ,treename=options.treename)
-    print files_d,trees_d,keys_d
+    files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename,xAODInit=options.xAODInit)
+    files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename,xAODInit=options.xAODInit)
+    files_d,trees_d,keys_d = anaplot.GetTreesFromFiles(options.data  ,treename=options.treename,xAODInit=options.xAODInit)
 
     scales_b = anaplot.GetScales(files_b,trees_b,keys_b,options)
     scales_s = anaplot.GetScales(files_s,trees_s,keys_s,options)
@@ -63,6 +62,9 @@ def main(options,args) :
         raw_input('Press enter to exit')
 
     anaplot.doSaving(options,cans)
+
+    if options.xAODInit :
+        ROOT.xAOD.ClearTransientTrees()
 
     print 'done.'
     return

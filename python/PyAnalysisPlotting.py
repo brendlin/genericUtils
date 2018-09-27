@@ -181,7 +181,7 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
     return can
 
 #-------------------------------------------------------------------------
-def GetTreesFromFiles(filelist_csv,treename='physics') :
+def GetTreesFromFiles(filelist_csv,treename='physics',xAODInit=False) :
     import ROOT,os
 
     tmperror = ROOT.gErrorIgnoreLevel        
@@ -223,7 +223,14 @@ def GetTreesFromFiles(filelist_csv,treename='physics') :
             import sys
             sys.exit()
         keys.append(name)
-        trees[name] = files[name].Get(treename)
+
+        # Regular files: Get tree
+        if xAODInit :
+            trees[name] = ROOT.xAOD.MakeTransientTree( files[name] )
+        else :
+            trees[name] = files[name].Get(treename)
+
+
         if not trees[name] :
             print 'Error! Tree \"%s\" does not exist! Exiting.'%(treename)
             import sys; sys.exit()
@@ -465,6 +472,7 @@ class TreePlottingOptParser :
         self.p.add_option('--save',action='store_true',default=False,dest='save',help='save cans to pdf')
         self.p.add_option('--outdir',type='string',default='',dest='outdir',help='output directory')
         self.p.add_option('-l','--log',action='store_true',default=False,dest='log',help='log')
+        self.p.add_option('--xAODInit',action='store_true',default=False,dest='xAODInit',help='run xAOD::Init()')
         
     def parse_args(self) :
         import sys,os
@@ -520,6 +528,8 @@ class TreePlottingOptParser :
         if self.options.fb <= 0 :
             self.options.fb = 1.
 
+        if self.options.xAODInit :
+            ROOT.xAOD.Init()
 
 
 
