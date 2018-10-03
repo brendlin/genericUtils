@@ -90,7 +90,7 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=F
         print '(Bad legend placement?)'
         return miny,maxy
 
-    if can.GetLogy() :
+    if can.GetLogy() and MinimumForLog(can) > 0 :
         # special treatment for log plots
         miny = 0.85*MinimumForLog(can)
         # some orders of magnitude *above* miny, making room for text
@@ -156,6 +156,9 @@ def MinimumForLog(can) :
                     y = ymin
                 ymin = min(ymin,y)
     # print 'MinimumForLog',ymin
+    if ymin == sys.float_info.max :
+        print 'Error! Trying to use Logy but y minimum is zero! Returning -1'
+        return -1
     return ymin
 
 ##

@@ -32,25 +32,27 @@ def main(options,args) :
     cans = []
 
     # get the histograms from the files
-    for v in options.variables.split(',') :
+    for v in options.variables :
         bkg_hists = []
         sig_hists = []
         data_hist = None
 
         if options.data :
-            data_hists = anaplot.GetVariableHistsFromTrees(trees_d,keys_d,v,dweight,options)
+            data_hists = anaplot.GetVariableHistsFromTrees(trees_d,keys_d,v,dweight,options,files=files_d)
             data_hist = anaplot.MergeSamples(data_hists,options)
             if len(data_hist) > 1 :
                 print 'Error! Failed to merge data histograms! Check your data sample merging.'
                 sys.exit()
             data_hist = data_hist[0]
             anaplot.PrepareDataHistos(data_hists,options)
+
         if options.bkgs :
-            bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight,options,scales=scales_b)
+            bkg_hists = anaplot.GetVariableHistsFromTrees(trees_b,keys_b,v,weight,options,scales=scales_b,files=files_b)
             bkg_hists = anaplot.MergeSamples(bkg_hists,options)
             anaplot.PrepareBkgHistosForStack(bkg_hists,options)
+
         if options.signal :
-            sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight,options,scales=scales_s)
+            sig_hists = anaplot.GetVariableHistsFromTrees(trees_s,keys_s,v,weight,options,scales=scales_s,files=files_s)
             sig_hists = anaplot.MergeSamples(sig_hists,options)
             anaplot.PrepareSignalHistos(sig_hists,options)
 
@@ -58,13 +60,13 @@ def main(options,args) :
 
     anaplot.UpdateCanvases(cans,options)
 
+    if options.xAODInit :
+        ROOT.xAOD.ClearTransientTrees()
+
     if not options.batch :
         raw_input('Press enter to exit')
 
     anaplot.doSaving(options,cans)
-
-    if options.xAODInit :
-        ROOT.xAOD.ClearTransientTrees()
 
     print 'done.'
     return

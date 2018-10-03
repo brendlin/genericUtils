@@ -115,10 +115,8 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
     #
     if not options.ratio :
         can = ROOT.TCanvas(canname,canname,500,500)
-        if options.log : can.SetLogy()
     else :
         can = plotfunc.RatioCanvas(canname,canname,500,500)
-        if options.log : can.GetPrimitive('pad_top').SetLogy()
 
     if bkg_hists :
 
@@ -168,6 +166,14 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
     if options.fb > 0 :
         text_lines += [plotfunc.GetLuminosityText(options.fb)]
     text_lines += [plotfunc.GetAtlasInternalText()]
+
+    if options.log :
+        if options.ratio :
+            if taxisfunc.MinimumForLog(can.GetPrimitive('pad_top')) > 0 :
+                can.GetPrimitive('pad_top').SetLogy()
+        else :
+            if taxisfunc.MinimumForLog(can) > 0 :
+                can.SetLogy()
 
     if options.ratio :
         plotfunc.DrawText(can,text_lines,0.2,0.65,0.5,0.90,totalentries=4)
@@ -293,7 +299,7 @@ def GetScales(files,trees,keys,options) :
     return weights
     
 #-------------------------------------------------------------------------
-def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,inputname='') :
+def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,inputname='',files=None) :
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
@@ -315,39 +321,67 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
     hists = []
     for k in keys :
         name = CleanUpName('%s_%s'%(inputname,k))
-        tmp_name,ni = name,0
-        while ROOT.gDirectory.Get(tmp_name) :
-            ni += 1
-            tmp_name = '%s_v%03d'%(name,ni)
-        name = tmp_name
 
-        if rebin and type(rebin) == type([]) :
-            name = name+'_unrebinned'
-        bins = '(%s,%s,%s)'%(n,low,high)
-        if (n <= 0) :
-            bins = ''
-        arg1,arg2,arg3 = '%s>>%s%s'%(variable,name,bins),weight,'egoff'
-        #arg1,arg2,arg3 = '%s>>%s'%(variable,name),weight,'egoff'
-        # Reset the default binning to 100, if "n" is not specified.
-        ROOT.gEnv.SetValue('Hist.Binning.1D.x','100')
-        print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
-        tmp = ROOT.gErrorIgnoreLevel
-        ROOT.gErrorIgnoreLevel = ROOT.kFatal
-        trees[k].Draw(arg1,arg2,arg3)
-        ROOT.gErrorIgnoreLevel = tmp
+        if issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
+            print 'Using existing histogram, %s'%(name)
+            # will load the histogram later...
 
-        # if Draw did not work, then exit.
-        if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-            print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
-            import sys
-            sys.exit()
+        elif options.macro :
 
-        if rebin and type(rebin) == type([]) :
-            tmp = ROOT.gDirectory.Get(name)
-            name = name.replace('_unrebinned','')
-            tmp.Rebin(len(rebin)-1,name,array('d',rebin))
+            macro_name = options.macro.replace('.h','').replace('.cxx','').replace('.cpp','')
+            macro_name = macro_name.replace('.C','')
+
+            if getattr(ROOT,macro_name,None) :
+                print 'Macro %s already loaded.'%(options.macro)
+            else :
+                print 'Loading macro %s'%(options.macro)
+                ROOT.gROOT.LoadMacro(options.macro)
+
+                if not getattr(ROOT,macro_name,None) :
+                    print 'ERROR Macro named %s not found in file %s'%(macro_name,options.macro)
+                    import sys; sys.exit()
+
+            # Macro should take a TTree and a key name
+            print 'Running macro %s...'%(macro_name)
+            getattr(ROOT,macro_name)(files[k],CleanUpName(k))
+
+            # if Draw did not work, then exit.
+            if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
+                print 'ERROR Macro failed trying to create %s Exiting.'%(name)
+                import sys; sys.exit()
+
+        else :
+
+            if rebin and type(rebin) == type([]) :
+                name = name+'_unrebinned'
+
+            bins = '(%s,%s,%s)'%(n,low,high)
+            if (n <= 0) :
+                bins = ''
+            arg1,arg2,arg3 = '%s>>%s%s'%(variable,name,bins),weight,'egoff'
+
+            # Reset the default binning to 100, if "n" is not specified.
+            ROOT.gEnv.SetValue('Hist.Binning.1D.x','100')
+
+            print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
+            tmp = ROOT.gErrorIgnoreLevel
+            ROOT.gErrorIgnoreLevel = ROOT.kFatal
+            trees[k].Draw(arg1,arg2,arg3)
+            ROOT.gErrorIgnoreLevel = tmp
+
+            # if Draw did not work, then exit.
+            if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
+                print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
+                import sys; sys.exit()
+
+            if rebin and type(rebin) == type([]) :
+                tmp = ROOT.gDirectory.Get(name)
+                name = name.replace('_unrebinned','')
+                tmp.Rebin(len(rebin)-1,name,array('d',rebin))
 
         hists.append(ROOT.gDirectory.Get(name))
+        hists[-1].SetDirectory(0)
+
         if rebin and type(rebin) == type(1) :
             hists[-1].Rebin(rebin)
 
@@ -473,6 +507,7 @@ class TreePlottingOptParser :
         self.p.add_option('--outdir',type='string',default='',dest='outdir',help='output directory')
         self.p.add_option('-l','--log',action='store_true',default=False,dest='log',help='log')
         self.p.add_option('--xAODInit',action='store_true',default=False,dest='xAODInit',help='run xAOD::Init()')
+        self.p.add_option('--macro',type='string',default='',dest='macro',help='Load and run a macro')
         
     def parse_args(self) :
         import sys,os
@@ -497,7 +532,7 @@ class TreePlottingOptParser :
             print 'Error! Please specify --limits using 3 numbers in the format nbins,lowedge,highedge'
             sys.exit()
 
-
+        self.options.variables = self.options.variables.split(',')
 
 
 
@@ -529,9 +564,10 @@ class TreePlottingOptParser :
             self.options.fb = 1.
 
         if self.options.xAODInit :
+            if not os.getenv('AtlasArea') :
+                print 'Error! Specified --xAODInit but did not set up ATLAS! Exiting.'
+                import sys; sys.exit()
             ROOT.xAOD.Init()
-
-
 
         # to get your current directory viewable by the code:
         sys.path.append(os.getcwd())
@@ -552,7 +588,7 @@ class TreePlottingOptParser :
                         self.options.cuts[i] = '('+c+')'
 
             if hasattr(usermodule,'variables') :
-                self.options.variables = ','.join(usermodule.variables)
+                self.options.variables = usermodule.variables
 
         def ExpandWildcard(csv_list) :
             import re
@@ -612,7 +648,7 @@ class TreePlottingOptParser :
         self.options.limits = dict()
 
         # Prepare stuff related to the variables.
-        for v in self.options.variables.split(',') :
+        for v in self.options.variables :
             if v == '' : continue
             if v in self.options.histformat.keys() :
                 if len(self.options.histformat[v]) < 4 :
@@ -707,7 +743,6 @@ def MergeSamples(hists,options) :
         for j in options.mergesamples.keys() :
 
             # Compare to regexp
-            print i.GetTitle(),j,options.mergesamples[j]
             if type(options.mergesamples[j]) == type('') :
                 if not re.match(options.mergesamples[j].replace('%','.*'),i.GetTitle()) :
                     continue
@@ -772,6 +807,9 @@ def CleanUpName(name) :
     tmp = tmp.replace('/','_over_').replace('&&','and')
     tmp = tmp.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
     tmp = tmp.replace('!','not').replace('*','times').replace('+','plus')
+    tmp = tmp.replace('::','_').replace(':','_')
+    tmp = tmp.replace(',','_')
+    tmp = tmp.replace('____','_').replace('___','_').replace('__','_')
     tmp = tmp.lstrip('_').rstrip('_')
     return tmp
 
