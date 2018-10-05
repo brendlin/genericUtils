@@ -299,6 +299,29 @@ def GetScales(files,trees,keys,options) :
     return weights
     
 #-------------------------------------------------------------------------
+def RunMacro(macro,thefile,histnamekey) :
+    import ROOT
+
+    macro_name = macro.replace('.h','').replace('.cxx','').replace('.cpp','')
+    macro_name = macro_name.replace('.C','')
+
+    if getattr(ROOT,macro_name,None) :
+        print 'Macro %s already loaded.'%(macro)
+    else :
+        print 'Loading macro %s'%(macro)
+        ROOT.gROOT.LoadMacro(macro)
+
+        if not getattr(ROOT,macro_name,None) :
+            print 'ERROR Macro named %s not found in file %s'%(macro_name,macro)
+            import sys; sys.exit()
+
+    # Macro should take a TTree and a key name
+    print 'Running macro %s...'%(macro_name)
+    getattr(ROOT,macro_name)(thefile,histnamekey)
+
+    return
+
+#-------------------------------------------------------------------------
 def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,inputname='',files=None) :
     import ROOT
     from array import array
@@ -328,22 +351,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
 
         elif options.macro :
 
-            macro_name = options.macro.replace('.h','').replace('.cxx','').replace('.cpp','')
-            macro_name = macro_name.replace('.C','')
-
-            if getattr(ROOT,macro_name,None) :
-                print 'Macro %s already loaded.'%(options.macro)
-            else :
-                print 'Loading macro %s'%(options.macro)
-                ROOT.gROOT.LoadMacro(options.macro)
-
-                if not getattr(ROOT,macro_name,None) :
-                    print 'ERROR Macro named %s not found in file %s'%(macro_name,options.macro)
-                    import sys; sys.exit()
-
-            # Macro should take a TTree and a key name
-            print 'Running macro %s...'%(macro_name)
-            getattr(ROOT,macro_name)(files[k],CleanUpName(k))
+            RunMacro(options.macro,files[k],CleanUpName(k))
 
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
@@ -414,19 +422,18 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
     return hists
 
 #-------------------------------------------------------------------------
-def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,scales=0,inputname='') :
+def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,scales=0,inputname='',files=None) :
     import ROOT
     from array import array
     import PlotFunctions as plotfunc
     import math
     import PyHelpers
 
-    print options.limits
-
-    if not options.limits.get(variable1,None) or not options.limits.get(variable2,None) :
-        print 'Error - you need to specify limits for both %s and %s.'%(variable1,variable2)
-        print '(Note you probably have to add these variables to the list of variables as well.)'
-        import sys; sys.exit()
+    if not options.macro :
+        if not options.limits.get(variable1,None) or not options.limits.get(variable2,None) :
+            print 'Error - you need to specify limits for both %s and %s.'%(variable1,variable2)
+            print '(Note you probably have to add these variables to the list of variables as well.)'
+            import sys; sys.exit()
 
     n1,low1,high1 = options.limits.get(variable1)
     n2,low2,high2 = options.limits.get(variable2)
@@ -437,27 +444,40 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
     hists = []
     for k in keys :
         name = CleanUpName('%s_%s'%(inputname,k))
-        while ROOT.gDirectory.Get(name) :
-            #print 'changing name'
-            name = name+'x'
 
-        arg1,arg2,arg3 = '%s:%s>>%s(%s,%s,%s,%s,%s,%s)'%(variable2,variable1,name,n1,low1,high1,n2,low2,high2),weight,'egoff'
-        print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
-        tmp = ROOT.gErrorIgnoreLevel
-        ROOT.gErrorIgnoreLevel = ROOT.kFatal
-        trees[k].Draw(arg1,arg2,arg3)
-        ROOT.gErrorIgnoreLevel = tmp
+        if issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
+            print 'Using existing histogram, %s'%(name)
+            # will load the histogram later...
 
-        # if Draw did not work, then exit.
-        if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-            print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
-            import sys
-            sys.exit()
+        elif options.macro :
+
+            RunMacro(options.macro,files[k],CleanUpName(k))
+
+            # if Draw did not work, then exit.
+            if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
+                print 'ERROR Macro failed trying to create %s Exiting.'%(name)
+                import sys; sys.exit()
+
+        else :
+
+            arg1 = '%s:%s>>%s(%s,%s,%s,%s,%s,%s)'%(variable2,variable1,name,
+                                                   n1,low1,high1,n2,low2,high2)
+            arg2 = weight
+            arg3 = 'egoff'
+            print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
+            tmp = ROOT.gErrorIgnoreLevel
+            ROOT.gErrorIgnoreLevel = ROOT.kFatal
+            trees[k].Draw(arg1,arg2,arg3)
+            ROOT.gErrorIgnoreLevel = tmp
+
+            # if Draw did not work, then exit.
+            if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
+                print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
+                import sys
+                sys.exit()
 
         hists.append(ROOT.gDirectory.Get(name))
-
-        hists[-1].SetTitle(k)
-        hists[-1].SetMinimum(-0.00001)
+        hists[-1].SetDirectory(0)
 
         hists[-1].SetTitle(k)
         if scales and (scales[k] != 1) :
