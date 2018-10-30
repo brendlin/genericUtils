@@ -829,6 +829,7 @@ def CleanUpName(name) :
     tmp = tmp.replace('!','not').replace('*','times').replace('+','plus')
     tmp = tmp.replace('::','_').replace(':','_')
     tmp = tmp.replace(',','_')
+    tmp = tmp.replace('#','')
     tmp = tmp.replace('____','_').replace('___','_').replace('__','_')
     tmp = tmp.lstrip('_').rstrip('_')
     return tmp
