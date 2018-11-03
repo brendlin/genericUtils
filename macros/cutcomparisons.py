@@ -56,7 +56,6 @@ def main(options,args) :
                 s.SetLineColor(plotfunc.KurtColorPalate()[i])
                 sig_hists.append(s)
 
-        print sig_hists
         cans.append(anaplot.DrawHistos(v,options,sig_hists=sig_hists))
 
     anaplot.UpdateCanvases(cans,options)
