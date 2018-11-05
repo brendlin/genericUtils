@@ -39,12 +39,12 @@ def main(options,args) :
         os.makedirs(options.outdir)
 
     for k in keys_d :
-        name = '%s_pico'%(files_d[k].GetName())
+        name = '%s_pico'%(files_d[k].GetName().replace('.root',''))
         print 'Making picoXaod for %s'%(k)
         ROOT.makePicoXaod(trees_d[k],k,dcuts,','.join(options.variables),options.outdir,name)
 
     for k in keys_b :
-        name = '%s_pico'%(files_b[k].GetName())
+        name = '%s_pico'%(files_b[k].GetName().replace('.root',''))
         print 'Making picoXaod for %s'%(k)
         ROOT.makePicoXaod(trees_b[k],k,simcuts,','.join(options.variables),options.outdir,name)
 
