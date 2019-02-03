@@ -30,8 +30,8 @@ These reference files that manipulate histogram cosmetics:
 
 ### How to run it
 
-Say you have a data file data1.root and background files (files that you want to stack) wz and
-ww. Then (note that ".root" is not required):
+Say you have a data file `data1.root` and background files (files that you want to stack) `wz.root` and
+`ww.root`. Then (note that ".root" is not required):
 
     python plottrees.py --data data1 --bkgs wz,ww --variable ph_pt --treename HZG_Tree
 
@@ -141,3 +141,104 @@ Then run e.g. the following:
 
 The cuts defined in the "cuts" option can/will still be applied on top, as a preselection to the
 cuts specified in "cutcomparisons".
+
+**PlotFunctions** and **TAxisFunctions** - Description and Instructions
+==================
+
+### What is it
+
+The functions in `Plotfunctions` and `TAxisFunctions` are meant to be helpers to construct
+a nice-looking canvas. They are also *functions*, meaning that you can pick and choose which
+functions you want to use, and if you want to do something else with your TCanvas then you
+can still use it like a regular TCanvas. The functions are meant to be short, so that you can
+look inside the code to see what they are doing. (This way you will see what other options there
+are too.)
+
+### How to use it in your code (python or C++)
+
+Note that there are examples of how to use these tools - see `python/UnitTestPlot.py` for a
+python version and `util/UnitTestPlotCpp.C` for a C++ version.
+
+If you want to start out with decent defaults, then before you do anything, do (note: this is python. If using c++, see the c++ setup below):
+
+ - **SetupStyle**()
+
+Then make your TCanvas as usual. You can also make a `RatioCanvas`
+(a TCanvas with a 'pad_top' and a 'pad_bot' which will be useful for ratio canvases).
+RatioCanvases have custom functions in this package (for instance you can use `AddRatio` to add a histogram plus its ratio to another histogram).
+ 
+ - c = TCanvas(name,title,canw,canh)
+ - c = RatioCanvas(name,title,canw,canh,ratio_size_as_fraction)
+
+Tools to add histograms to a normal canvas:
+
+ - **AddHistogram**(can,hist)
+
+If you have a RatioCanvas, you can use:
+
+ - **AddHistogramTop**(can,hist)
+ - **AddHistogramBot**(can,hist)
+ - **AddRatio**(can,hist,ref_hist)
+ - **AddRatioManual**(can,hist,ratioplot,drawopt1='pE1',drawopt2='pE1')
+
+**Once you have added all the histograms**, you can use the following to manipulate the content in the canvas:
+
+ - **FullFormatCanvasDefault**(can,lumi=36.1,sqrts=13,additionaltext=,preliminary=False)
+ - **ConvertToDifferential**(hist)
+ - **SetAxisLabels**(can,xlabel,ylabel)
+ - **SetColors**(can,[color1,color2,color3...])
+ - **SetMarkerStyles**(can,these_styles=[],these_sizes=[])
+ - **MakeLegend**(can,x1,x2,y1,y2,...)
+ - **FormatCanvasAxes**(can,options...) - must be run AFTER the first histograms are added!
+ - **SetLeftMargin**(can,margin), SetRightMargin(can,margin)
+ - **GetTopPad**(can), GetBotPad(can)
+ - **Stack**(can,reverse=False)
+ - **ColorGradient**(i,ntotal)
+ - **SetColorGradient**(name='MyThermometer')
+
+Tools for adding text:
+
+ - **DrawText**(can,text,x1,y1,x2,y2,...)
+ - **GetLuminosityText**(lumi)
+ - **GetSqrtsText**(sqrts)
+ - **GetAtlasInternalText**(status='Internal')
+
+### C++ Setup
+
+You first need to compile the macros:
+
+```
+cd genericUtils/genericUtils
+root -l
+.L TAxisFunctions.cxx++
+.L PlotFunctions.cxx++
+.q
+```
+
+Then instead of calling `root -l myScript.C`, you must do (you must change the file path to the correct one):
+
+```
+gSystem->Load("$HOME/genericUtils/genericUtils/TAxisFunctions_cxx.so");
+gSystem->Load("$HOME/genericUtils/genericUtils/PlotFunctions_cxx.so");
+.L myScript.C
+myScript()
+```
+
+Or, if that's too much to type every time, you can load them by default when you start root.
+Do this by first creating a "$HOME/.rootrc" file, or (if it exists) make sure it has the following line in it:
+
+```
+Rint.Logon:          $(HOME)/rootlogon.C
+```
+
+Then make a "$HOME/rootlogon.C" file that looks like this:
+
+```
+void rootlogon()
+{
+  gSystem->Load("$HOME/genericUtils/genericUtils/TAxisFunctions_cxx.so");
+  gSystem->Load("$HOME/genericUtils/genericUtils/PlotFunctions_cxx.so");
+}
+```
+
+Then you can simply call `root -l myScript.C` like before.
