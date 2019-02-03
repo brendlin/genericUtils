@@ -191,7 +191,7 @@ If you have a RatioCanvas, you can use:
  - **MakeLegend**(can,x1,x2,y1,y2,...)
  - **FormatCanvasAxes**(can,options...) - must be run AFTER the first histograms are added!
  - **SetLeftMargin**(can,margin), SetRightMargin(can,margin)
- - **GetTopPad**(can), GetBotPad(can)
+ - **GetTopPad**(can), **GetBotPad**(can)
  - **Stack**(can,reverse=False)
  - **ColorGradient**(i,ntotal)
  - **SetColorGradient**(name='MyThermometer')
