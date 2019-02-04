@@ -242,3 +242,16 @@ void rootlogon()
 ```
 
 Then you can simply call `root -l myScript.C` like before.
+
+### Use with AnalysisBase
+
+You should also be able to use genericUtils with AnalysisBase. 
+It should be compatible with nearly every AnalysisBase release, since it's relatively vanilla ROOT code.
+Here there is no special instruction -- simply check
+out the package where you have checked out your other packages, and compile! Then you can do:
+
+```
+#include "genericUtils/PlotFunctions.h"
+#include "genericUtils/TAxisFunctions.h"
+```
+
