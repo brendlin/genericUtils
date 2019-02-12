@@ -245,6 +245,10 @@ def SetColors(can,these_colors=[],fill=False,line=False) :
         if color_count >= len(these_colors) :
             break
 
+    if can.GetPrimitive('pad_top') :
+        can.GetPrimitive('pad_top').Modified()
+        can.GetPrimitive('pad_top').Update()
+
     can.Modified()
     can.Update()
     return
@@ -388,8 +392,10 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
             drawopt = option[total]
         if (type(option) == type('')) :
             drawopt = option
-        if not drawopt :
+        if not drawopt and issubclass(type(i),ROOT.TH1) :
             drawopt = 'f'
+        if not drawopt and issubclass(type(i),ROOT.TGraph) :
+            drawopt = 'p'
 
         # print '%s: drawopt \"%s\"'%(i.GetName(),drawopt)
         leg.AddEntry(i,'^{ }'+i.GetTitle(),drawopt) # plef

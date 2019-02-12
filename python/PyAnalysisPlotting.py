@@ -698,7 +698,7 @@ class TreePlottingOptParser :
 def doSaving(options,cans) :
     import os,sys
     directory = os.getcwd()
-    if options.outdir :
+    if hasattr(options,'outdir') and options.outdir :
         directory = options.outdir
         if not os.path.exists(directory) :
             os.makedirs(directory)
