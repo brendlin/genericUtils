@@ -39,15 +39,15 @@ namespace GU {
                   int ncolumns=1,int totalentries=0,
                   const std::vector<std::string>& options=std::vector<std::string>(),
                   const std::vector<std::string>& skip=std::vector<std::string>(),
-                  int textsize=18);
+                  int textsize=0);
 
   void DrawText(TPad& can,const std::vector<std::string> text,
                 double x1=-1,double y1=-1,double x2=-1,double y2=-1,int totalentries=1,
-                double angle=0,std::string align="",int textsize=18);
+                double angle=0,std::string align="",int textsize=0);
 
   void DrawText(TPad& can,const std::string text,
                 double x1=-1,double y1=-1,double x2=-1,double y2=-1,int totalentries=1,
-                double angle=0,std::string align="",int textsize=18);
+                double angle=0,std::string align="",int textsize=0);
 
   TCanvas* RatioCanvas(const char *name,const char *title,
                        Int_t canw=500,Int_t canh=600,double ratio_size_as_fraction=0.35);

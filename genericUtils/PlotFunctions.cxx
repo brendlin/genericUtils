@@ -174,7 +174,7 @@ namespace GU {
 
     leg->SetMargin(0);
     leg->SetFillStyle(0);
-    leg->SetTextSize(textsize);
+    if (textsize > 0) leg->SetTextSize(textsize);
 
     int total = 0;
     for (unsigned int i=0;i<text.size();++i) {
@@ -236,7 +236,7 @@ namespace GU {
     leg->SetName("legend");
     GetGlobalHistoCollector()->Add(leg);
 
-    leg->SetTextSize(textsize);
+    if (textsize > 0) leg->SetTextSize(textsize);
     leg->SetFillStyle(0);
     leg->SetNColumns(ncolumns);
 
@@ -414,6 +414,9 @@ namespace GU {
     {
       TPad* pad_top = GetTopPad(can);
 
+      // Hide the x-label
+      XLabelOffset = 0.05;
+
       TIter next(pad_top->GetListOfPrimitives());
       TObject* prim = NULL;
       while ((prim = next()))
@@ -441,6 +444,9 @@ namespace GU {
     if (can.GetPrimitive("pad_bot"))
     {
       TPad* pad_bot = GetBotPad(can);
+
+      // Reset XLabelOffset
+      XLabelOffset = 0.002;
 
       TIter next(pad_bot->GetListOfPrimitives());
       TObject* prim = NULL;
