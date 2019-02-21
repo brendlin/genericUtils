@@ -49,6 +49,7 @@ More command-line options:
  - **--ratio**: Use this to create a ratio pad of data divided by the stacked background, underneath the main pad.
  - **--log**: Use this to specify a log scale.
  - **--save**: Use this to save to a .pdf and .C file.
+ - **--plottext**: (list of strings) - to add some text to the plot, underneath ATLAS Internal
 
 ### Normalizing MC
 
@@ -76,6 +77,7 @@ somewhere. For this you make config file (called e.g. UserInput.py), and point t
  - **fb** (float): the integrated luminosity
  - **weight** (string): the location of weight branches in the tree
  - **weightscale** (function, with TFile as input) - for getting sample normalization like sumw from histos
+ - **plottext** (list of strings) - to add some text to the plot, underneath ATLAS Internal
 
 There's another option, if you want to group (merge) samples into a larger sample (say, merge
 4 sliced eegamma samples into one eegamma sample. You can do this using a "mergesamples" dict in the 

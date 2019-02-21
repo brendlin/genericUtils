@@ -5,10 +5,11 @@ from TAxisFunctions import *
 ##
 def help() :
     print 'FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',preliminary=False)'
-    print 'ConvertToDifferential()'
+    print 'ConvertToDifferential(hist)'
     print 'AddHistogram(can,hist)'
     print 'SetAxisLabels(can,xlabel,ylabel)'
     print 'SetColors(can,[color1,color2,color3...])'
+    print 'SetMarkerStyles(can,these_styles=[],these_sizes=[])'
     print 'GetLuminosityText(lumi)'
     print 'GetSqrtsText(sqrts)'
     print 'GetAtlasInternalText(status=\'Internal\')'
@@ -17,15 +18,16 @@ def help() :
     print 'FormatCanvasAxes(can,options...) - must be run AFTER the first histograms are added!'
     print 'SetupStyle()'
     print 'RatioCanvas(name,title,canw,canh,ratio_size_as_fraction)'
-    print 'SetLeftMargin(can,margin)'
-    print 'GetTopPad(can)'
-    print 'GetBotPad(can)'
+    print 'SetLeftMargin(can,margin), SetRightMargin(can,margin)'
+    print 'GetTopPad(can), GetBotPad(can)'
     print 'AddHistogramTop(can,hist)'
     print 'AddHistogramBot(can,hist)'
     print 'AddRatio(can,hist,ref_hist)'
     print 'AddRatioManual(can,hist,ratioplot,drawopt1=\'pE1\',drawopt2=\'pE1\')'
+    print 'Stack(can,reverse=False)'
+    print 'ColorGradient(i,ntotal)'
+    print 'SetColorGradient(name=\'MyThermometer\')'
 ##
-## # SetMarkerStyles() Coming soon!
 ## # SetFillStyles() Coming soon!
 ##
 

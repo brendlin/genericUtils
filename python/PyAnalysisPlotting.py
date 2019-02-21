@@ -166,6 +166,8 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
     if options.fb > 0 :
         text_lines += [plotfunc.GetLuminosityText(options.fb)]
     text_lines += [plotfunc.GetAtlasInternalText()]
+    if hasattr(options,'plottext') and options.plottext :
+        text_lines += options.plottext
 
     if options.log :
         if options.ratio :
@@ -520,6 +522,7 @@ class TreePlottingOptParser :
         self.p.add_option('--nostack',action='store_true',default=False,dest='nostack',help='do not stack')
         self.p.add_option('--normalize',action='store_true',default=False,dest='normalize',help='normalize')
         self.p.add_option('--showflows',action='store_true',default=False,dest='showflows',help='show overflows/underflows as first and last bin')
+        self.p.add_option('--plottext',type='string',default='',dest='plottext',help='Additional plot text')
 
         # other options
         self.p.add_option('--batch',action='store_true',default=False,dest='batch',help='run in batch mode')
@@ -553,7 +556,7 @@ class TreePlottingOptParser :
             sys.exit()
 
         self.options.variables = self.options.variables.split(',')
-
+        self.options.plottext = self.options.plottext.split(',')
 
 
         # some defaults are not set in the option parser
@@ -597,7 +600,7 @@ class TreePlottingOptParser :
             self.options.usermodule = usermodule
 
             for x in ['histformat','weight','weightscale','blindcut','truthcuts'
-                      ,'treename','fb','colors','labels','mergesamples','bkgs','data','signal'] :
+                      ,'treename','fb','colors','labels','mergesamples','bkgs','data','signal','plottext'] :
                 if hasattr(usermodule,x) :
                     setattr(self.options,x,getattr(usermodule,x))
 
