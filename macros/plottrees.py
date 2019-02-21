@@ -56,6 +56,11 @@ def main(options,args) :
             sig_hists = anaplot.MergeSamples(sig_hists,options)
             anaplot.PrepareSignalHistos(sig_hists,options)
 
+        if options.normalize :
+            for hist in [data_hist] + bkg_hists + sig_hists :
+                if not hist : continue
+                hist.Scale(1/float(hist.Integral()))
+
         cans.append(anaplot.DrawHistos(v,options,bkg_hists,sig_hists,data_hist))
 
     anaplot.UpdateCanvases(cans,options)

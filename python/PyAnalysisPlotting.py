@@ -184,8 +184,16 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
     else :
         plotfunc.DrawText(can,text_lines,0.2,0.75,0.5,0.94,totalentries=4)
         plotfunc.MakeLegend(can,0.53,0.75,0.94,0.94,totalentries=5,ncolumns=2,skip=['remove me'])
-    plotfunc.SetAxisLabels(can,options.xlabel.get(variable),'entries')
+    ylabel = 'entries (normalized)' if options.normalize else 'entries'
+    plotfunc.SetAxisLabels(can,options.xlabel.get(variable),ylabel)
     plotfunc.AutoFixAxes(can)
+
+    if not options.log :
+        if can.GetPrimitive('pad_top') :
+            plotfunc.AutoFixYaxis(can.GetPrimitive('pad_top'),minzero=True)
+        else :
+            plotfunc.AutoFixYaxis(can,minzero=True)
+
     return can
 
 #-------------------------------------------------------------------------
@@ -338,7 +346,6 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
         n,low,high = options.limits.get(variable,[-1,-1,-1])
     rebin = options.rebin.get(variable,[]) if hasattr(options,'rebin') else []
     showflows = hasattr(options,'showflows') and options.showflows
-    normalize = hasattr(options,'normalize') and options.normalize
 
     if not inputname :
         inputname = variable
@@ -416,8 +423,6 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
         # print the yield and error after cuts (includes overflow)
         PyHelpers.PrintNumberOfEvents(hists[-1])
 
-        if normalize :
-            hists[-1].Scale(1/float(hists[-1].Integral()))
         if rebin :
             plotfunc.ConvertToDifferential(hists[-1])
 
@@ -662,6 +667,9 @@ class TreePlottingOptParser :
                 print 'No --bkgs, --signal, or --data specified. Exiting.'
                 sys.exit()
 
+        if self.options.ratio and not self.options.bkgs :
+            print 'Error! Specified --ratio but no bkg hists! Exiting.'
+            sys.exit()
 
         self.options.xlabel = dict()
         self.options.rebin = dict()
