@@ -450,7 +450,7 @@ def FormatCanvasAxes(can
                      ,ZTitleOffset = 0.85
                      ,ZTitleFont   = 43
                      ,ZLabelSize   = 22
-                     ,ZLabelOffset = 0.002
+                     ,ZLabelOffset = 0.006
                      ,ZLabelFont   = 43
                      ) :
 
@@ -571,7 +571,7 @@ def SetupStyle() :
 
     # z axis
     mystyle.SetTitleOffset(0.85,'z')
-    mystyle.SetLabelOffset(0.004,'z')
+    mystyle.SetLabelOffset(0.006,'z')
 
     # Legend
     mystyle.SetLegendTextSize(18)
@@ -602,7 +602,7 @@ def SetupStyle() :
 
     ROOT.gROOT.SetStyle("mystyle")
 
-    return
+    return mystyle
 
 ##
 ## Call this if you want a TCanvas especially prepared for ratio plots. It creates two

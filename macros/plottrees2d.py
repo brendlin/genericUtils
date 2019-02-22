@@ -12,7 +12,8 @@ import PlotFunctions as plotfunc
 #-------------------------------------------------------------------------
 def main(options,args) :
 
-    plotfunc.SetupStyle()
+    style = plotfunc.SetupStyle()
+    style.SetPadRightMargin(0.16)
 
     files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename,xAODInit=options.xAODInit)
     files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename,xAODInit=options.xAODInit)
@@ -38,6 +39,7 @@ def main(options,args) :
     # get the histograms from the files
     for vi,v1 in enumerate(options.variables) :
 
+        labelv1 = v1
         if v1 in options.histformat.keys() and len(options.histformat[v1]) >= 4:
             labelv1 = options.histformat[v1][3]
 
@@ -46,6 +48,7 @@ def main(options,args) :
             if v2 == v1 : continue
             if vj < vi : continue
 
+            labelv2 = v2
             if v2 in options.histformat.keys() and len(options.histformat[v2]) >= 4:
                 labelv2 = options.histformat[v2][3]
 
@@ -61,6 +64,12 @@ def main(options,args) :
                     sys.exit()
                 data_hist = data_hist[0]
 
+                canname = anaplot.CleanUpName('%s_%s_%s'%(v1,v2,'data'))
+                cans.append(ROOT.TCanvas(canname,canname,600,500))
+                data_hist.SetMinimum(-0.00001)
+                plotfunc.AddHistogram(cans[-1],data_hist,drawopt='colz')
+                plotfunc.SetAxisLabels(cans[-1],labelv1,labelv2)
+
             if options.bkgs :
                 bkg_hists = anaplot.Get2dVariableHistsFromTrees(trees_b,keys_b,v1,v2,weight,options,scales=scales_b,files=files_b)
                 bkg_hists = anaplot.MergeSamples(bkg_hists,options)
@@ -68,13 +77,11 @@ def main(options,args) :
             if options.signal :
                 sig_hists = anaplot.Get2dVariableHistsFromTrees(trees_s,keys_s,v1,v2,weight,options,scales=scales_s,files=files_s)
                 sig_hists = anaplot.MergeSamples(sig_hists,options)
-
                 for i,h in enumerate(sig_hists) :
-                    canname = '%s_%s_%s'%(v1,v2,keys_s[i])
-                    cans.append(ROOT.TCanvas(canname,canname,500,500))
+                    canname = anaplot.CleanUpName('%s_%s_%s'%(v1,v2,keys_s[i]))
+                    cans.append(ROOT.TCanvas(canname,canname,600,500))
                     h.SetMinimum(-0.00001)
                     plotfunc.AddHistogram(cans[-1],h,drawopt='colz')
-                    plotfunc.FormatCanvasAxes(cans[-1])
                     plotfunc.SetAxisLabels(cans[-1],labelv1,labelv2)
 
     anaplot.UpdateCanvases(cans,options)
@@ -95,9 +102,9 @@ if __name__ == '__main__':
     p = anaplot.TreePlottingOptParser()
     options,args = p.parse_args()
 
-    if int(bool(options.signal)) + int(bool(options.bkgs)) + int(bool(options.data)) > 1 :
-        print 'Error! Cannot deal with more than one input at this moment. Use --signal please.'
-        sys.exit()
+#     if int(bool(options.signal)) + int(bool(options.bkgs)) + int(bool(options.data)) > 1 :
+#         print 'Error! Cannot deal with more than one input at this moment. Use --signal please.'
+#         sys.exit()
 
     if not options.variables :
         print 'Error! Please specify a variable!'
