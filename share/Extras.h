@@ -305,7 +305,7 @@ void makePicoXaod_Categories(TChain* oldchain,const char* name,const char* cuts,
 //
 // This function makes a PicoXaod with arbitrary branch names (separated by ",")
 //
-void makePicoXaod(TTree* oldtree,const char* name,const char* cuts,char* branches,const char* outdir,const char* filename_nodotroot) {
+void makePicoXaod(TFile* oldfile,TTree* oldtree,const char* name,const char* cuts,char* branches,const char* outdir,const char* filename_nodotroot) {
 
   oldtree->SetBranchStatus("*",1);
   std::cout << Form("tree.Draw(\">>%s\",\"%s\")",name,cuts) << std::endl;
@@ -330,6 +330,18 @@ void makePicoXaod(TTree* oldtree,const char* name,const char* cuts,char* branche
   
   oldtree->SetEntryList(0);
   newtree->AutoSave();
+
+  // Copy any 0th-level histograms to the file too
+  TIter next(oldfile->GetListOfKeys());
+  TKey *key;
+  while ( (key = (TKey*)next()) ) {
+    TClass *cl = gROOT->GetClass(key->GetClassName());
+    if (!cl->InheritsFrom("TH1")) continue;
+    TH1 *h = (TH1*)key->ReadObj();
+    newfile->cd();
+    h->Write();
+  }
+
   newfile->Close();
   delete elist;
   delete newfile;
