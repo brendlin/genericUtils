@@ -573,6 +573,7 @@ class TreePlottingOptParser :
                         'labels':dict(),
                         'histformat':dict(),
                         'usermodule':None,
+                        'afterburner':None,
                         }
             setattr(self.options,x,defaults.get(x,None))
 
@@ -605,7 +606,8 @@ class TreePlottingOptParser :
             self.options.usermodule = usermodule
 
             for x in ['histformat','weight','weightscale','blindcut','truthcuts'
-                      ,'treename','fb','colors','labels','mergesamples','bkgs','data','signal','plottext'] :
+                      ,'treename','fb','colors','labels','mergesamples','bkgs','data','signal','plottext'
+                      ,'afterburner'] :
                 if hasattr(usermodule,x) :
                     setattr(self.options,x,getattr(usermodule,x))
 

@@ -78,6 +78,7 @@ somewhere. For this you make config file (called e.g. UserInput.py), and point t
  - **weight** (string): the location of weight branches in the tree
  - **weightscale** (function, with TFile as input) - for getting sample normalization like sumw from histos
  - **plottext** (list of strings) - to add some text to the plot, underneath ATLAS Internal
+ - **afterburner(can)** (function) - gives you the ability to manipulate a canvas at the very end of the job.
 
 There's another option, if you want to group (merge) samples into a larger sample (say, merge
 4 sliced eegamma samples into one eegamma sample. You can do this using a "mergesamples" dict in the 

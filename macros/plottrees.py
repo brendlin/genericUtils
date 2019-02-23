@@ -63,6 +63,10 @@ def main(options,args) :
 
         cans.append(anaplot.DrawHistos(v,options,bkg_hists,sig_hists,data_hist))
 
+    if options.afterburner :
+        for can in cans :
+            options.afterburner(can)
+
     anaplot.UpdateCanvases(cans,options)
 
     if options.xAODInit :
