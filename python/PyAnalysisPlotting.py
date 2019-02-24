@@ -565,17 +565,17 @@ class TreePlottingOptParser :
 
 
         # some defaults are not set in the option parser
-        for x in ['blindcut','truthcuts','mergesamples','colors','labels','histformat','usermodule'] :
-            defaults = {'blindcut':[],
-                        'truthcuts':[],
-                        'mergesamples':dict(),
-                        'colors':dict(),
-                        'labels':dict(),
-                        'histformat':dict(),
-                        'usermodule':None,
-                        'afterburner':None,
-                        }
-            setattr(self.options,x,defaults.get(x,None))
+        defaults = {'blindcut':[],
+                    'truthcuts':[],
+                    'mergesamples':dict(),
+                    'colors':dict(),
+                    'labels':dict(),
+                    'histformat':dict(),
+                    'usermodule':None,
+                    'afterburner':None,
+                    }
+        for k in defaults.keys() :
+            setattr(self.options,k,defaults[k])
 
 
 

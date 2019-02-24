@@ -84,6 +84,10 @@ def main(options,args) :
                     plotfunc.AddHistogram(cans[-1],h,drawopt='colz')
                     plotfunc.SetAxisLabels(cans[-1],labelv1,labelv2)
 
+    if options.afterburner :
+        for can in cans :
+            options.afterburner(can)
+
     anaplot.UpdateCanvases(cans,options)
 
     if options.xAODInit :

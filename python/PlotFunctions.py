@@ -518,6 +518,7 @@ def SetupStyle() :
     from array import array
 
     mystyle = ROOT.TStyle("mystyle","mystyle")
+    mystyle.SetTextFont(42)
     mystyle.SetStatColor(0)
     mystyle.SetTitleColor(0)
     mystyle.SetCanvasColor(0)
