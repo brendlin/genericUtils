@@ -578,27 +578,9 @@ def SetupStyle() :
     mystyle.SetLegendFont(43)
     mystyle.SetLegendFillColor(0)
     mystyle.SetLegendBorderSize(0)
-
-    # Gradient colors
-    ncont = 255
-    # cern default
-#     stops = array('d',[0.00, 0.50, 1.00])
-#     red   = array('d',[0.00, 0.50, 1.00])
-#     green = array('d',[0.00, 1.00, 0.00])
-#     blue  = array('d',[1.00, 0.50, 0.00])
-    # http://ultrahigh.org/2007/08/making-pretty-root-color-palettes/
-    stops = array('d',[0.00, 0.34, 0.61, 0.84, 1.00])
-    red   = array('d',[0.00, 0.00, 0.87, 1.00, 0.51])
-    green = array('d',[0.00, 0.81, 1.00, 0.20, 0.00])
-    blue  = array('d',[0.51, 1.00, 0.12, 0.00, 0.00])
-    # Higgs
-#     stops = array('d',[0.00,1.00])
-#     red   = array('d',[1.00,0.20])
-#     green = array('d',[1.00,0.20])
-#     blue  = array('d',[1.00,0.80])
     
-    ROOT.TColor.CreateGradientColorTable(len(stops),stops,red,green,blue,ncont)
-    mystyle.SetNumberContours(ncont)
+    mystyle.SetNumberContours(255)
+    SetColorGradient('HiggsBlue')
 
     ROOT.gROOT.SetStyle("mystyle")
 
@@ -787,7 +769,7 @@ def ColorGradient(i,ntotal) :
     the_int = int((NCont-1)*i/float(ntotal-1))
     return ROOT.gStyle.GetColorPalette(the_int)
 
-def SetColorGradient(name='MyThermometer') :
+def SetColorGradient(name='MyThermometer',mystyle = None) :
 
     import ROOT
     from array import array
@@ -796,20 +778,29 @@ def SetColorGradient(name='MyThermometer') :
 
     if name == 'MyThermometer' :
         # Blue -> Red (but it doesn't go through white)
-        NRGBs = 2
         stops = array('d',[ 0.00,1.00 ])
         red   = array('d',[ 0.10,0.90 ])
         green = array('d',[ 0.10,0.10 ])
         blue  = array('d',[ 1.00,0.10 ])
-        ROOT.TColor.CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont)
 
     if name == 'HiggsBlue' :
         # Higgs white -> Blue
-        NRGBs = 2
         stops = array('d',[ 0.00,1.00 ])
         red   = array('d',[ 1.00,0.50 ])
         green = array('d',[ 1.00,0.50 ])
         blue  = array('d',[ 1.00,1.00 ])
-        ROOT.TColor.CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont)
 
+    if name == 'DarkRainbow' :
+        stops = array('d',[0.00, 0.34, 0.61, 0.84, 1.00])
+        red   = array('d',[0.00, 0.00, 0.87, 1.00, 0.51])
+        green = array('d',[0.00, 0.81, 1.00, 0.20, 0.00])
+        blue  = array('d',[0.51, 1.00, 0.12, 0.00, 0.00])
+
+    if name == 'Rainbow' :
+        stops = array('d',[0.00, 0.50, 1.00])
+        red   = array('d',[0.00, 0.50, 1.00])
+        green = array('d',[0.00, 1.00, 0.00])
+        blue  = array('d',[1.00, 0.50, 0.00])
+
+    ROOT.TColor.CreateGradientColorTable(len(stops), stops, red, green, blue, NCont)
     return
