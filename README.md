@@ -125,20 +125,19 @@ in the directory specified by **--outdir**.
 **cutcomparisons.py** - Description and Instructions
 ==================
 
-This macro offers a way to compare different cut selection. Right now it only works for --signal MC.
-To use it, make a config file and define inside a list called "cutcomparisons", e.g. to compare
+This macro offers a way to compare different cut selection. Right now it only works for --signal and --data.
+To use it, make a config file and define inside a dictionary called "cutcomparisons", e.g. to compare
 different channels:
 
-    cutcomparisons = [
-        ['#mu#mu#gamma'      ,'HGamEventInfoAuxDyn.yyStarChannel == 1']
-        ['ee#gamma resolved' ,'HGamEventInfoAuxDyn.yyStarChannel == 2']
-        ['ee#gamma merged'   ,'HGamEventInfoAuxDyn.yyStarChannel == 3']
-        ['ee#gamma ambiguous','HGamEventInfoAuxDyn.yyStarChannel == 4']
-        ]
+    cutcomparisons = {
+        '#mu#mu#gamma'      : ['HGamEventInfoAuxDyn.yyStarChannel == 1'],
+        'ee#gamma resolved' : ['HGamEventInfoAuxDyn.yyStarChannel == 2'],
+        'ee#gamma merged'   : ['HGamEventInfoAuxDyn.yyStarChannel == 3'],
+        'ee#gamma ambiguous': ['HGamEventInfoAuxDyn.yyStarChannel == 4'],
+        }
 
-Note that the first element of the list corresponds to the name of the selection, and the subsequent
-cuts are applied as usual.
-Then run e.g. the following:
+Note that the key of the dictionary corresponds to the name of the selection, and the subsequent
+cuts are applied as usual. Then run e.g. the following:
 
     cutcomparisons.py --signal %gamstargam%r9364%.root --config cutcomparisons_Channels.py
 

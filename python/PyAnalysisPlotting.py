@@ -675,10 +675,6 @@ class TreePlottingOptParser :
                 print 'No --bkgs, --signal, or --data specified. Exiting.'
                 sys.exit()
 
-        if self.options.ratio and not self.options.bkgs :
-            print 'Error! Specified --ratio but no bkg hists! Exiting.'
-            sys.exit()
-
         self.options.xlabel = dict()
         self.options.rebin = dict()
 
@@ -761,10 +757,12 @@ def UpdateCanvases(cans,options=None) :
     return
 
 #-------------------------------------------------------------------------
-def MergeSamples(hists,options) :
+def MergeSamples(hists,options,requireFullyMerged=False) :
     #
     # Yeah so this adds the samples together that you specify, in a resonable
     # order close to the one you specify in the command line "bkgs"
+    # If you require that the samples are fully merged, this means that N
+    # inputs is merged into one output (a check we require for data).
     #
     import math
     import ROOT
@@ -801,6 +799,7 @@ def MergeSamples(hists,options) :
                 hists_new.append(i)
                 keys_new.append(j)
                 hists_new[-1].SetTitle(j)
+                hists_new[-1].SetName(CleanUpName(j))
                 added = True
         if not added :
             hists_new.append(i)
@@ -808,6 +807,10 @@ def MergeSamples(hists,options) :
 
     for i in hists_index.keys() :
         PyHelpers.PrintNumberOfEvents(hists_new[hists_index[i]])
+
+    if requireFullyMerged and len(hists_new) > 1 :
+        print 'Error! Failed to merge histograms into one histogram! (Usually required for data.) Check your sample merging.'
+        import sys; sys.exit()
 
     return hists_new
 

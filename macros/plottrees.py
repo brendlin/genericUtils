@@ -39,11 +39,7 @@ def main(options,args) :
 
         if options.data :
             data_hists = anaplot.GetVariableHistsFromTrees(trees_d,keys_d,v,dweight,options,files=files_d)
-            data_hist = anaplot.MergeSamples(data_hists,options)
-            if len(data_hist) > 1 :
-                print 'Error! Failed to merge data histograms! Check your data sample merging.'
-                sys.exit()
-            data_hist = data_hist[0]
+            data_hist = anaplot.MergeSamples(data_hists,options,requireFullyMerged=True)[0]
             anaplot.PrepareDataHistos(data_hists,options)
 
         if options.bkgs :
