@@ -74,23 +74,29 @@ def PrepareDataHistos(data_hists,options) :
 #-------------------------------------------------------------------------
 def PrepareSignalHistos(sig_hists,options) :
     import re
-
-    sig_hists[-1].SetLineWidth(2)
-    sig_hists[-1].SetLineColor(2)
-    sig_hists[-1].SetMarkerColor(2)
-    sig_hists[-1].SetMarkerStyle(20)
-    sig_hists[-1].SetMarkerSize(1)
+    import ROOT
 
     labels = getattr(options,'labels',None)
     if not labels :
         labels = dict()
 
-    # Set labels according to "labels" dict (allows for reg-exp)
-    for j in labels.keys() :
-        # Compare to regexp
-        if not re.match(j.replace('%','.*'),sig_hists[-1].GetTitle()) :
-            continue
-        sig_hists[-1].SetTitle(labels[j])
+    signal_colors = [ROOT.kRed,ROOT.kBlue,ROOT.kSpring-8,ROOT.kMagenta+1,ROOT.kAzure+8
+                     ,21,22,23,24,25,26,27,28,29,30
+                     ,21,22,23,24,25,26,27,28,29,30]
+
+    for i,sig_hist in enumerate(sig_hists) :
+        sig_hist.SetLineWidth(2)
+        sig_hist.SetLineColor(signal_colors[i])
+        sig_hist.SetMarkerColor(signal_colors[i])
+        sig_hist.SetMarkerStyle(20)
+        sig_hist.SetMarkerSize(1)
+
+        # Set labels according to "labels" dict (allows for reg-exp)
+        for j in labels.keys() :
+            # Compare to regexp
+            if not re.match(j.replace('%','.*'),sig_hist.GetTitle()) :
+                continue
+            sig_hist.SetTitle(labels[j])
 
     return
 
@@ -843,6 +849,7 @@ def CleanUpName(name) :
     tmp = tmp.replace('::','_').replace(':','_')
     tmp = tmp.replace(',','_')
     tmp = tmp.replace('#','')
+    tmp = tmp.replace('@','')
     tmp = tmp.replace('____','_').replace('___','_').replace('__','_')
     tmp = tmp.lstrip('_').rstrip('_')
     return tmp
