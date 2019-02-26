@@ -581,7 +581,7 @@ def SetupStyle() :
     mystyle.SetLegendBorderSize(0)
     
     mystyle.SetNumberContours(255)
-    SetColorGradient('HiggsBlue')
+    SetColorGradient('Grayscale')
 
     ROOT.gROOT.SetStyle("mystyle")
 
@@ -790,6 +790,13 @@ def SetColorGradient(name='MyThermometer',mystyle = None) :
         red   = array('d',[ 1.00,0.50 ])
         green = array('d',[ 1.00,0.50 ])
         blue  = array('d',[ 1.00,1.00 ])
+
+    if name == 'Grayscale' :
+        # Higgs white -> Blue
+        stops = array('d',[ 0.00,1.00 ])
+        red   = array('d',[ 1.00,0.00 ])
+        green = array('d',[ 1.00,0.00 ])
+        blue  = array('d',[ 1.00,0.00 ])
 
     if name == 'DarkRainbow' :
         stops = array('d',[0.00, 0.34, 0.61, 0.84, 1.00])
