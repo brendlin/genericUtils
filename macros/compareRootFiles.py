@@ -110,7 +110,7 @@ def IterateAllTheThings(i,j,outdir,options):
             options.ratio = True
             cans.append(anaplot.DrawHistos(v,options,mc_hists))
 
-        anaplot.UpdateCanvases(options,cans)
+        anaplot.UpdateCanvases(cans,options)
         if not os.path.exists(outdir) :
             os.makedirs(outdir)
         for c in cans :
@@ -176,6 +176,9 @@ if __name__ == '__main__':
     p.p.remove_option('--data')
 
     (options,args) = p.parse_args()
+
+    if not options.outdir :
+        options.outdir = os.getcwd()
 
     firstfile = ROOT.TFile(options.first,'READ')
     secondfile = ROOT.TFile(options.second,'READ')
