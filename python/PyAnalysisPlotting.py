@@ -786,7 +786,11 @@ def MergeSamples(hists,options,requireFullyMerged=False) :
 
             # Compare to list of samples
             if type(options.mergesamples[j]) == type([]) :
-                if i.GetTitle() not in options.mergesamples[j] :
+                match = False
+                for mergesample in options.mergesamples[j] :
+                    if re.match(mergesample.replace('%','.*'),i.GetTitle()) :
+                        match = True
+                if not match :
                     continue
 
             if j in hists_index.keys() :
