@@ -667,7 +667,11 @@ class TreePlottingOptParser :
             self.options.data = ','.join(datalist)
 
         self.options.data = ExpandWildcard(self.options.data)
-        self.options.mergesamples['data'] = list(a.replace('.root','') for a in self.options.data.split(','))
+
+        self.options.mergesamples['data'] = []
+        for a in self.options.data.split(',') :
+            if not a : continue
+            self.options.mergesamples['data'].append(a.replace('.root',''))
         self.options.data = AddDotRoot(self.options.data)
 
         if self.p.has_option('--bkgs') :
