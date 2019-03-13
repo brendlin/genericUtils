@@ -54,7 +54,6 @@ def main(options,args) :
 if __name__ == '__main__':
 
     p = anaplot.TreePlottingOptParser()
-    p.p
     options,args = p.parse_args()
 
     if not options.variables :

@@ -726,7 +726,8 @@ def doSaving(options,cans) :
         return 
     for can in cans :
         while True :
-            name = directory + '/' + can.GetName()+'.pdf'
+            log = '_log' if (can.GetLogy() or can.GetLogz()) else ''
+            name = directory + '/' + CleanUpName(can.GetName())+log+'.pdf'
             try :
                 open(name, 'a').close()
                 can.Print(name)

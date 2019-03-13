@@ -68,6 +68,13 @@ def main(options,args) :
     anaplot.PrepareSignalHistos(sig_hists+data_hists+bkg_hists,None)
     cans.append(anaplot.DrawHistos(v,options,sig_hists=sig_hists+bkg_hists+data_hists))
 
+    if options.xlabel_override :
+        for can in cans :
+            can.SetName(options.xlabel_override)
+            for i in can.GetListOfPrimitives() :
+                if hasattr(i,'GetXaxis') :
+                    i.GetXaxis().SetTitle(options.xlabel_override)
+
     if options.afterburner :
         for can in cans :
             options.afterburner(can)
@@ -88,6 +95,7 @@ def main(options,args) :
 if __name__ == '__main__':
 
     p = anaplot.TreePlottingOptParser()
+    p.p.add_option('--xlabel',type='string',default='',dest='xlabel_override',help='x-label (overrides other variable names)')
     options,args = p.parse_args()
 
     if not options.variables :
