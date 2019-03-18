@@ -176,22 +176,28 @@ def SetYaxisRanges(can,ymin,ymax) :
     if can.GetPrimitive('pad_top') :
         SetYaxisRanges(can.GetPrimitive('pad_top'),ymin,ymax)
         return
-    from ROOT import TGraph,TH1,THStack
+    import ROOT
     yaxis = 0
     for i in can.GetListOfPrimitives() :
-        if issubclass(type(i),TGraph) :
+        if issubclass(type(i),ROOT.TGraph) :
             # print 'SetYaxisRanges',ymin,ymax
             i.SetMinimum(ymin)
             i.SetMaximum(ymax)
             if not yaxis :
                 yaxis = i.GetHistogram().GetYaxis()
-        if issubclass(type(i),TH1) :
+        if issubclass(type(i),ROOT.TF1) :
             # print 'SetYaxisRanges',ymin,ymax
             i.SetMinimum(ymin)
             i.SetMaximum(ymax)
-            if not yaxis: 
+            if not yaxis:
+                yaxis = i.GetHistogram().GetYaxis()
+        if issubclass(type(i),ROOT.TH1) :
+            # print 'SetYaxisRanges',ymin,ymax
+            i.SetMinimum(ymin)
+            i.SetMaximum(ymax)
+            if not yaxis:
                 yaxis = i.GetYaxis()
-        if issubclass(type(i),THStack) :
+        if issubclass(type(i),ROOT.THStack) :
             # print 'SetYaxisRanges',ymin,ymax
             i.SetMinimum(ymin)
             i.SetMaximum(ymax)

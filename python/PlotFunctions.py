@@ -97,20 +97,25 @@ def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
     if can.GetPrimitive('pad_top') :
         return_hist = AddHistogram(can.GetPrimitive('pad_top'),hist,drawopt,keepname)
         return return_hist
-    from ROOT import TH1,TGraph
+    import ROOT
     tmp = hist.Clone()
-    is_graph = issubclass(type(hist),TGraph)
 
-    plot_exists = list(issubclass(type(a),TH1) for a in can.GetListOfPrimitives())
-    plot_exists += list(issubclass(type(a),TGraph) for a in can.GetListOfPrimitives())
+    use_drawopt_a = issubclass(type(hist),ROOT.TGraph)
+    use_same = not use_drawopt_a
+    has_GetHistogram = issubclass(type(hist),ROOT.TGraph) or issubclass(type(hist),ROOT.TF1)
+
+    plot_exists = list(issubclass(type(a),ROOT.TH1) for a in can.GetListOfPrimitives())
+    plot_exists += list(issubclass(type(a),ROOT.TGraph) for a in can.GetListOfPrimitives())
+    plot_exists += list(issubclass(type(a),ROOT.TF1) for a in can.GetListOfPrimitives())
+    plot_exists = (True in plot_exists)
 
     if hasattr(tmp,'SetDirectory') :
         tmp.SetDirectory(0)
 
     drawopt_orig = drawopt
-    if (not is_graph) and (True in plot_exists) :
+    if use_same and plot_exists :
         drawopt += 'same'
-    if is_graph and not (True in plot_exists) :
+    if use_drawopt_a and (not plot_exists) :
         drawopt += 'a'
 
     tobject_collector.append(tmp)
@@ -118,7 +123,7 @@ def AddHistogram(can,hist,drawopt='pE1',keepname=False) :
         tmp.SetName('%s_%s'%(can.GetName(),hist.GetName()))
     can.cd()
     tmp.Draw(drawopt)
-    if is_graph :
+    if has_GetHistogram :
         tmp.GetHistogram().SetOption(drawopt_orig)
     else :
         tmp.SetOption(drawopt_orig)
