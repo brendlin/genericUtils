@@ -332,17 +332,22 @@ def SetXaxisRanges(can,xmin,xmax) :
 ## If you specify "check_all=True", returns the maximal x-range of all the plots in the canvas
 ##
 def GetXaxisRanges(can,check_all=False) :
-    from ROOT import TGraph,TH1
+    if can.GetPrimitive('pad_top') :
+        xmintop,xmaxtop = GetXaxisRanges(can.GetPrimitive('pad_top'))
+        xminbot,xmaxbot = GetXaxisRanges(can.GetPrimitive('pad_bot'))
+        return min(xmintop,xminbot),max(xmaxtop,xmaxbot)
+
+    import ROOT
     xmin = 999999999
     xmax = -999999999
     for i in can.GetListOfPrimitives() :
-        if issubclass(type(i),TGraph) :
+        if issubclass(type(i),ROOT.TGraph) :
             xaxis = i.GetHistogram().GetXaxis()
             if not check_all :
                 return xaxis.GetXmin(),xaxis.GetXmax()
             xmin = min(xmin,xaxis.GetXmin())
             xmax = max(xmax,xaxis.GetXmax())
-        if issubclass(type(i),TH1) :
+        if issubclass(type(i),ROOT.TH1) :
             xaxis = i.GetXaxis()
             if not check_all :
                 return xaxis.GetXmin(),xaxis.GetXmax()
