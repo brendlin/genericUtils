@@ -852,11 +852,17 @@ def RebinSmoothlyFallingFunction(hist,error=0.10) :
     return
 
 #-------------------------------------------------------------------------
-def CleanUpName(name) :
+def CleanUpName(name,originalIsDirectoryName=False) :
     tmp = name.replace('[','_').replace(']','').replace('_index','').replace('.','_')
     tmp = tmp.replace('[','_').replace(']','_').replace('(','_').replace(')','_')
-    tmp = tmp.replace('/','_over_').replace('&&','and')
-    tmp = tmp.replace('>','gt').replace('<','lt').replace('-','minus').replace(' ','_')
+
+    if originalIsDirectoryName :
+        tmp = tmp.replace('/','_').replace('-','_')
+    else :
+        tmp = tmp.replace('/','_over_').replace('-','minus')
+
+    tmp = tmp.replace('&&','and')
+    tmp = tmp.replace('>','gt').replace('<','lt').replace(' ','_')
     tmp = tmp.replace('!','not').replace('*','times').replace('+','plus')
     tmp = tmp.replace('::','_').replace(':','_')
     tmp = tmp.replace(',','_')
