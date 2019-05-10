@@ -48,7 +48,7 @@ def main(options,args) :
     for k in keys_d :
         outfilename = os.path.basename(files_d[k].GetName()).replace('.root','')
         outfilename = '%s_pico'%(outfilename)
-        outfilename = anaplot.CleanUpName(outfilename,originalIsDirectoryName=True)
+        outfilename = anaplot.CleanUpName(outfilename,originalIsDirectoryName=True,forFileName=True)
         histname = anaplot.CleanUpName(k,originalIsDirectoryName=True)
         print 'Making picoXaod for %s'%(k)
         ROOT.makePicoXaod(files_d[k],trees_d[k],histname,dcuts,','.join(options.variables),options.outdir,outfilename)
@@ -56,7 +56,7 @@ def main(options,args) :
     for k in keys_b :
         outfilename = os.path.basename(files_b[k].GetName()).replace('.root','')
         outfilename = '%s_pico'%(outfilename)
-        outfilename = anaplot.CleanUpName(outfilename,originalIsDirectoryName=True)
+        outfilename = anaplot.CleanUpName(outfilename,originalIsDirectoryName=True,forFileName=True)
         histname = anaplot.CleanUpName(k,originalIsDirectoryName=True)
         print 'Making picoXaod for %s'%(k)
         ROOT.makePicoXaod(files_b[k],trees_b[k],histname,simcuts,','.join(options.variables),options.outdir,outfilename)
