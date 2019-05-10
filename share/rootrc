@@ -3,7 +3,7 @@
 # You have to make 2 changes to path names, depending on where you check out genericUtils
 #
 
-Unix.*.Root.MacroPath:      .:$(HOME)/genericUtils/share:$ROOTSYS/tmva/test:$(HOME)/higgsUtils/share
+Unix.*.Root.MacroPath:      .:$ROOTSYS/tmva/test
 Rint.Logon:          $(HOME)/genericUtils/share/rootlogon.C
 Rint.Logoff:
 

@@ -11,6 +11,13 @@ import PlotFunctions as plotfunc
 import CouplingsHelpers
 import PyHelpers
 
+# Get base path (genericUtils)
+the_path = ('/').join(os.path.abspath(__file__).split('/')[:-2])
+
+# Add to macro path
+ROOT.gROOT.SetMacroPath('%s:%s/share'%(ROOT.gROOT.GetMacroPath(),the_path))
+
+# Load Extras.h macro:
 isLoaded = ROOT.gROOT.LoadMacro('Extras.h')
 if (isLoaded < 0) :
     print 'Error! Macro compilation Extras.h failed. See error messages.'
