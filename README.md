@@ -10,6 +10,23 @@ This package contains the following scripts:
  - **macros/makePicoXaod.py**
    - This script allows you to make a smaller version of an existing flat ntuple.
 
+Initial setup
+==================
+
+To get started, simply check out the package from git, and run the following commands
+(or put them in your `.bash_profile` script):
+
+     export PYTHONPATH=$PYTHONPATH:/path/to/genericUtils/python
+     export PATH=$PATH:/path/to/genericUtils/macros
+
+(This appends the python directories to PYTHONPATH, and makes the genericUtils/macros executable from
+any directory.) Now you can run these scripts in any directory:
+
+    cd testarea
+    plottrees.py ...
+
+And that's it - you're ready to go!
+
 
 **plottrees.py** - Description and Instructions
 ==================
