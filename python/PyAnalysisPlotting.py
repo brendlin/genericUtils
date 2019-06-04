@@ -169,7 +169,7 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
 
     plotfunc.FormatCanvasAxes(can)
     text_lines = [plotfunc.GetSqrtsText(13)]
-    if options.fb > 0 :
+    if options.fb > 0 and not options.normalize :
         text_lines += [plotfunc.GetLuminosityText(options.fb)]
     text_lines += [plotfunc.GetAtlasInternalText()]
     if hasattr(options,'plottext') and options.plottext :
@@ -627,18 +627,13 @@ class TreePlottingOptParser :
                 self.options.variables = usermodule.variables
 
         def ExpandWildcard(csv_list) :
-            import re
+            import glob
             tmp = csv_list.split(',')
             tmp_new = []
             for i in range(len(tmp)) :
                 if not tmp[i] :
                     continue
-                if '%' in tmp[i] :
-                    for j in sorted(os.listdir('.')) :
-                        if re.match(tmp[i].replace('%','.*'),j) :
-                            tmp_new.append(j)
-                else :
-                    tmp_new.append(tmp[i])
+                tmp_new += glob.glob(tmp[i].replace('%','*'))
             return ','.join(tmp_new)
 
         def AddDotRoot(csv_list) :
