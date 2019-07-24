@@ -457,7 +457,8 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
         
     hists = []
     for k in keys :
-        name = CleanUpName('%s_%s'%(inputname,k))
+        k_clean = CleanUpName(k,originalIsDirectoryName=True)
+        name = CleanUpName('%s_%s'%(inputname,k_clean))
 
         if issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
             print 'Using existing histogram, %s'%(name)

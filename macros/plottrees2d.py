@@ -69,6 +69,12 @@ def main(options,args) :
             if options.bkgs :
                 bkg_hists = anaplot.Get2dVariableHistsFromTrees(trees_b,keys_b,v1,v2,weight,options,scales=scales_b,files=files_b)
                 bkg_hists = anaplot.MergeSamples(bkg_hists,options)
+                for i,h in enumerate(bkg_hists) :
+                    canname = anaplot.CleanUpName('%s_%s_%s'%(v1,v2,keys_b[i]))
+                    cans.append(ROOT.TCanvas(canname,canname,600,500))
+                    h.SetMinimum(-0.00001)
+                    plotfunc.AddHistogram(cans[-1],h,drawopt='colz')
+                    plotfunc.SetAxisLabels(cans[-1],labelv1,labelv2)
 
             if options.signal :
                 sig_hists = anaplot.Get2dVariableHistsFromTrees(trees_s,keys_s,v1,v2,weight,options,scales=scales_s,files=files_s)
