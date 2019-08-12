@@ -228,6 +228,33 @@ def SetYaxisNdivisions(can,a,b,c) :
     can.Update()
     return
 
+def SetYaxisProperty(can,property,*args) :
+    if can.GetPrimitive('pad_top') :
+        SetYaxisProperty(can.GetPrimitive('pad_top'),property,*args)
+        SetYaxisProperty(can.GetPrimitive('pad_bot'),property,*args)
+
+    for i in can.GetListOfPrimitives() :
+        if hasattr(i,'GetYaxis') :
+            axis = i.GetYaxis()
+            getattr(axis,property)(*args)
+    can.Modified()
+    can.Update()
+    return
+
+def SetXaxisProperty(can,property,*args) :
+    if can.GetPrimitive('pad_top') :
+        SetXaxisProperty(can.GetPrimitive('pad_top'),property,*args)
+        SetXaxisProperty(can.GetPrimitive('pad_bot'),property,*args)
+
+    for i in can.GetListOfPrimitives() :
+        if hasattr(i,'GetXaxis') :
+            axis = i.GetXaxis()
+            getattr(axis,property)(*args)
+
+    can.Modified()
+    can.Update()
+    return
+
 ##
 ## Returns the y-range of the first plotted histogram.
 ## If you specify "check_all=True", returns the maximal y-range of all the plots in the canvas
