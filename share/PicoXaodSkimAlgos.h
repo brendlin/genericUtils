@@ -220,3 +220,150 @@ void makePicoXaod_Zpileup(TFile* oldfile,TTree* oldtree,const char* name,const c
   delete elist;
   delete newfile;
 }
+
+enum BitDefPhoton {
+  /** @brief cluster eta range */
+  ClusterEtaRange_Photon        =  0,
+  /** @brief energy fraction in the third layer */
+  ClusterBackEnergyFraction_Photon = 7,
+  /** @brief cluster leakage into the hadronic calorimeter */
+  ClusterHadronicLeakage_Photon =  10,
+  /** @brief energy in 2nd sampling (e277) */
+  ClusterMiddleEnergy_Photon    =  11,
+  /** @brief energy ratio in 2nd sampling */
+  ClusterMiddleEratio37_Photon  =  12,
+  /** @brief energy ratio in 2nd sampling for photons */
+  ClusterMiddleEratio33_Photon  =  13,
+  /** @brief width in the second sampling */
+  ClusterMiddleWidth_Photon     =  14,
+  /** @brief fraction of energy found in 1st sampling */
+  ClusterStripsEratio_Photon    =  15,
+  /** @brief energy of 2nd maximum in 1st sampling ~e2tsts1/(1000+const_lumi*et) */
+  ClusterStripsDeltaEmax2_Photon =  16,
+  /** @brief difference between 2nd maximum and 1st minimum in strips (e2tsts1-emins1) */
+  ClusterStripsDeltaE_Photon    = 17,
+  /** @brief shower width in 1st sampling */
+  ClusterStripsWtot_Photon      = 18,
+  /** @brief shower shape in shower core 1st sampling */
+  ClusterStripsFracm_Photon     = 19,
+  /** @brief shower width weighted by distance from the maximum one */
+  ClusterStripsWeta1c_Photon    = 20,
+  /** @brief difference between max and 2nd max in strips */
+  ClusterStripsDEmaxs1_Photon  = 21,
+  /** @brief energy-momentum match for photon selection*/
+  TrackMatchEoverP_Photon       = 22,
+  /** @brief ambiguity resolution for photon (vs electron) */
+  AmbiguityResolution_Photon    = 23,
+  /** @brief isolation */
+  Isolation_Photon              = 29,
+  /** @brief calorimetric isolation for photon selection */
+  ClusterIsolation_Photon       = 30,
+  /** @brief tracker isolation for photon selection */
+ TrackIsolation_Photon         = 31
+};
+
+const unsigned int HADLEAK_PHOTON =
+  0x1 << ClusterHadronicLeakage_Photon;
+
+const unsigned int CALOSTRIPS_PHOTONTIGHT =
+  0x1 << ClusterStripsEratio_Photon     |
+  0x1 << ClusterStripsDeltaEmax2_Photon |
+  0x1 << ClusterStripsDeltaE_Photon     |
+  0x1 << ClusterStripsWtot_Photon       |
+  0x1 << ClusterStripsFracm_Photon      |
+  0x1 << ClusterStripsWeta1c_Photon     |
+  0x1 << ClusterStripsDEmaxs1_Photon    ;
+
+const unsigned int CALOMIDDLE_PHOTON =
+  0x1 << ClusterMiddleEnergy_Photon     |
+  0x1 << ClusterMiddleEratio37_Photon   |
+  0x1 << ClusterMiddleEratio33_Photon   |
+  0x1 << ClusterMiddleWidth_Photon     ;
+
+/* Just for reference... */
+/** @brief Tight photon selection, minus the eta range */
+const unsigned int PhotonTight = HADLEAK_PHOTON | CALOMIDDLE_PHOTON | CALOSTRIPS_PHOTONTIGHT;
+
+//
+// To add Fail-two-tight variable
+//
+void makePicoXaod_addFail2Tight(TFile* oldfile,TTree* oldtree,const char* name,const char* cuts,char* branches,const char* outdir,const char* filename_nodotroot) {
+
+  oldtree->SetBranchStatus("*",1);
+  std::cout << Form("tree.Draw(\">>%s\",\"%s\")",name,cuts) << std::endl;
+  oldtree->Draw(Form(">>%s",name),cuts,"entrylist");
+  TEntryList* elist = (TEntryList*)gDirectory->Get(name);
+  Long64_t listEntries = elist->GetN();
+  std::cout << "number in TEntryList: " << listEntries << std::endl;
+  oldtree->SetBranchStatus("*",0);
+
+  std::vector<unsigned int> * isEMTight = 0;
+  oldtree->SetBranchStatus ("HGamPhotonsAuxDyn.isEMTight",1);
+  oldtree->SetBranchAddress("HGamPhotonsAuxDyn.isEMTight",&isEMTight);
+
+  // Iterate over branches and set branch status of particular ones
+  char* tok;
+  tok = strtok(branches,",");
+  while (tok != NULL) {
+    oldtree->SetBranchStatus(tok,1);
+    tok = strtok(NULL,",");
+  }
+
+  //Create a new file + a clone of old tree in new file
+  TFile *newfile = new TFile(Form("%s/%s.root",outdir,filename_nodotroot),"recreate");
+  TTree* newtree = oldtree->CloneTree(0);
+
+  std::vector<int> * failTwoTight = new std::vector<int>();
+  newtree->Branch("HGamPhotonsAuxDyn.failTwoTight","vector<int>",&failTwoTight);
+
+  for (Long64_t el = 0; el < listEntries; el++) {
+    Long64_t entryNumber = elist->GetEntry(el);
+
+    oldtree->GetEntry(entryNumber);
+
+    failTwoTight->clear();
+
+    // Check for failing 2 tight cuts
+    for (int iel = 0;iel < (*isEMTight).size(); iel++) {
+      int nFailTight = 0;
+
+      // std::cout << "isEMTight: " << std::hex << (*isEMTight)[iel] << std::endl;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterHadronicLeakage_Photon ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterStripsEratio_Photon    ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterStripsDeltaEmax2_Photon) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterStripsDeltaE_Photon    ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterStripsWtot_Photon      ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterStripsFracm_Photon     ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterStripsWeta1c_Photon    ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterStripsDEmaxs1_Photon   ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterHadronicLeakage_Photon ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterMiddleEnergy_Photon    ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterMiddleEratio37_Photon  ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterMiddleEratio33_Photon  ) ) nFailTight++;
+      if ( (*isEMTight)[iel] & (0x1 << ClusterMiddleWidth_Photon     ) ) nFailTight++;
+
+      if (nFailTight >= 2) failTwoTight->push_back(1);
+      else failTwoTight->push_back(0);
+
+    }
+
+    newtree->Fill();
+  }
+
+  // Copy any 0th-level histograms to the file too
+  TIter next(oldfile->GetListOfKeys());
+  TKey *key;
+  while ( (key = (TKey*)next()) ) {
+    TClass *cl = gROOT->GetClass(key->GetClassName());
+    if (!cl->InheritsFrom("TH1")) continue;
+    TH1 *h = (TH1*)key->ReadObj();
+    newfile->cd();
+    h->Write();
+  }
+
+  newtree->AutoSave();
+  newfile->Close();
+
+  delete elist;
+  delete newfile;
+}
