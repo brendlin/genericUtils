@@ -129,6 +129,7 @@ in a config file and specified using the **--config** option). The options are:
  - **--truthcuts**: Cuts on truth-level quantities (e.g. only applied to MC)
  - **--outdir**: The output directory to save the picoXaod files in.
  - **--variables**: Comma-separated list of variables you want to save.
+ - **--alg**: Algorithm to use (define it in the share/PicoXaodSkimAlgos.h file. Default is "makePicoXaod")
 
 ### How to run it
 
