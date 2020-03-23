@@ -119,7 +119,7 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
     #
     # stack, before adding SUSY histograms
     #
-    if not options.ratio :
+    if not options.ratio and not options.pull :
         can = ROOT.TCanvas(canname,canname,500,500)
     else :
         can = plotfunc.RatioCanvas(canname,canname,500,500)
@@ -148,8 +148,12 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
         if (not options.stack) :
             i.SetLineWidth(2)
             i.SetLineColor(i.GetMarkerColor())
+            if len(bkg_hists) == 1 :
+                i.SetFillColor(0)
         if (index > 0) and (not data_hist) and (not options.stack) and (options.ratio) :
             plotfunc.AddRatio(can,i,bkg_hists[0])
+        elif len(bkg_hists) == 1 :
+            plotfunc.AddHistogram(can,i,drawopt='hist')
         else :
             plotfunc.AddHistogram(can,i)
 
@@ -164,6 +168,8 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
     if data_hist :
         if options.ratio :
             plotfunc.AddRatio(can,data_hist,totb)
+        elif options.pull :
+            plotfunc.AddRatio(can,data_hist,totb,divide='pull')
         else :
             plotfunc.AddHistogram(can,data_hist)
 
@@ -176,14 +182,14 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
         text_lines += options.plottext
 
     if options.log :
-        if options.ratio :
+        if options.ratio or options.pull :
             if taxisfunc.MinimumForLog(can.GetPrimitive('pad_top')) > 0 :
                 can.GetPrimitive('pad_top').SetLogy()
         else :
             if taxisfunc.MinimumForLog(can) > 0 :
                 can.SetLogy()
 
-    if options.ratio :
+    if options.ratio or options.pull :
         plotfunc.DrawText(can,text_lines,0.2,0.65,0.5,0.90,totalentries=4)
         plotfunc.MakeLegend(can,0.53,0.65,0.92,0.90,totalentries=5,ncolumns=2,skip=['remove me'])
         taxisfunc.SetYaxisRanges(plotfunc.GetBotPad(can),0,2)
@@ -191,7 +197,7 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
         plotfunc.DrawText(can,text_lines,0.2,0.75,0.5,0.94,totalentries=4)
         plotfunc.MakeLegend(can,0.53,0.75,0.94,0.94,totalentries=5,ncolumns=2,skip=['remove me'])
     ylabel = 'entries (normalized)' if options.normalize else 'entries'
-    plotfunc.SetAxisLabels(can,options.xlabel.get(variable),ylabel)
+    plotfunc.SetAxisLabels(can,options.xlabel.get(variable),ylabel,yratiolabel=('pull' if options.pull else 'ratio'))
     plotfunc.AutoFixAxes(can)
 
     if not options.log :
@@ -532,6 +538,7 @@ class TreePlottingOptParser :
 
         # plot manipulation
         self.p.add_option('--ratio',action='store_true',default=False,dest='ratio',help='Plot as a ratio')
+        self.p.add_option('--pull' ,action='store_true',default=False,dest='pull' ,help='Plot as a pull distribution')
         self.p.add_option('--nostack',action='store_true',default=False,dest='nostack',help='do not stack')
         self.p.add_option('--normalize',action='store_true',default=False,dest='normalize',help='normalize')
         self.p.add_option('--showflows',action='store_true',default=False,dest='showflows',help='show overflows/underflows as first and last bin')
@@ -581,6 +588,7 @@ class TreePlottingOptParser :
                     'histformat':dict(),
                     'usermodule':None,
                     'afterburner':None,
+                    'variablemap':{},
                     }
         for k in defaults.keys() :
             setattr(self.options,k,defaults[k])
@@ -615,7 +623,7 @@ class TreePlottingOptParser :
 
             for x in ['histformat','weight','weightscale','blindcut','truthcuts'
                       ,'treename','fb','colors','labels','mergesamples','bkgs','data','signal','plottext'
-                      ,'afterburner'] :
+                      ,'afterburner','variablemap'] :
                 if hasattr(usermodule,x) :
                     setattr(self.options,x,getattr(usermodule,x))
 
@@ -684,7 +692,7 @@ class TreePlottingOptParser :
         self.options.limits = dict()
 
         # Prepare stuff related to the variables.
-        for v in self.options.variables :
+        for v in self.options.variables + self.options.variablemap.values() :
             if v == '' : continue
             if v in self.options.histformat.keys() :
                 if len(self.options.histformat[v]) < 4 :
@@ -723,7 +731,7 @@ def doSaving(options,cans) :
         return 
     for can in cans :
         while True :
-            log = '_log' if (can.GetLogy() or can.GetLogz()) else ''
+            log = '_log' if (can.GetLogy() or can.GetLogz() or (can.GetPrimitive('pad_top') and can.GetPrimitive('pad_top').GetLogy()) ) else ''
             name = directory + '/' + CleanUpName(can.GetName())+log+'.pdf'
             try :
                 open(name, 'a').close()
@@ -898,3 +906,37 @@ def weightscaleHZY(tfile) :
 
     #print 'scaling by one over ',sumweight
     return 1.0/sumweight
+
+#-------------------------------------------------------------------------
+def RatioRangeAfterBurner(can,ymin=0,ymax=2) :
+    import PlotFunctions as plotfunc
+    import TAxisFunctions as taxisfunc
+    import ROOT
+
+    # Set ratio range; add dotted line at 1
+    if not plotfunc.GetBotPad(can) :
+        return
+
+    isPull = False
+    for hist in plotfunc.GetBotPad(can).GetListOfPrimitives() :
+        if hasattr(hist,'GetYaxis') :
+            isPull = isPull or (hist.GetYaxis().GetTitle() == 'pull')
+
+    taxisfunc.SetYaxisRanges(plotfunc.GetBotPad(can),ymin,ymax)
+    if ymax <= 1 :
+        return
+
+    xmin,xmax = None,None
+    for i in plotfunc.GetBotPad(can).GetListOfPrimitives() :
+        if issubclass(type(i),ROOT.TH1) :
+            xmin = i.GetXaxis().GetBinLowEdge(1)
+            xmax = i.GetXaxis().GetBinLowEdge(i.GetNbinsX()+1)
+    if xmin != None :
+        lineh = 0 if isPull else 1
+        line = ROOT.TLine(xmin,lineh,xmax,lineh)
+        line.SetLineStyle(2)
+        plotfunc.GetBotPad(can).cd()
+        line.Draw()
+        plotfunc.tobject_collector.append(line)
+
+    return
