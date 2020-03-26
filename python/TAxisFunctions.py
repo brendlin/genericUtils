@@ -26,16 +26,16 @@ def help() :
 ## If a text or legend has been added to the plot it will force the plot content to appear BELOW
 ## the text.
 ##
-def AutoFixAxes(can,symmetrize=False,ignorelegend=False,ignorezero=False) :
+def AutoFixAxes(can,symmetrize=False,ignorelegend=False,ignorezero=False,ignoretext=False) :
     if can.GetPrimitive('pad_top') :
-        AutoFixAxes(can.GetPrimitive('pad_top'),ignorelegend=ignorelegend)
-        AutoFixAxes(can.GetPrimitive('pad_bot'),ignorelegend=ignorelegend)
+        AutoFixAxes(can.GetPrimitive('pad_top'),ignorelegend=ignorelegend,ignorezero=ignorezero,ignoretext=ignoretext)
+        AutoFixAxes(can.GetPrimitive('pad_bot'),ignorelegend=ignorelegend,ignorezero=ignorezero,ignoretext=ignoretext)
         return
     FixXaxisRanges(can)    
-    AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=ignorezero)
+    AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=ignorezero,ignoretext=ignoretext)
     return
 
-def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=False) :
+def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=False,ignoretext=False) :
     #
     # Makes space for text as well!
     #
@@ -66,7 +66,9 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=F
             plots_exist = True
         if issubclass(type(i),ROOT.TGraph) :
             plots_exist = True
-        if (ignorelegend) and issubclass(type(i),ROOT.TLegend) :
+        if (ignorelegend) and issubclass(type(i),ROOT.TLegend) and 'legend' in i.GetName() :
+            continue
+        if (ignoretext) and issubclass(type(i),ROOT.TLegend) and '_text' in i.GetName() :
             continue
         if type(i) == type(ROOT.TFrame()) :
             continue
@@ -434,11 +436,11 @@ def PutUnderflowIntoFirstBin(hist,low=None) :
 
     return
 
-def EqualizeYAxes(cans,ignorelegend=False,minzero=False) :
+def EqualizeYAxes(cans,ignorelegend=False,minzero=False,ignoretext=False) :
     import sys
     miny,maxy = sys.float_info.max,sys.float_info.min
     for can in cans :
-        tmp_miny,tmp_maxy = AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=True,minzero=minzero)
+        tmp_miny,tmp_maxy = AutoFixYaxis(can,ignorelegend=ignorelegend,ignorezero=True,minzero=minzero,ignoretext=ignoretext)
         miny,maxy = min(miny,tmp_miny),max(maxy,tmp_maxy)
     for can in cans :
         SetYaxisRanges(can,miny,maxy)

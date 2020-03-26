@@ -338,7 +338,8 @@ def CanvasEmpty(can) :
 ## of your TH1 or TGraph *before* you add it to the canvas.*
 ## The x and y coordinates are the fractional distances, with the origin at the bottom left.
 ## 
-def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totalentries=3,option=None,skip=[]) :
+def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totalentries=3,option=None,skip=[],extend=False) :
+
     import ROOT
 
     if x1 == None : x1 = 0.6
@@ -352,7 +353,7 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         if y2 == None : y2 = 0.94
 
     if can.GetPrimitive('pad_top') :
-        MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,option,skip=skip)
+        MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,option,skip=skip,extend=extend)
         return
     if CanvasEmpty(can) :
         print 'Error: trying to make legend from canvas with 0 plots. Will do nothing.'
@@ -414,6 +415,10 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
     while (total < totalentries) :
         leg.AddEntry(None,'','')
         total += 1
+
+    # if the option is set, extend the legend downward to accommodate more entries
+    if (total > totalentries) and extend :
+        leg.SetY1(leg.GetY2() - total*(leg.GetY2() - leg.GetY1())/float(totalentries) )
 
     # recipe for making roughly square boxes
     h = leg.GetY2()-leg.GetY1()
