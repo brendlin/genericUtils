@@ -18,45 +18,70 @@
 #include "TEntryList.h"
 #include <string.h>
 
+TEntryList* GetTEntryListFromSelection(TTree* tree,const char* name,const char* cuts) {
+  // Apply the selection defined in "cuts"
+
+  tree->SetBranchStatus("*",1);
+  std::cout << Form("tree.Draw(\">>%s\",\"%s\",\"entrylist\")",name,cuts) << std::endl;
+  tree->Draw(Form(">>%s",name),cuts,"entrylist");
+  TEntryList* entryList = (TEntryList*)gDirectory->Get(name);
+  std::cout << "number in TEntryList: " << entryList->GetN() << std::endl;
+
+  return entryList;
+}
+
+void SetSelectedBranchStatusesOn(TTree* tree,char* branches) {
+  // Set only a subset of branches to status 1
+  // Iterate over branches and set branch status of particular ones.
+  // branch names should be separated by ","
+
+  tree->SetBranchStatus("*",0);
+
+  char* token;
+  token = strtok(branches,",");
+  while (token != NULL) {
+    tree->SetBranchStatus(token,1);
+    token = strtok(NULL,",");
+  }
+
+  return;
+}
+
+// Copy all the base-directory histograms
+//
+void CopyHistogramsFromBaseDirectory(TFile* old_file,TFile* new_file) {
+  // Copy any 0th-level histograms to the file too
+  TIter next(old_file->GetListOfKeys());
+  TKey *key;
+  while ( (key = (TKey*)next()) ) {
+    TClass *key_class = gROOT->GetClass(key->GetClassName());
+    if (!key_class->InheritsFrom("TH1")) continue;
+    TH1 *hist = (TH1*)key->ReadObj();
+    new_file->cd();
+    hist->Write();
+  }
+
+  return;
+}
+
 //
 // This function makes a PicoXaod with arbitrary branch names (separated by ",")
 //
 void makePicoXaod(TFile* oldfile,TTree* oldtree,const char* name,const char* cuts,char* branches,const char* outdir,const char* filename_nodotroot) {
 
-  oldtree->SetBranchStatus("*",1);
-  std::cout << Form("tree.Draw(\">>%s\",\"%s\")",name,cuts) << std::endl;
-  oldtree->Draw(Form(">>%s",name),cuts,"entrylist");
-  TEntryList* elist = (TEntryList*)gDirectory->Get(name);
-  Long64_t listEntries = elist->GetN();
-  std::cout << "number in TEntryList: " << listEntries << std::endl;
+  TEntryList* elist = GetTEntryListFromSelection(oldtree,name,cuts);
   oldtree->SetEntryList(elist);
-  oldtree->SetBranchStatus("*",0);
 
-  // Iterate over branches and set branch status of particular ones
-  char* tok;
-  tok = strtok(branches,",");
-  while (tok != NULL) {
-    oldtree->SetBranchStatus(tok,1);
-    tok = strtok(NULL,",");
-  }
+  SetSelectedBranchStatusesOn(oldtree,branches);
 
   //Create a new file + a clone of old tree in new file
   TFile *newfile = new TFile(Form("%s/%s.root",outdir,filename_nodotroot),"recreate");
   TTree* newtree = oldtree->CopyTree("");
-  
+
   oldtree->SetEntryList(0);
   newtree->AutoSave();
 
-  // Copy any 0th-level histograms to the file too
-  TIter next(oldfile->GetListOfKeys());
-  TKey *key;
-  while ( (key = (TKey*)next()) ) {
-    TClass *cl = gROOT->GetClass(key->GetClassName());
-    if (!cl->InheritsFrom("TH1")) continue;
-    TH1 *h = (TH1*)key->ReadObj();
-    newfile->cd();
-    h->Write();
-  }
+  CopyHistogramsFromBaseDirectory(oldfile,newfile);
 
   newfile->Close();
   delete elist;
@@ -67,11 +92,10 @@ void makePicoXaod(TFile* oldfile,TTree* oldtree,const char* name,const char* cut
 // This function makes a PicoXaod for every category of the 2015+2016 Couplings analysis.
 //
 void makePicoXaod_Categories(TChain* oldchain,const char* name,const char* cuts,const char* outdir,char* categories) {
-  oldchain->SetBranchStatus("*",1);
-  std::cout << Form("tree.Draw(\">>selection\",\"%s\",\"entrylist\")",cuts) << std::endl;
-  oldchain->Draw(">>selection",cuts,"entrylist");
-  TEntryList* elist = (TEntryList*)gDirectory->Get("selection");
+
+  TEntryList* elist = GetTEntryListFromSelection(oldchain,"selection",cuts);
   oldchain->SetEntryList(elist);
+
   oldchain->SetBranchStatus("*",0);
   oldchain->SetBranchStatus("HGamEventInfoAuxDyn.m_yy",1);
   int catCoup_Moriond2017BDT;
@@ -93,9 +117,8 @@ void makePicoXaod_Categories(TChain* oldchain,const char* name,const char* cuts,
   }
   
   Int_t treenum = 0;
-  Long64_t listEntries = elist->GetN();
-  //std::cout << "number in TEntryList: " << listEntries << std::endl;
-  for (Long64_t el = 0; el < listEntries; el++) {
+
+  for (Long64_t el = 0; el < elist->GetN(); el++) {
     // From Rene Brun, from TEntryList class def
     Long64_t treeEntry = elist->GetEntryAndTree(el,treenum);
     Long64_t chainEntry = treeEntry+oldchain->GetTreeOffset()[treenum];
@@ -127,14 +150,9 @@ void makePicoXaod_Categories(TChain* oldchain,const char* name,const char* cuts,
 //
 void makePicoXaod_Zpileup(TFile* oldfile,TTree* oldtree,const char* name,const char* cuts,char* branches,const char* outdir,const char* filename_nodotroot) {
 
-  oldtree->SetBranchStatus("*",1);
-  std::cout << Form("tree.Draw(\">>%s\",\"%s\")",name,cuts) << std::endl;
-  oldtree->Draw(Form(">>%s",name),cuts,"entrylist");
-  TEntryList* elist = (TEntryList*)gDirectory->Get(name);
-  Long64_t listEntries = elist->GetN();
-  std::cout << "number in TEntryList: " << listEntries << std::endl;
-  oldtree->SetBranchStatus("*",0);
-/*   oldtree->SetBranchStatus("HGamMuon*",0); */
+  TEntryList* elist = GetTEntryListFromSelection(oldtree,name,cuts);
+
+  SetSelectedBranchStatusesOn(oldtree,branches);
 
   std::vector<float> * eta_s2 = 0;
   std::vector<float> * pt = 0;
@@ -149,16 +167,7 @@ void makePicoXaod_Zpileup(TFile* oldfile,TTree* oldtree,const char* name,const c
   oldtree->SetBranchStatus ("HGamPhotonsAuxDyn.phi",1);
   oldtree->SetBranchAddress("HGamPhotonsAuxDyn.phi",&phi);
 
-
   int nKept = 0;
-
-  // Iterate over branches and set branch status of particular ones
-  char* tok;
-  tok = strtok(branches,",");
-  while (tok != NULL) {
-    oldtree->SetBranchStatus(tok,1);
-    tok = strtok(NULL,",");
-  }
 
   //Create a new file + a clone of old tree in new file
   TFile *newfile = new TFile(Form("%s/%s.root",outdir,filename_nodotroot),"recreate");
@@ -171,7 +180,7 @@ void makePicoXaod_Zpileup(TFile* oldfile,TTree* oldtree,const char* name,const c
   TH2F* histall = new TH2F("histall","histall",500/*eta_s2*/,-2.5,2.5,630/*phi*/,-3.15,3.15);
   TH1F* dupeList = new TH1F("dupes","dupes",100,0,100);
 
-  for (Long64_t el = 0; el < listEntries; el++) {
+  for (Long64_t el = 0; el < elist->GetN(); el++) {
     Long64_t entryNumber = elist->GetEntry(el);
 
     oldtree->GetEntry(entryNumber);
@@ -201,15 +210,7 @@ void makePicoXaod_Zpileup(TFile* oldfile,TTree* oldtree,const char* name,const c
   std::cout << "nKept: " << nKept << std::endl;
 
   // Copy any 0th-level histograms to the file too
-  TIter next(oldfile->GetListOfKeys());
-  TKey *key;
-  while ( (key = (TKey*)next()) ) {
-    TClass *cl = gROOT->GetClass(key->GetClassName());
-    if (!cl->InheritsFrom("TH1")) continue;
-    TH1 *h = (TH1*)key->ReadObj();
-    newfile->cd();
-    h->Write();
-  }
+  CopyHistogramsFromBaseDirectory(oldfile,newfile);
 
   newfile->cd();
   hist->Write();
@@ -289,25 +290,13 @@ const unsigned int PhotonTight = HADLEAK_PHOTON | CALOMIDDLE_PHOTON | CALOSTRIPS
 //
 void makePicoXaod_addFail2Tight(TFile* oldfile,TTree* oldtree,const char* name,const char* cuts,char* branches,const char* outdir,const char* filename_nodotroot) {
 
-  oldtree->SetBranchStatus("*",1);
-  std::cout << Form("tree.Draw(\">>%s\",\"%s\")",name,cuts) << std::endl;
-  oldtree->Draw(Form(">>%s",name),cuts,"entrylist");
-  TEntryList* elist = (TEntryList*)gDirectory->Get(name);
-  Long64_t listEntries = elist->GetN();
-  std::cout << "number in TEntryList: " << listEntries << std::endl;
-  oldtree->SetBranchStatus("*",0);
+  TEntryList* elist = GetTEntryListFromSelection(oldtree,name,cuts);
+
+  SetSelectedBranchStatusesOn(oldtree,branches);
 
   std::vector<unsigned int> * isEMTight = 0;
   oldtree->SetBranchStatus ("HGamPhotonsAuxDyn.isEMTight",1);
   oldtree->SetBranchAddress("HGamPhotonsAuxDyn.isEMTight",&isEMTight);
-
-  // Iterate over branches and set branch status of particular ones
-  char* tok;
-  tok = strtok(branches,",");
-  while (tok != NULL) {
-    oldtree->SetBranchStatus(tok,1);
-    tok = strtok(NULL,",");
-  }
 
   //Create a new file + a clone of old tree in new file
   TFile *newfile = new TFile(Form("%s/%s.root",outdir,filename_nodotroot),"recreate");
@@ -316,7 +305,7 @@ void makePicoXaod_addFail2Tight(TFile* oldfile,TTree* oldtree,const char* name,c
   std::vector<int> * failTwoTight = new std::vector<int>();
   newtree->Branch("HGamPhotonsAuxDyn.failTwoTight","vector<int>",&failTwoTight);
 
-  for (Long64_t el = 0; el < listEntries; el++) {
+  for (Long64_t el = 0; el < elist->GetN(); el++) {
     Long64_t entryNumber = elist->GetEntry(el);
 
     oldtree->GetEntry(entryNumber);
@@ -351,15 +340,7 @@ void makePicoXaod_addFail2Tight(TFile* oldfile,TTree* oldtree,const char* name,c
   }
 
   // Copy any 0th-level histograms to the file too
-  TIter next(oldfile->GetListOfKeys());
-  TKey *key;
-  while ( (key = (TKey*)next()) ) {
-    TClass *cl = gROOT->GetClass(key->GetClassName());
-    if (!cl->InheritsFrom("TH1")) continue;
-    TH1 *h = (TH1*)key->ReadObj();
-    newfile->cd();
-    h->Write();
-  }
+  CopyHistogramsFromBaseDirectory(oldfile,newfile);
 
   newtree->AutoSave();
   newfile->Close();
