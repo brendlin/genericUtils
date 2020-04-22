@@ -17,20 +17,28 @@ the_path = ('/').join(os.path.abspath(__file__).split('/')[:-2])
 # Add to macro path
 ROOT.gROOT.SetMacroPath('%s:%s/share'%(ROOT.gROOT.GetMacroPath(),the_path))
 
-# Load PicoXaodSkimAlgos.h macro:
-isLoaded = ROOT.gROOT.LoadMacro('PicoXaodSkimAlgos.h')
-if (isLoaded < 0) :
-    print 'Error! Macro compilation PicoXaodSkimAlgos.h failed. See error messages.'
-    sys.exit()
-else :
-    print 'Loaded Macro PicoXaodSkimAlgos.h'
-
 #-------------------------------------------------------------------------
 def main(options,args) :
 
     plotfunc.SetupStyle()
 
-    print 'Skimming using the \"%s\" algorithm...'%(options.alg)
+    # The nominal case, where you use an algorithm inside the predefined file
+    macroFileName = 'PicoXaodSkimAlgos.h'
+    algName = options.alg
+
+    # If a colon is used, it is to specify a different file path
+    if ':' in options.alg :
+        macroFileName = options.alg.split(':')[0]
+        algName = options.alg.split(':')[-1]
+
+    isLoaded = ROOT.gROOT.LoadMacro(macroFileName)
+    if (isLoaded < 0) :
+        print 'Error! Macro compilation of file %s failed. See error msgs.'%(macroFileName)
+        sys.exit()
+    else :
+        print 'Loaded macro file %s'%(macroFileName)
+
+    print 'Skimming using the \"%s\" algorithm...'%(algName)
 
     # Here "b" stands for simulation
     files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename)
@@ -53,7 +61,7 @@ def main(options,args) :
         outfilename = anaplot.CleanUpName(outfilename,originalIsDirectoryName=True,forFileName=True)
         histname = anaplot.CleanUpName(k,originalIsDirectoryName=True)
         print 'Making picoXaod for %s'%(k)
-        getattr(ROOT,options.alg)(files_d[k],trees_d[k],histname,dcuts,','.join(options.variables),options.outdir,outfilename)
+        getattr(ROOT,algName)(files_d[k],trees_d[k],histname,dcuts,','.join(options.variables),options.outdir,outfilename)
 
     for k in keys_b :
         outfilename = os.path.basename(files_b[k].GetName()).replace('.root','')
@@ -61,7 +69,7 @@ def main(options,args) :
         outfilename = anaplot.CleanUpName(outfilename,originalIsDirectoryName=True,forFileName=True)
         histname = anaplot.CleanUpName(k,originalIsDirectoryName=True)
         print 'Making picoXaod for %s'%(k)
-        getattr(ROOT,options.alg)(files_b[k],trees_b[k],histname,simcuts,','.join(options.variables),options.outdir,outfilename)
+        getattr(ROOT,algName)(files_b[k],trees_b[k],histname,simcuts,','.join(options.variables),options.outdir,outfilename)
 
     print 'done.'
     return
@@ -69,7 +77,7 @@ def main(options,args) :
 if __name__ == '__main__':
 
     p = anaplot.TreePlottingOptParser()
-    p.p.add_option('--alg',type='string',default='makePicoXaod',dest='alg',help='Algorithm to use (default is makePicoXaod. Others: makePicoXaod_Categories, makePicoXaod_Zpileup)')
+    p.p.add_option('--alg',type='string',default='makePicoXaod',dest='alg',help='Algorithm to use (default is makePicoXaod. Others: makePicoXaod_Categories, makePicoXaod_Zpileup). Can also specify /path/to/file.h:algo')
     options,args = p.parse_args()
 
     if not options.variables :
