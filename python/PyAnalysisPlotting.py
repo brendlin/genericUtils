@@ -1,5 +1,14 @@
 
 #-------------------------------------------------------------------------
+def SafeExit(xAODInit=False) :
+    import ROOT
+
+    if xAODInit :
+        ROOT.xAOD.ClearTransientTrees()
+
+    import sys; sys.exit()
+
+#-------------------------------------------------------------------------
 def PrepareBkgHistosForStack(bkg_hists,options) :
     from PlotFunctions import KurtColorPalate
     from PyHelpers import GetHWWColors
@@ -215,6 +224,8 @@ def GetTreesFromFiles(filelist_csv,treename='physics',xAODInit=False) :
     tmperror = ROOT.gErrorIgnoreLevel        
     ROOT.gErrorIgnoreLevel = ROOT.kFatal
 
+    hasZombies = False
+
     files = dict()
     trees = dict()
     keys = []
@@ -233,9 +244,10 @@ def GetTreesFromFiles(filelist_csv,treename='physics',xAODInit=False) :
                     continue
                 files[name].append(ROOT.TFile(tmpfilename))
                 if files[name][-1].IsZombie() :
-                    print 'exiting'
-                    import sys
-                    sys.exit()
+                    print 'File %s is a zombie. exiting.'%(name)
+                    hasZombies = True
+                    continue
+
                 #print 'adding',tmpfilename
                 trees[name].Add(tmpfilename)
                 
@@ -247,9 +259,10 @@ def GetTreesFromFiles(filelist_csv,treename='physics',xAODInit=False) :
         # 
         files[name] = ROOT.TFile(f)
         if files[name].IsZombie() :
-            print 'exiting'
-            import sys
-            sys.exit()
+            print 'File %s is a zombie. exiting.'%(name)
+            hasZombies = True
+            continue
+
         keys.append(name)
 
         # Regular files: Get tree
@@ -260,8 +273,11 @@ def GetTreesFromFiles(filelist_csv,treename='physics',xAODInit=False) :
 
 
         if not trees[name] :
-            print 'Error! Tree \"%s\" does not exist! Exiting.'%(treename)
-            import sys; sys.exit()
+            print 'Error! Tree \"%s\" from %s does not exist! Exiting.'%(treename,name)
+            hasZombies = True
+
+    if hasZombies :
+        SafeExit(xAODInit)
 
     ROOT.gErrorIgnoreLevel = tmperror
     return files,trees,keys
@@ -321,24 +337,27 @@ def GetScales(files,trees,keys,options) :
     return weights
     
 #-------------------------------------------------------------------------
-def RunMacro(macro,thefile,histnamekey) :
+def RunMacro(macro,thefile,histnamekey,verbose=True,xAODInit=False) :
     import ROOT
 
     macro_name = macro.replace('.h','').replace('.cxx','').replace('.cpp','')
     macro_name = macro_name.replace('.C','')
 
     if getattr(ROOT,macro_name,None) :
-        print 'Macro %s already loaded.'%(macro)
+        if verbose :
+            print 'Macro %s already loaded.'%(macro)
     else :
-        print 'Loading macro %s'%(macro)
+        if verbose :
+            print 'Loading macro %s'%(macro)
         ROOT.gROOT.LoadMacro(macro)
 
         if not getattr(ROOT,macro_name,None) :
             print 'ERROR Macro named %s not found in file %s'%(macro_name,macro)
-            import sys; sys.exit()
+            SafeExit(xAODInit)
 
     # Macro should take a TTree and a key name
-    print 'Running macro %s...'%(macro_name)
+    if verbose :
+        print 'Running macro %s...'%(macro_name)
     getattr(ROOT,macro_name)(thefile,histnamekey)
 
     return
@@ -378,7 +397,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
                 print 'ERROR Macro failed trying to create %s Exiting.'%(name)
-                import sys; sys.exit()
+                SafeExit(options.xAODInit)
 
         else :
 
@@ -402,7 +421,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
                 print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
-                import sys; sys.exit()
+                SafeExit(options.xAODInit)
 
             if rebin and type(rebin) == type([]) :
                 tmp = ROOT.gDirectory.Get(name)
@@ -453,7 +472,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
         if not options.limits.get(variable1,None) or not options.limits.get(variable2,None) :
             print 'Error - you need to specify limits for both %s and %s.'%(variable1,variable2)
             print '(Note you probably have to add these variables to the list of variables as well.)'
-            import sys; sys.exit()
+            SafeExit(options.xAODInit)
 
     n1,low1,high1 = options.limits.get(variable1)
     n2,low2,high2 = options.limits.get(variable2)
@@ -477,7 +496,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
                 print 'ERROR Macro failed trying to create %s Exiting.'%(name)
-                import sys; sys.exit()
+                SafeExit(options.xAODInit)
 
         else :
 
@@ -494,8 +513,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
                 print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
-                import sys
-                sys.exit()
+                SafeExit(options.xAODInit)
 
         hists.append(ROOT.gDirectory.Get(name))
         hists[-1].SetDirectory(0)
@@ -508,7 +526,10 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
         PyHelpers.PrintNumberOfEvents(hists[-1])
 
         if options.normalize :
-            hists[-1].Scale(1/float(hists[-1].Integral()))
+            try :
+                hists[-1].Scale(1/float(hists[-1].Integral()))
+            except ZeroDivisionError :
+                pass
 
     return hists
 
@@ -682,7 +703,7 @@ class TreePlottingOptParser :
         if self.p.has_option('--bkgs') :
             if (not self.options.bkgs) and (not self.options.signal) and (not self.options.data) :
                 print 'No --bkgs, --signal, or --data specified. Exiting.'
-                sys.exit()
+                SafeExit(self.options.xAODInit)
 
         self.options.xlabel = dict()
         self.options.rebin = dict()
@@ -824,7 +845,7 @@ def MergeSamples(hists,options,requireFullyMerged=False) :
 
     if requireFullyMerged and len(hists_new) > 1 :
         print 'Error! Failed to merge histograms into one histogram! (Usually required for data.) Check your sample merging.'
-        import sys; sys.exit()
+        SafeExit(options.xAODInit)
 
     return hists_new
 
