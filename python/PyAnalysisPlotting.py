@@ -59,6 +59,7 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
 #-------------------------------------------------------------------------
 def PrepareDataHistos(data_hists,options) :
     import re
+    import ROOT
 
     labels = getattr(options,'labels',None)
     if not labels :
@@ -78,6 +79,9 @@ def PrepareDataHistos(data_hists,options) :
                 continue
             i.SetTitle(labels[j])
 
+        if getattr(options,'poisson',False) :
+            i.SetBinErrorOption(ROOT.TH1.kPoisson);
+
     return
 
 #-------------------------------------------------------------------------
@@ -90,6 +94,7 @@ def PrepareSignalHistos(sig_hists,options) :
         labels = dict()
 
     signal_colors = [ROOT.kRed,ROOT.kBlue,ROOT.kSpring-8,ROOT.kMagenta+1,ROOT.kAzure+8
+                     ,ROOT.kOrange+1
                      ,21,22,23,24,25,26,27,28,29,30
                      ,21,22,23,24,25,26,27,28,29,30]
 
@@ -133,6 +138,8 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
     else :
         can = plotfunc.RatioCanvas(canname,canname,500,500)
 
+    totb = None
+
     if bkg_hists :
 
         # Make a histogram that includes the total of all bkgs:
@@ -175,9 +182,9 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
         plotfunc.AddHistogram(can,h)
 
     if data_hist :
-        if options.ratio :
+        if options.ratio and totb :
             plotfunc.AddRatio(can,data_hist,totb)
-        elif options.pull :
+        elif options.pull and totb :
             plotfunc.AddRatio(can,data_hist,totb,divide='pull')
         else :
             plotfunc.AddHistogram(can,data_hist)
@@ -560,6 +567,7 @@ class TreePlottingOptParser :
         # plot manipulation
         self.p.add_option('--ratio',action='store_true',default=False,dest='ratio',help='Plot as a ratio')
         self.p.add_option('--pull' ,action='store_true',default=False,dest='pull' ,help='Plot as a pull distribution')
+        self.p.add_option('--poisson',action='store_true',default=False,dest='poisson',help='Poisson errors for data')
         self.p.add_option('--nostack',action='store_true',default=False,dest='nostack',help='do not stack')
         self.p.add_option('--normalize',action='store_true',default=False,dest='normalize',help='normalize')
         self.p.add_option('--showflows',action='store_true',default=False,dest='showflows',help='show overflows/underflows as first and last bin')
