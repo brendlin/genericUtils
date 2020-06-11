@@ -462,9 +462,6 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
         # print the yield and error after cuts (includes overflow)
         PyHelpers.PrintNumberOfEvents(hists[-1])
 
-        if rebin :
-            plotfunc.ConvertToDifferential(hists[-1])
-
     return hists
 
 #-------------------------------------------------------------------------
@@ -539,6 +536,27 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
                 pass
 
     return hists
+
+#-------------------------------------------------------------------------
+def ExpandWildcard(csv_list) :
+    import glob
+    tmp = csv_list.split(',')
+    tmp_new = []
+    for i in range(len(tmp)) :
+        if not tmp[i] :
+            continue
+        tmp_new += glob.glob(tmp[i].replace('%','*'))
+    return ','.join(tmp_new)
+
+#-------------------------------------------------------------------------
+def AddDotRoot(csv_list) :
+    tmp = csv_list.split(',')
+    for i in range(len(tmp)) :
+        if not tmp[i] :
+            continue
+        if '.root' not in tmp[i] :
+            tmp[i] = tmp[i]+'.root'
+    return ','.join(tmp)
 
 #-------------------------------------------------------------------------
 class TreePlottingOptParser :
@@ -665,25 +683,6 @@ class TreePlottingOptParser :
             if hasattr(usermodule,'variables') :
                 self.options.variables = usermodule.variables
 
-        def ExpandWildcard(csv_list) :
-            import glob
-            tmp = csv_list.split(',')
-            tmp_new = []
-            for i in range(len(tmp)) :
-                if not tmp[i] :
-                    continue
-                tmp_new += glob.glob(tmp[i].replace('%','*'))
-            return ','.join(tmp_new)
-
-        def AddDotRoot(csv_list) :
-            tmp = csv_list.split(',')
-            for i in range(len(tmp)) :
-                if not tmp[i] :
-                    continue
-                if '.root' not in tmp[i] :
-                    tmp[i] = tmp[i]+'.root'
-            return ','.join(tmp)
-        
         # add .root to each background name.
         self.options.bkgs = ExpandWildcard(self.options.bkgs)
         self.options.bkgs = AddDotRoot(self.options.bkgs)
@@ -937,7 +936,7 @@ def weightscaleHZY(tfile) :
     return 1.0/sumweight
 
 #-------------------------------------------------------------------------
-def RatioRangeAfterBurner(can,ymin=0,ymax=2) :
+def RatioRangeAfterBurner(can,ymin=None,ymax=None) :
     import PlotFunctions as plotfunc
     import TAxisFunctions as taxisfunc
     import ROOT
@@ -951,6 +950,12 @@ def RatioRangeAfterBurner(can,ymin=0,ymax=2) :
         if hasattr(hist,'GetYaxis') :
             isPull = isPull or (hist.GetYaxis().GetTitle() == 'pull')
 
+    if ymin == None :
+        if isPull :
+            ymin,ymax = -4,4
+        else :
+            ymin,ymax = 0,2
+
     taxisfunc.SetYaxisRanges(plotfunc.GetBotPad(can),ymin,ymax)
     if ymax <= 1 :
         return
@@ -960,6 +965,7 @@ def RatioRangeAfterBurner(can,ymin=0,ymax=2) :
         if issubclass(type(i),ROOT.TH1) :
             xmin = i.GetXaxis().GetBinLowEdge(1)
             xmax = i.GetXaxis().GetBinLowEdge(i.GetNbinsX()+1)
+
     if xmin != None :
         lineh = 0 if isPull else 1
         line = ROOT.TLine(xmin,lineh,xmax,lineh)
