@@ -57,6 +57,9 @@ def main(options,args) :
                 if not hist : continue
                 hist.Scale(1/float(hist.Integral()))
 
+        if options.customnormalize :
+            options.customnormalize(v,sig_hists=sig_hists,bkg_hists=bkg_hists,data_hist=data_hist)
+
         cans.append(anaplot.DrawHistos(v,options,bkg_hists,sig_hists,data_hist))
 
     if options.afterburner :

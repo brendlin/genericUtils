@@ -132,6 +132,9 @@ def main(options,args) :
                 if not hist : continue
                 hist.Scale(1/float(hist.Integral()))
 
+        if options.customnormalize :
+            options.customnormalize(v,sig_hists=sig_hists,data_hist=data_hist)
+
         anaplot.PrepareSignalHistos(sig_hists+data_hists,None)
 
         ## Special canvas:
