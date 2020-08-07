@@ -316,7 +316,7 @@ def DrawText(can,text='text',x1=None,y1=None,x2=None,y2=None,angle=0,align='',te
         leg.AddEntry(0,i,'')
         total += 1
     while (total < totalentries) :
-        leg.AddEntry(None,'','')
+        leg.AddEntry(0,'','')
         total += 1
     leg.Draw()
     can.Modified()
@@ -415,7 +415,7 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
     # Add empty entries to ensure a standard layout
     #            
     while (total < totalentries) :
-        leg.AddEntry(None,'','')
+        leg.AddEntry(0,'','')
         total += 1
 
     # if the option is set, extend the legend downward to accommodate more entries
