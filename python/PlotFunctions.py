@@ -549,7 +549,7 @@ def SetupStyle() :
     mystyle.SetFrameFillColor(0)
     mystyle.SetOptTitle(0)
     mystyle.SetPaintTextFormat('4.1f ')
-    mystyle.SetEndErrorSize(3)
+    mystyle.SetEndErrorSize(0)
 
     # For top (x) / right (y) ticks
     mystyle.SetPadTickX(1)

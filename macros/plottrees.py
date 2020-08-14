@@ -12,7 +12,7 @@ import PlotFunctions as plotfunc
 #-------------------------------------------------------------------------
 def main(options,args) :
 
-    plotfunc.SetupStyle()
+    mystyle = plotfunc.SetupStyle()
 
     files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename,xAODInit=options.xAODInit)
     files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename,xAODInit=options.xAODInit)
@@ -72,7 +72,8 @@ def main(options,args) :
         ROOT.xAOD.ClearTransientTrees()
 
     if not options.batch :
-        raw_input('Press enter to exit')
+        import code
+        code.interact(banner='Pausing... Press Contol-D to exit.',local=locals())
 
     anaplot.doSaving(options,cans)
 
