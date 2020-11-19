@@ -115,7 +115,7 @@ def PrepareSignalHistos(sig_hists,options) :
     return
 
 #-------------------------------------------------------------------------
-def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name='') :
+def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name='',skipBError=False) :
     #
     # bkg_hists is a list of background histograms (TH1)
     # sig_hists is a list of signal histograms (TH1)
@@ -152,12 +152,13 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
         for i in bkg_hists[1:] :
             totb.Add(i)
 
-        # A copy of the total bkg histo, for plotting the error bar
-        totberror = totb.Clone()
-        totberror.SetName(totb.GetName().replace('_SM','_error'))
-        totberror.SetTitle('SM (stat)')
-        totberror.SetFillColor(12)
-        totberror.SetFillStyle(3254)
+        if not skipBError :
+            # A copy of the total bkg histo, for plotting the error bar
+            totberror = totb.Clone()
+            totberror.SetName(totb.GetName().replace('_SM','_error'))
+            totberror.SetTitle('SM (stat)')
+            totberror.SetFillColor(12)
+            totberror.SetFillStyle(3254)
 
     for index,i in enumerate(bkg_hists) :
         # if no data, but you specified you wanted a ratio, then do ratio of MC
@@ -175,7 +176,8 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
 
     if bkg_hists and options.stack :
         plotfunc.Stack(can)
-        plotfunc.AddHistogram(can,totberror,drawopt='E2',keepname=True)
+        if not skipBError :
+            plotfunc.AddHistogram(can,totberror,drawopt='E2',keepname=True)
         plotfunc.AddHistogram(can,totb,drawopt='hist',keepname=True)
 
     for h in sig_hists :

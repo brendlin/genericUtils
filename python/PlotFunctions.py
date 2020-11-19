@@ -272,7 +272,14 @@ def GetLuminosityText(lumi=20.3) :
     if lumi < 1 :
         unit = 'pb'
         lumi = lumi * 1000.
-    return '#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f %s^{#minus1}'%(lumi,unit)
+
+    # Version with int Ldt:
+    #return '#lower[-0.2]{#scale[0.60]{#int}}Ldt = %1.1f %s^{#minus1}'%(lumi,unit)
+
+    if unit == 'fb' and lumi > 100 :
+        return '%d %s^{#minus1}'%(int(lumi),unit)
+
+    return '%1.1f %s^{#minus1}'%(lumi,unit)
 
 def GetSqrtsText(sqrts=13) :
     return '#sqrt{s} = %d TeV'%(sqrts)
@@ -338,7 +345,7 @@ def CanvasEmpty(can) :
 ## of your TH1 or TGraph *before* you add it to the canvas.*
 ## The x and y coordinates are the fractional distances, with the origin at the bottom left.
 ## 
-def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totalentries=3,option=None,skip=[],extend=False) :
+def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totalentries=3,option=None,skip=[],extend=False,order=[]) :
 
     import ROOT
 
@@ -381,6 +388,12 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
     if can.GetPrimitive('stack') :
         the_stack = list(can.GetPrimitive('stack').GetHists())
         the_primitives = the_stack+list(the_primitives)
+
+    if order :
+        tmp = []
+        for i in order :
+            tmp.append(the_primitives[i])
+        the_primitives = tmp
 
     total = 0
     for i in the_primitives :

@@ -23,7 +23,7 @@ def DrawHistosCutComparison(variable,options,sig_hists=[],data_hists=[],name='')
     # stack, before adding SUSY histograms
     #
     if not options.ratio :
-        can = ROOT.TCanvas(canname,canname,500,500)
+        can = ROOT.TCanvas(canname,canname,600,450)
     else :
         can = plotfunc.RatioCanvas(canname,canname,500,500)
 
@@ -80,7 +80,7 @@ def DrawHistosCutComparison(variable,options,sig_hists=[],data_hists=[],name='')
 #-------------------------------------------------------------------------
 def main(options,args) :
 
-    plotfunc.SetupStyle()
+    mystyle = plotfunc.SetupStyle()
 
     files_b,trees_b,keys_b = anaplot.GetTreesFromFiles(options.bkgs  ,treename=options.treename,xAODInit=options.xAODInit)
     files_s,trees_s,keys_s = anaplot.GetTreesFromFiles(options.signal,treename=options.treename,xAODInit=options.xAODInit)
@@ -140,13 +140,18 @@ def main(options,args) :
         ## Special canvas:
         cans.append(DrawHistosCutComparison(v,options,sig_hists=sig_hists,data_hists=data_hists))
 
+    if options.afterburner :
+        for can in cans :
+            options.afterburner(can)
+
     anaplot.UpdateCanvases(cans,options)
 
     if options.xAODInit :
         ROOT.xAOD.ClearTransientTrees()
 
     if not options.batch :
-        raw_input('Press enter to exit')
+        import code
+        code.interact(banner='Pausing... Press Contol-D to exit.',local=locals())
 
     anaplot.doSaving(options,cans)
 
