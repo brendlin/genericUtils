@@ -208,7 +208,7 @@ If you have a RatioCanvas, you can use:
  - **SetAxisLabels**(can,xlabel,ylabel)
  - **SetColors**(can,[color1,color2,color3...])
  - **SetMarkerStyles**(can,these_styles=[],these_sizes=[])
- - **MakeLegend**(can,x1,x2,y1,y2,...)
+ - **MakeLegend**(can,x1,y1,x2,y2,...)
  - **FormatCanvasAxes**(can,options...) - must be run AFTER the first histograms are added!
  - **SetLeftMargin**(can,margin), SetRightMargin(can,margin)
  - **GetTopPad**(can), **GetBotPad**(can)
