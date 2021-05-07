@@ -2,17 +2,17 @@
 ## Available functions:
 ##
 def help() :
-    print 'AutoFixAxes(can,symmetrize=False,ignorelegend=False)'
-    print 'AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=False)'
-    print 'EqualizeYAxes(cans,ignorelegend=False)'
-    print
-    print 'FixYaxisRanges(can)'
-    print 'SetYaxisRanges(can,ymin,ymax)'
-    print 'GetYaxisRanges(can,check_all=False,ignorezero=False)'
-    print
-    print 'FixXaxisRanges(can)'
-    print 'SetXaxisRanges(can,xmin,xmax)'
-    print 'GetXaxisRanges(can,check_all=False)'
+    print('AutoFixAxes(can,symmetrize=False,ignorelegend=False)')
+    print('AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=False)')
+    print('EqualizeYAxes(cans,ignorelegend=False)')
+    print()
+    print('FixYaxisRanges(can)')
+    print('SetYaxisRanges(can,ymin,ymax)')
+    print('GetYaxisRanges(can,check_all=False,ignorezero=False)')
+    print()
+    print('FixXaxisRanges(can)')
+    print('SetXaxisRanges(can,xmin,xmax)')
+    print('GetXaxisRanges(can,check_all=False)')
 ## 
 ## Smaller, helpers:
 ##  NearestNiceNumber(miny,maxy)
@@ -48,7 +48,7 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=F
 
     for i in can.GetListOfPrimitives() :
         if issubclass(type(i),ROOT.TH2) :
-            print 'Warning: AutoFixYaxis for a 2d plot. Skipping for this canvas.'
+            print('Warning: AutoFixYaxis for a 2d plot. Skipping for this canvas.')
             return miny,maxy
 
     # maxy_frac is the fractional maximum of the y-axis stuff.
@@ -77,10 +77,10 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=F
         if hasattr(i,'GetY') :
             maxy_frac = min(maxy_frac,i.GetY())
     if not plots_exist :
-        print 'Your plot %s has nothing in it. AutoFixYaxis() is Doing nothing.'%(can.GetName())
+        print('Your plot %s has nothing in it. AutoFixYaxis() is Doing nothing.'%(can.GetName()))
         return  miny,maxy
     (miny,maxy) = GetYaxisRanges(can,check_all=True,ignorezero=ignorezero)
-    # print 'AutoFixAxes0',miny,maxy
+    # print('AutoFixAxes0',miny,maxy)
     if miny == 0 and maxy == 0 :
         return miny,maxy
     miny = (0.95*miny) if (miny>0) else (1.05*miny)
@@ -88,8 +88,8 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=F
     maxy_frac = maxy_frac-can.GetBottomMargin()
 
     if maxy_frac < 0 :
-        print 'Error in AutoFixAxes - somehow there is no more room for your plot.'
-        print '(Bad legend placement?)'
+        print('Error in AutoFixAxes - somehow there is no more room for your plot.')
+        print('(Bad legend placement?)')
         return miny,maxy
 
     if can.GetLogy() and MinimumForLog(can) > 0 :
@@ -105,7 +105,7 @@ def AutoFixYaxis(can,ignorelegend=False,forcemin=None,minzero=False,ignorezero=F
         maxy = tframe_height*(maxy-miny)/float(maxy_frac)+miny
         # round y axis to nice round numbers
         (miny,maxy) = NearestNiceNumber(miny,maxy)
-    # print 'AutoFixAxes',miny,maxy
+    # print('AutoFixAxes',miny,maxy)
 #     if symmetrize :
 #         (miny,maxy) = -max(math.fabs(miny),math.fabs(maxy)),max(math.fabs(miny),math.fabs(maxy))
     if minzero == True :
@@ -127,7 +127,7 @@ def NearestNiceNumber(miny,maxy) :
     else :
         newminy = round_number*smallest_increment*math.floor(miny/(round_number*smallest_increment))
     newmaxy     = round_number*smallest_increment*math.ceil (maxy/(round_number*smallest_increment))
-    # print 'NearestNiceNumber',newminy,newmaxy
+    # print('NearestNiceNumber',newminy,newmaxy)
     return newminy,newmaxy
 
 ##
@@ -157,9 +157,9 @@ def MinimumForLog(can) :
                 if y <= 0 :
                     y = ymin
                 ymin = min(ymin,y)
-    # print 'MinimumForLog',ymin
+    # print('MinimumForLog',ymin)
     if ymin == sys.float_info.max :
-        print 'Error! Trying to use Logy but y minimum is zero! Returning -1'
+        print('Error! Trying to use Logy but y minimum is zero! Returning -1')
         return -1
     return ymin
 
@@ -182,31 +182,31 @@ def SetYaxisRanges(can,ymin,ymax) :
     yaxis = 0
     for i in can.GetListOfPrimitives() :
         if issubclass(type(i),ROOT.TGraph) :
-            # print 'SetYaxisRanges',ymin,ymax
+            # print('SetYaxisRanges',ymin,ymax)
             i.SetMinimum(ymin)
             i.SetMaximum(ymax)
             if not yaxis :
                 yaxis = i.GetHistogram().GetYaxis()
         if issubclass(type(i),ROOT.TF1) :
-            # print 'SetYaxisRanges',ymin,ymax
+            # print('SetYaxisRanges',ymin,ymax)
             i.SetMinimum(ymin)
             i.SetMaximum(ymax)
             if not yaxis:
                 yaxis = i.GetHistogram().GetYaxis()
         if issubclass(type(i),ROOT.TH1) :
-            # print 'SetYaxisRanges',ymin,ymax
+            # print('SetYaxisRanges',ymin,ymax)
             i.SetMinimum(ymin)
             i.SetMaximum(ymax)
             if not yaxis:
                 yaxis = i.GetYaxis()
         if issubclass(type(i),ROOT.THStack) :
-            # print 'SetYaxisRanges',ymin,ymax
+            # print('SetYaxisRanges',ymin,ymax)
             i.SetMinimum(ymin)
             i.SetMaximum(ymax)
             if not yaxis :
                 yaxis = i.GetHistogram().GetYaxis()
     if not yaxis :
-        print 'Warning: SetYaxisRange had no effect. Check that your canvas has plots in it.'
+        print('Warning: SetYaxisRange had no effect. Check that your canvas has plots in it.')
         return
     
     yaxis.SetRangeUser(ymin,ymax)
@@ -322,7 +322,7 @@ def GetYaxisRanges(can,check_all=False,ignorezero=False) :
             if not check_all :
                 return ymin,ymax
 
-    # print 'GetYaxisRanges',ymin,ymax
+    # print('GetYaxisRanges',ymin,ymax)
     return ymin,ymax
 
 ##
@@ -355,7 +355,7 @@ def SetXaxisRanges(can,xmin,xmax) :
             xaxis.SetRangeUser(xmin,xmax)
     
     if not xaxis :
-        print 'Warning: SetXaxisRange had no effect. Check that your canvas has plots in it.'
+        print('Warning: SetXaxisRange had no effect. Check that your canvas has plots in it.')
         return
 
     can.Modified()
