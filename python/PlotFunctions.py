@@ -1,32 +1,37 @@
-from TAxisFunctions import *
+import sys
+major_python_version = sys.version_info[0]
+if major_python_version == 3:
+    from .TAxisFunctions import *
+else:
+    from TAxisFunctions import *
 
 ##
 ## New plotting functions :
 ##
 def help() :
-    print 'FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',preliminary=False)'
-    print 'ConvertToDifferential(hist)'
-    print 'AddHistogram(can,hist)'
-    print 'SetAxisLabels(can,xlabel,ylabel)'
-    print 'SetColors(can,[color1,color2,color3...])'
-    print 'SetMarkerStyles(can,these_styles=[],these_sizes=[])'
-    print 'GetLuminosityText(lumi)'
-    print 'GetSqrtsText(sqrts)'
-    print 'GetAtlasInternalText(status=\'Internal\')'
-    print 'DrawText(can,text,x1,y1,x2,y2,...)'
-    print 'MakeLegend(can,x1,x2,y1,y2,...)'
-    print 'FormatCanvasAxes(can,options...) - must be run AFTER the first histograms are added!'
-    print 'SetupStyle()'
-    print 'RatioCanvas(name,title,canw,canh,ratio_size_as_fraction)'
-    print 'SetLeftMargin(can,margin), SetRightMargin(can,margin)'
-    print 'GetTopPad(can), GetBotPad(can)'
-    print 'AddHistogramTop(can,hist)'
-    print 'AddHistogramBot(can,hist)'
-    print 'AddRatio(can,hist,ref_hist)'
-    print 'AddRatioManual(can,hist,ratioplot,drawopt1=\'pE1\',drawopt2=\'pE1\')'
-    print 'Stack(can,reverse=False)'
-    print 'ColorGradient(i,ntotal)'
-    print 'SetColorGradient(name=\'MyThermometer\')'
+    print('FullFormatCanvasDefault(can,lumi=36.1,sqrts=13,additionaltext='',preliminary=False)')
+    print('ConvertToDifferential(hist)')
+    print('AddHistogram(can,hist)')
+    print('SetAxisLabels(can,xlabel,ylabel)')
+    print('SetColors(can,[color1,color2,color3...])')
+    print('SetMarkerStyles(can,these_styles=[],these_sizes=[])')
+    print('GetLuminosityText(lumi)')
+    print('GetSqrtsText(sqrts)')
+    print('GetAtlasInternalText(status=\'Internal\')')
+    print('DrawText(can,text,x1,y1,x2,y2,...)')
+    print('MakeLegend(can,x1,x2,y1,y2,...)')
+    print('FormatCanvasAxes(can,options...) - must be run AFTER the first histograms are added!')
+    print('SetupStyle()')
+    print('RatioCanvas(name,title,canw,canh,ratio_size_as_fraction)')
+    print('SetLeftMargin(can,margin), SetRightMargin(can,margin)')
+    print('GetTopPad(can), GetBotPad(can)')
+    print('AddHistogramTop(can,hist)')
+    print('AddHistogramBot(can,hist)')
+    print('AddRatio(can,hist,ref_hist)')
+    print('AddRatioManual(can,hist,ratioplot,drawopt1=\'pE1\',drawopt2=\'pE1\')')
+    print('Stack(can,reverse=False)')
+    print('ColorGradient(i,ntotal)')
+    print('SetColorGradient(name=\'MyThermometer\')')
 ##
 ## # SetFillStyles() Coming soon!
 ##
@@ -215,8 +220,8 @@ def KurtColorPalate() :
 def SetColors(can,these_colors=[],fill=False,line=False) :
 
     if can.GetPrimitive('stack') :
-        print 'WARNING in PlotFunctions SetColors: canvas has a THStack, but colors must be set'
-        print '  before adding to the THStack. Please call SetColors() before calling Stack(). Doing nothing.'
+        print('WARNING in PlotFunctions SetColors: canvas has a THStack, but colors must be set')
+        print('  before adding to the THStack. Please call SetColors() before calling Stack(). Doing nothing.')
         return
 
     if not these_colors :
@@ -363,7 +368,7 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,option,skip=skip,extend=extend)
         return
     if CanvasEmpty(can) :
-        print 'Error: trying to make legend from canvas with 0 plots. Will do nothing.'
+        print('Error: trying to make legend from canvas with 0 plots. Will do nothing.')
         return
     #
     # if a previous version exists from this function, delete it
