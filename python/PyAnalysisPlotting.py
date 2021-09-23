@@ -723,7 +723,7 @@ class TreePlottingOptParser :
         self.options.limits = dict()
 
         # Prepare stuff related to the variables.
-        for v in self.options.variables + self.options.variablemap.values() :
+        for v in self.options.variables + list(self.options.variablemap.values()) :
             if v == '' : continue
             if v in self.options.histformat.keys() :
                 if len(self.options.histformat[v]) < 4 :
