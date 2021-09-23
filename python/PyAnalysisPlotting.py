@@ -253,7 +253,7 @@ def GetTreesFromFiles(filelist_csv,treename='physics',xAODInit=False) :
                     continue
                 files[name].append(ROOT.TFile(tmpfilename))
                 if files[name][-1].IsZombie() :
-                    print 'File %s is a zombie. exiting.'%(name)
+                    print('File %s is a zombie. exiting.'%(name))
                     hasZombies = True
                     continue
 
@@ -268,7 +268,7 @@ def GetTreesFromFiles(filelist_csv,treename='physics',xAODInit=False) :
         # 
         files[name] = ROOT.TFile(f)
         if files[name].IsZombie() :
-            print 'File %s is a zombie. exiting.'%(name)
+            print('File %s is a zombie. exiting.'%(name))
             hasZombies = True
             continue
 
@@ -282,7 +282,7 @@ def GetTreesFromFiles(filelist_csv,treename='physics',xAODInit=False) :
 
 
         if not trees[name] :
-            print 'Error! Tree \"%s\" from %s does not exist! Exiting.'%(treename,name)
+            print('Error! Tree \"%s\" from %s does not exist! Exiting.'%(treename,name))
             hasZombies = True
 
     if hasZombies :
@@ -318,18 +318,18 @@ def GetChainFromFiles(filelist_csv,treename='physics',chainname='data') :
         files[name] = ROOT.TFile(f)
 
         if files[name].IsZombie() :
-            print 'exiting'
+            print('exiting')
             import sys
             sys.exit()
 
         if not files[name].Get(treename) :
-            print 'Error: No Tree named %s. Exiting.'%(treename)
+            print('Error: No Tree named %s. Exiting.'%(treename))
             import sys
             sys.exit()
 
         trees[chainname].Add(f)
 
-    print keys[0],'will be composed of',','.join(k for k in files.keys())
+    print(keys[0],'will be composed of',','.join(k for k in files.keys()))
     return files,trees,keys
 
 #-------------------------------------------------------------------------
@@ -354,19 +354,19 @@ def RunMacro(macro,thefile,histnamekey,verbose=True,xAODInit=False) :
 
     if getattr(ROOT,macro_name,None) :
         if verbose :
-            print 'Macro %s already loaded.'%(macro)
+            print('Macro %s already loaded.'%(macro))
     else :
         if verbose :
-            print 'Loading macro %s'%(macro)
+            print('Loading macro %s'%(macro))
         ROOT.gROOT.LoadMacro(macro)
 
         if not getattr(ROOT,macro_name,None) :
-            print 'ERROR Macro named %s not found in file %s'%(macro_name,macro)
+            print('ERROR Macro named %s not found in file %s'%(macro_name,macro))
             SafeExit(xAODInit)
 
     # Macro should take a TTree and a key name
     if verbose :
-        print 'Running macro %s...'%(macro_name)
+        print('Running macro %s...'%(macro_name))
     getattr(ROOT,macro_name)(thefile,histnamekey)
 
     return
@@ -396,7 +396,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
         name = CleanUpName('%s_%s'%(inputname,k_clean))
 
         if issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-            print 'Using existing histogram, %s'%(name)
+            print('Using existing histogram, %s'%(name))
             # will load the histogram later...
 
         elif options.macro :
@@ -405,7 +405,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
 
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-                print 'ERROR Macro failed trying to create %s Exiting.'%(name)
+                print('ERROR Macro failed trying to create %s Exiting.'%(name))
                 SafeExit(options.xAODInit)
 
         else :
@@ -421,7 +421,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
             # Reset the default binning to 100, if "n" is not specified.
             ROOT.gEnv.SetValue('Hist.Binning.1D.x','100')
 
-            print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
+            print('tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3))
             tmp = ROOT.gErrorIgnoreLevel
             ROOT.gErrorIgnoreLevel = ROOT.kFatal
             trees[k].Draw(arg1,arg2,arg3)
@@ -429,7 +429,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
 
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-                print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
+                print('ERROR TTree::Draw failed trying to draw %s Exiting.'%(name))
                 SafeExit(options.xAODInit)
 
             if rebin and type(rebin) == type([]) :
@@ -444,7 +444,7 @@ def GetVariableHistsFromTrees(trees,keys,variable,weight,options=None,scales=0,i
             hists[-1].Rebin(rebin)
 
         if (n <= 0) :
-            print 'Changing limits to match those from the first plot.'
+            print('Changing limits to match those from the first plot.')
             n    = hists[-1].GetNbinsX()
             low  = hists[-1].GetBinLowEdge(1)
             high = hists[-1].GetBinLowEdge(n+1)
@@ -476,8 +476,8 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
 
     if not options.macro :
         if not options.limits.get(variable1,None) or not options.limits.get(variable2,None) :
-            print 'Error - you need to specify limits for both %s and %s.'%(variable1,variable2)
-            print '(Note you probably have to add these variables to the list of variables as well.)'
+            print('Error - you need to specify limits for both %s and %s.'%(variable1,variable2))
+            print('(Note you probably have to add these variables to the list of variables as well.)')
             SafeExit(options.xAODInit)
 
     n1,low1,high1 = options.limits.get(variable1)
@@ -492,7 +492,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
         name = CleanUpName('%s_%s'%(inputname,k_clean))
 
         if issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-            print 'Using existing histogram, %s'%(name)
+            print('Using existing histogram, %s'%(name))
             # will load the histogram later...
 
         elif options.macro :
@@ -501,7 +501,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
 
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-                print 'ERROR Macro failed trying to create %s Exiting.'%(name)
+                print('ERROR Macro failed trying to create %s Exiting.'%(name))
                 SafeExit(options.xAODInit)
 
         else :
@@ -510,7 +510,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
                                                    n1,low1,high1,n2,low2,high2)
             arg2 = weight
             arg3 = 'egoff'
-            print 'tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3)
+            print('tree.Draw(\'%s\',\'%s\',\'%s\')'%(arg1,arg2,arg3))
             tmp = ROOT.gErrorIgnoreLevel
             ROOT.gErrorIgnoreLevel = ROOT.kFatal
             trees[k].Draw(arg1,arg2,arg3)
@@ -518,7 +518,7 @@ def Get2dVariableHistsFromTrees(trees,keys,variable1,variable2,weight,options,sc
 
             # if Draw did not work, then exit.
             if not issubclass(type(ROOT.gDirectory.Get(name)),ROOT.TH1) :
-                print 'ERROR TTree::Draw failed trying to draw %s Exiting.'%(name)
+                print('ERROR TTree::Draw failed trying to draw %s Exiting.'%(name))
                 SafeExit(options.xAODInit)
 
         hists.append(ROOT.gDirectory.Get(name))
@@ -621,7 +621,7 @@ class TreePlottingOptParser :
             self.options.signal = ','.join('%s/%s'%(dir,a) for a in os.listdir(self.options.signal))
 
         if len(self.options.limits.split(',')) != 3 :
-            print 'Error! Please specify --limits using 3 numbers in the format nbins,lowedge,highedge'
+            print('Error! Please specify --limits using 3 numbers in the format nbins,lowedge,highedge')
             sys.exit()
 
         self.options.variables = self.options.variables.split(',')
@@ -648,7 +648,7 @@ class TreePlottingOptParser :
 
         # if you indicate 'HZY' then the function weightscaleHZY() will be used.
         if self.options.weightscale :
-            print 'INFO: Using weightscale function weightscale%s(tree)'%(self.options.weightscale)
+            print('INFO: Using weightscale function weightscale%s(tree)'%(self.options.weightscale))
             self.options.weightscale = eval('weightscale%s'%(self.options.weightscale))
         else :
             def defaultweightscale(tfile) :
@@ -660,7 +660,7 @@ class TreePlottingOptParser :
 
         if self.options.xAODInit :
             if not os.getenv('AtlasArea') :
-                print 'Error! Specified --xAODInit but did not set up ATLAS! Exiting.'
+                print('Error! Specified --xAODInit but did not set up ATLAS! Exiting.')
                 import sys; sys.exit()
             ROOT.xAOD.Init()
 
@@ -712,7 +712,7 @@ class TreePlottingOptParser :
 
         if self.p.has_option('--bkgs') :
             if (not self.options.bkgs) and (not self.options.signal) and (not self.options.data) :
-                print 'No --bkgs, --signal, or --data specified. Exiting.'
+                print('No --bkgs, --signal, or --data specified. Exiting.')
                 SafeExit(self.options.xAODInit)
 
         self.options.xlabel = dict()
@@ -854,7 +854,7 @@ def MergeSamples(hists,options,requireFullyMerged=False) :
         PyHelpers.PrintNumberOfEvents(hists_new[hists_index[i]])
 
     if requireFullyMerged and len(hists_new) > 1 :
-        print 'Error! Failed to merge histograms into one histogram! (Usually required for data.) Check your sample merging.'
+        print('Error! Failed to merge histograms into one histogram! (Usually required for data.) Check your sample merging.')
         SafeExit(options.xAODInit)
 
     return hists_new
@@ -882,7 +882,7 @@ def RebinSmoothlyFallingFunction(hist,error=0.10) :
         binj += 1
     therange.append(hist.GetBinLowEdge(hist.GetNbinsX()+1))
 
-    print therange
+    print(therange)
     # import sys
     # sys.exit()
     return
