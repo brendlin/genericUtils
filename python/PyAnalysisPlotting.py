@@ -547,7 +547,7 @@ def ExpandWildcard(csv_list) :
     for i in range(len(tmp)) :
         if not tmp[i] :
             continue
-        tmp_new += glob.glob(tmp[i].replace('%','*'))
+        tmp_new += sorted(glob.glob(tmp[i].replace('%','*')))
     return ','.join(tmp_new)
 
 #-------------------------------------------------------------------------
