@@ -9,10 +9,30 @@ def SafeExit(xAODInit=False) :
     import sys; sys.exit()
 
 #-------------------------------------------------------------------------
+def SetLegendLabels(hists,options) :
+    import re
+
+    labels = getattr(options,'labels',None)
+    if not labels :
+        labels = dict()
+
+    # Set labels according to "labels" dict (allows for reg-exp)
+    for i in hists :
+        for j in labels.keys() :
+            # Compare to regexp
+            if not re.match(j.replace('%','.*'),i.GetTitle()) :
+                continue
+            i.SetTitle(labels[j])
+
+    return
+
+#-------------------------------------------------------------------------
 def PrepareBkgHistosForStack(bkg_hists,options) :
     from PlotFunctions import KurtColorPalate
     from PyHelpers import GetHWWColors
     import re
+
+    SetLegendLabels(bkg_hists,options)
 
     colors = getattr(options,'colors',None)
 
@@ -46,27 +66,11 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
     return
 
 #-------------------------------------------------------------------------
-def SetLegendLabels(hists,options) :
-    import re
-
-    labels = getattr(options,'labels',None)
-    if not labels :
-        labels = dict()
-
-    # Set labels according to "labels" dict (allows for reg-exp)
-    for i in hists :
-        for j in labels.keys() :
-            # Compare to regexp
-            if not re.match(j.replace('%','.*'),i.GetTitle()) :
-                continue
-            i.SetTitle(labels[j])
-
-    return
-
-#-------------------------------------------------------------------------
 def PrepareDataHistos(data_hists,options) :
     import re
     import ROOT
+
+    SetLegendLabels(data_hists,options)
 
     for i in data_hists :
         i.SetLineWidth(2)
@@ -88,6 +92,8 @@ def PrepareDataHistos(data_hists,options) :
 def PrepareSignalHistos(sig_hists,options) :
     import re
     import ROOT
+
+    SetLegendLabels(sig_hists,options)
 
     color_dict = getattr(options,'colors',None)
 
