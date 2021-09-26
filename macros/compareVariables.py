@@ -85,7 +85,8 @@ def main(options,args) :
         ROOT.xAOD.ClearTransientTrees()
 
     if not options.batch :
-        raw_input('Press enter to exit')
+        import code
+        code.interact(banner='Pausing... Press Contol-D to exit.',local=locals())
 
     anaplot.doSaving(options,cans)
 

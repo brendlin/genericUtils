@@ -15,14 +15,10 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
     import re
 
     colors = getattr(options,'colors',None)
-    labels = getattr(options,'labels',None)
 
     if not colors :
         colors = GetHWWColors()
     used_colors = []
-
-    if not labels :
-        labels = dict()
 
     for i in bkg_hists :
 
@@ -32,13 +28,6 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
         used_colors.append(i.GetFillColor())
         i.SetLineWidth(1)
         i.SetLineColor(1)
-
-        # Set labels according to "labels" dict (allows for reg-exp)
-        for j in labels.keys() :
-            # Compare to regexp
-            if not re.match(j.replace('%','.*'),i.GetTitle()) :
-                continue
-            i.SetTitle(labels[j])
 
     # Set the un-assigned colors to random stuff in this KurtPalate. Make sure the color is unused.
     colors_for_unassigned_samples = KurtColorPalate()
@@ -57,13 +46,27 @@ def PrepareBkgHistosForStack(bkg_hists,options) :
     return
 
 #-------------------------------------------------------------------------
-def PrepareDataHistos(data_hists,options) :
+def SetLegendLabels(hists,options) :
     import re
-    import ROOT
 
     labels = getattr(options,'labels',None)
     if not labels :
         labels = dict()
+
+    # Set labels according to "labels" dict (allows for reg-exp)
+    for i in hists :
+        for j in labels.keys() :
+            # Compare to regexp
+            if not re.match(j.replace('%','.*'),i.GetTitle()) :
+                continue
+            i.SetTitle(labels[j])
+
+    return
+
+#-------------------------------------------------------------------------
+def PrepareDataHistos(data_hists,options) :
+    import re
+    import ROOT
 
     for i in data_hists :
         i.SetLineWidth(2)
@@ -72,12 +75,9 @@ def PrepareDataHistos(data_hists,options) :
         i.SetMarkerStyle(20)
         i.SetMarkerSize(1)
 
-        # Set labels according to "labels" dict (allows for reg-exp)
-        for j in labels.keys() :
-            # Compare to regexp
-            if not re.match(j.replace('%','.*'),i.GetTitle()) :
-                continue
-            i.SetTitle(labels[j])
+        # Going with the 800-600 paradaigm for non-ratio plots
+        if not hasattr(options,'ratio') or (not options.ratio) :
+            i.SetMarkerSize(1.2)
 
         if getattr(options,'poisson',False) :
             i.SetBinErrorOption(ROOT.TH1.kPoisson);
@@ -89,9 +89,7 @@ def PrepareSignalHistos(sig_hists,options) :
     import re
     import ROOT
 
-    labels = getattr(options,'labels',None)
-    if not labels :
-        labels = dict()
+    color_dict = getattr(options,'colors',None)
 
     signal_colors = [ROOT.kRed,ROOT.kBlue,ROOT.kSpring-8,ROOT.kMagenta+1,ROOT.kAzure+8
                      ,ROOT.kOrange+1
@@ -103,14 +101,18 @@ def PrepareSignalHistos(sig_hists,options) :
         sig_hist.SetLineColor(signal_colors[i])
         sig_hist.SetMarkerColor(signal_colors[i])
         sig_hist.SetMarkerStyle(20)
-        sig_hist.SetMarkerSize(1)
 
-        # Set labels according to "labels" dict (allows for reg-exp)
-        for j in labels.keys() :
-            # Compare to regexp
-            if not re.match(j.replace('%','.*'),sig_hist.GetTitle()) :
-                continue
-            sig_hist.SetTitle(labels[j])
+        if color_dict :
+            for j in color_dict.keys() :
+                if re.match(j.replace('%','.*'),sig_hist.GetTitle()) :
+                    sig_hist.SetMarkerColor(color_dict[j])
+                    sig_hist.SetLineColor(color_dict[j])
+                    #sig_hist.SetFillColor(color_dict[j])
+
+        sig_hist.SetMarkerSize(1)
+        # Going with the 800-600 paradaigm for non-ratio plots
+        if not hasattr(options,'ratio') or (not options.ratio) :
+            sig_hist.SetMarkerSize(1.2)
 
     return
 
@@ -192,10 +194,13 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
             plotfunc.AddHistogram(can,data_hist)
 
     plotfunc.FormatCanvasAxes(can)
-    text_lines = [plotfunc.GetSqrtsText(13)]
+    text_lines = [plotfunc.GetAtlasInternalText()]
+
     if options.fb > 0 and not options.normalize :
-        text_lines += [plotfunc.GetLuminosityText(options.fb)]
-    text_lines += [plotfunc.GetAtlasInternalText()]
+        text_lines += ['%s, %s'%(plotfunc.GetSqrtsText(13),plotfunc.GetLuminosityText(options.fb))]
+    else :
+        text_lines = [plotfunc.GetSqrtsText(13)]
+
     if hasattr(options,'plottext') and options.plottext :
         text_lines += options.plottext
 
@@ -213,7 +218,7 @@ def DrawHistos(variable,options,bkg_hists=[],sig_hists=[],data_hist=None,name=''
         taxisfunc.SetYaxisRanges(plotfunc.GetBotPad(can),0,2)
     else :
         plotfunc.DrawText(can,text_lines,0.2,0.75,0.5,0.94,totalentries=4)
-        plotfunc.MakeLegend(can,0.53,0.75,0.94,0.94,totalentries=5,ncolumns=2,skip=['remove me'])
+        plotfunc.MakeLegend(can,0.63,0.75,0.94,0.94,totalentries=4,ncolumns=1,skip=['remove me'])
     ylabel = 'entries (normalized)' if options.normalize else 'entries'
     plotfunc.SetAxisLabels(can,options.xlabel.get(variable),ylabel,yratiolabel=('pull' if options.pull else 'ratio'))
     plotfunc.AutoFixAxes(can)
@@ -951,7 +956,7 @@ def RatioRangeAfterBurner(can,ymin=None,ymax=None) :
     isPull = False
     for hist in plotfunc.GetBotPad(can).GetListOfPrimitives() :
         if hasattr(hist,'GetYaxis') :
-            isPull = isPull or (hist.GetYaxis().GetTitle() == 'pull')
+            isPull = isPull or (hist.GetYaxis().GetTitle() in ['pull','Pull'])
 
     if ymin == None :
         if isPull :
