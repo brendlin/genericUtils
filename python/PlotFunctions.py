@@ -290,6 +290,8 @@ def GetSqrtsText(sqrts=13) :
     return '#sqrt{s} = %d TeV'%(sqrts)
 
 def GetAtlasInternalText(status='Internal') :
+    if not status :
+        return '#font[72]{ATLAS}'
     return '#font[72]{ATLAS} #font[42]{%s}'%(status)
     
 ##
@@ -333,7 +335,7 @@ def DrawText(can,text='text',x1=None,y1=None,x2=None,y2=None,angle=0,align='',te
     leg.Draw()
     can.Modified()
     #can.Update()
-    return
+    return leg
 
 def CanvasEmpty(can) :
     from ROOT import TH1,TGraph
@@ -365,11 +367,11 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
         if y2 == None : y2 = 0.94
 
     if can.GetPrimitive('pad_top') :
-        MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,option,skip=skip,extend=extend)
-        return
+        return MakeLegend(can.GetPrimitive('pad_top'),x1,y1,x2,y2,textsize,ncolumns,totalentries,option,skip=skip,extend=extend,order=order)
     if CanvasEmpty(can) :
         print('Error: trying to make legend from canvas with 0 plots. Will do nothing.')
-        return
+        return None
+
     #
     # if a previous version exists from this function, delete it
     #
@@ -387,14 +389,29 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
     #
     # Add by TH1 GetTitle()
     #
-    the_primitives = can.GetListOfPrimitives()
+    all_primitives = can.GetListOfPrimitives()
     if can.GetPrimitive('pad_top') :
-        the_primitives = can.GetPrimitive('pad_top').GetListOfPrimitives()
+        all_primitives = can.GetPrimitive('pad_top').GetListOfPrimitives()
     if can.GetPrimitive('stack') :
         the_stack = list(can.GetPrimitive('stack').GetHists())
-        the_primitives = the_stack+list(the_primitives)
+        all_primitives = the_stack+list(all_primitives)
 
-    if order :
+    # Make a list of the primitives that will be presented.
+    the_primitives = []
+    for i in all_primitives :
+        if 'stack' in i.GetTitle() :
+            continue
+        if 'remove' in i.GetTitle() :
+            continue
+        if ((not issubclass(type(i),ROOT.TH1)) and
+            (not issubclass(type(i),ROOT.TGraph)) and
+            (not issubclass(type(i),ROOT.TF1))) :
+            continue
+        if i.GetTitle() in skip :
+            continue
+        the_primitives.append(i)
+
+    if len(order) :
         tmp = []
         for i in order :
             tmp.append(the_primitives[i])
@@ -402,15 +419,6 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
 
     total = 0
     for i in the_primitives :
-        if 'stack' in i.GetTitle() :
-            continue
-        if 'remove' in i.GetTitle() :
-            continue
-        if (not issubclass(type(i),ROOT.TH1)) and (not issubclass(type(i),ROOT.TGraph)) and (not issubclass(type(i),ROOT.TF1)) :
-            continue
-        if i.GetTitle() in skip :
-            continue
-
         drawopt = i.GetOption().replace('same','').replace('hist','l').replace('E2','f')
         if issubclass(type(i),ROOT.TGraph) :
             drawopt = i.GetHistogram().GetOption().replace('same','').replace('hist','l')
@@ -454,7 +462,43 @@ def MakeLegend(can,x1=None,y1=None,x2=None,y2=None,textsize=18,ncolumns=1,totale
     leg.Draw()
     can.Modified()
     can.Update()
-    return
+    return leg
+
+# For 500 x 500 aspect ratio
+def FormatCanvasAxes500500(can) :
+
+    w,h = 500,500
+    can.SetWindowSize(w,h)
+    can.SetWindowSize(w + (w - can.GetWw()), h + (h - can.GetWh()))
+
+    return FormatCanvasAxes(can,
+                            XTitleOffset = 1.10)
+
+# For 800 x 600 aspect ratio
+def FormatCanvasAxes800600(can,
+                           XTitleSize   = 32,
+                           XTitleOffset = 1.05,
+                           XLabelSize   = 32,
+                           YTitleSize   = 32,
+                           YTitleOffset = 1.4,
+                           YLabelSize   = 32) :
+
+    w,h = 800,600
+    can.SetWindowSize(w,h)
+    can.SetWindowSize(w + (w - can.GetWw()), h + (h - can.GetWh()))
+
+    can.SetTopMargin(0.05)
+    can.SetRightMargin(0.05)
+    can.SetLeftMargin(0.15)
+    can.SetBottomMargin(0.13)
+
+    return FormatCanvasAxes(can,
+                            XTitleSize   = XTitleSize  ,
+                            XTitleOffset = XTitleOffset,
+                            XLabelSize   = XLabelSize,
+                            YTitleSize   = YTitleSize  ,
+                            YTitleOffset = YTitleOffset,
+                            YLabelSize   = YLabelSize)
 
 ##
 ## Format the axes of your canvas or RatioCanvas, including axis labels, sizes, offsets. 
@@ -525,6 +569,8 @@ def FormatCanvasAxes(can
         i.GetYaxis().SetLabelFont  (YLabelFont  )
         i.GetYaxis().SetNdivisions (YNDiv[0],YNDiv[1],YNDiv[2])
 
+        i.GetYaxis().SetTickLength(0.02/float(can.GetWNDC()))
+
         if not hasattr(i,'GetZaxis') :
             continue
         i.GetZaxis().SetTitleSize  (ZTitleSize  )
@@ -534,7 +580,7 @@ def FormatCanvasAxes(can
         i.GetZaxis().SetLabelOffset(ZLabelOffset)
         i.GetZaxis().SetLabelFont  (ZLabelFont  )
 
-        break
+        #break
 
     can.Modified()
     #can.Update()
@@ -633,7 +679,7 @@ def RatioCanvas(canvas_name,canvas_title,canw=500,canh=600,ratio_size_as_fractio
     c.cd()
     top = TPad("pad_top", "This is the top pad",0.0,ratio_size_as_fraction,1.0,1.0)
     top.SetBottomMargin(0.02/float(top.GetHNDC()))
-    top.SetTopMargin   (0.04/float(top.GetHNDC()))
+    top.SetTopMargin   (0.05/float(top.GetHNDC()))
     top.SetRightMargin (0.05 )
     top.SetLeftMargin  (0.16 )
     top.SetFillColor(0)
