@@ -54,10 +54,10 @@ def PrintNumberOfEvents(hist,isUnicode=False) :
     elif issubclass(type(hist),ROOT.TH1) :
         integral = hist.Integral(0,hist.GetNbinsX()+1)
     
-    text = '%s: %2.2f'%(hist.GetName(),integral)
+    text = '%s: %2.9f'%(hist.GetName(),integral)
                         
     if sumw2 :
-        text += ' %s %2.2f'%(pm,math.sqrt(sumw2))
+        text += ' %s %2.9f'%(pm,math.sqrt(sumw2))
     print text.encode('utf-8')
     return text
 
